@@ -1,0 +1,16 @@
+name: env_name
+
+channels:
+- defaults
+- conda-forge
+
+dependencies:
+  - seaborn
+  - scipy
+  - matplotlib
+  - numpy
+  - pandas
+  - ipython
+  - loguru
+  - pip:
+    - lmfit
