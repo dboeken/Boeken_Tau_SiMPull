@@ -1,21 +1,20 @@
-from scipy.stats import pearsonr
-from lib2to3.pgen2.pgen import DFAState
+import functools
 import os
 import re
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import functools
+from lib2to3.pgen2.pgen import DFAState
+
 import matplotlib
-
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from loguru import logger
 from matplotlib.colors import ListedColormap
-
+from scipy.stats import pearsonr
 
 # from smma.src.utilities import closest_node, find_pairs
 # from smma.src.visualise import plot_colocalisation
 
-from loguru import logger
 
 logger.info('Import OK')
 
@@ -467,7 +466,7 @@ filtered_disease = for_plotting[for_plotting['disease_state'] == 'AD'].copy()
 for i, (group, df) in enumerate(filtered_disease.groupby('capture')):
     # add hex bin, with optional variable assignment to enable colorbar creation
     hexplot = axes[i].hexbin(
-        data=df, x='mean_intensity_641', y='mean_intensity_488', cmap=cm)
+        data=df, x='mean_intensity_641', y='mean_intensity_488', cmap=cm, vmin=0, vmax=900)
     # Add kde
     sns.kdeplot(data=df, x='mean_intensity_641', y='mean_intensity_488', color='darkgrey',
                 linestyles='--', levels=np.arange(0, 1, 0.2), ax=axes[i])
