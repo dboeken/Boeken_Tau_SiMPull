@@ -132,3 +132,5 @@ dmypy.json
 results/*
 .vscode/*
 resources/*
+data/*
+data_collection.py
