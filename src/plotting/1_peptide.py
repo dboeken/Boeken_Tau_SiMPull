@@ -13,12 +13,19 @@ from loguru import logger
 
 logger.info('Import OK')
 
-input_path = 'data/peptide_data/spots_per_fov.csv'
+if os.path.exists('data_path.txt'):
+    root_path = open("experimental_data/root_path.txt", "r").readlines()[0]
+else:
+    root_path = ''
+    
+# Set paths
+input_path = f'{root_path}data/peptide_data/spots_per_fov.csv'
 output_folder = 'results/1_peptide/'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
+# Set default font parameters
 font = {'family': 'normal',
         'weight': 'normal',
         'size': 12}
