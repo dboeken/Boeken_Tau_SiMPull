@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from smma.src import visualise
+#from smma.src import visualise
 from loguru import logger
 
 logger.info('Import OK')
