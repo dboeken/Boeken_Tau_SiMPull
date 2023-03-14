@@ -74,7 +74,7 @@ example_dimer = np.mean(example_dimer[10:, :, :], axis=0)
 
 # ==================Generate main figure==================
 
-fig, axes = plt.subplots(1, 4, figsize=(20, 5))
+fig, axes = plt.subplots(1, 4, figsize=(23, 5), gridspec_kw={'width_ratios': [6, 6, 6, 5]})
 
 # Panel D: Example BSA image
 microim1 = microshow(images=[example_BSA],
@@ -110,6 +110,11 @@ sns.barplot(
 axes[3].set_ylim(0, 400)
 axes[3].set_ylabel("Mean spots per FOV")
 axes[3].set_xlabel("")
+
+axes[0].annotate('B', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='bold')
+axes[1].annotate('C', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='bold')
+axes[2].annotate('D', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='bold')
+axes[3].annotate('E', xy=(-0.3, 1.05), xycoords='axes fraction', size=24, weight='bold')
 
 plt.tight_layout()
 plt.savefig(f'{output_folder}1_peptide.svg')
