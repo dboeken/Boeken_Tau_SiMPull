@@ -88,7 +88,7 @@ fig.tight_layout()
 
 for x, (capture, df) in enumerate(for_plotting.groupby('capture')):
     f = sns.barplot(
-        data=df,
+        data=df.groupby(['disease_state', 'channel', 'sample', 'antibody_state']).mean().reset_index(),
         x='disease_state',
         y='total_spots',
         hue='antibody_state',
@@ -101,7 +101,8 @@ for x, (capture, df) in enumerate(for_plotting.groupby('capture')):
     )
 
     sns.stripplot(
-        data=df,
+        data=df.groupby(['disease_state', 'channel', 'sample',
+                        'antibody_state']).mean().reset_index(),
         x='disease_state',
         y='total_spots',
         hue='antibody_state',
@@ -136,7 +137,7 @@ for x, (capture, df) in enumerate(for_plotting.groupby('capture')):
 #change error width and capsize, fade out, alpha, change size scatterplots use s =
 
 
-#plotting proporion of colocalised spots
+#plotting proportion of colocalised spots
 
 linestyles = {
     'AD': '--',
@@ -157,7 +158,7 @@ fig, axes = plt.subplots(1, 2, figsize=(7, 4))
 fig.tight_layout()
 for x, (capture, df) in enumerate(for_plotting_proportion.groupby('capture')):
     f = sns.barplot(
-        data=df,
+        data=df.groupby(['disease_state', 'channel', 'sample', 'antibody_state']).mean().reset_index(),
         x='disease_state',
         y='proportion_coloc',
         hue='antibody_state',
@@ -166,11 +167,12 @@ for x, (capture, df) in enumerate(for_plotting_proportion.groupby('capture')):
         capsize=.15,
         errwidth=0.7,
         saturation=0.8,
-        alpha=0.9
+        alpha=0.9,
+        order = ['AD', 'CRL', 'BSA']
     )
 
     sns.stripplot(
-        data=df,
+        data=df.groupby(['disease_state', 'channel', 'sample', 'antibody_state']).mean().reset_index(),
         x='disease_state',
         y='proportion_coloc',
         hue='antibody_state',
@@ -178,7 +180,8 @@ for x, (capture, df) in enumerate(for_plotting_proportion.groupby('capture')):
         palette=palette2,
         dodge=True,
         s=5,
-        alpha=0.8
+        alpha=0.8, 
+        order=['AD', 'CRL', 'BSA']
 
     )
     axes[x].set_title(capture)
@@ -239,7 +242,8 @@ fig, axes = plt.subplots(1, 2, figsize=(14, 4))
 fig.tight_layout()
 for x, (capture, df) in enumerate(melted.groupby(['capture'])):
     f = sns.barplot(
-        data=df,
+        data=df.groupby(['disease_state', 'channel', 'sample',
+                        'antibody_state', 'key']).mean().reset_index(),
         x='disease_state',
         y='coloc_intensity',
         hue='key',
@@ -250,12 +254,14 @@ for x, (capture, df) in enumerate(melted.groupby(['capture'])):
         #width = 15,
         saturation=0.8,
         alpha=0.9,
+        order=['AD', 'CRL', 'BSA'],
         hue_order=['noncoloc_T181', 'coloc_T181',
                    'noncoloc_AT8', 'coloc_AT8']
     )
 
     sns.stripplot(
-        data=df,
+        data=df.groupby(['disease_state', 'channel', 'sample',
+                        'antibody_state', 'key']).mean().reset_index(),
         x='disease_state',
         y='coloc_intensity',
         hue='key',
@@ -264,6 +270,7 @@ for x, (capture, df) in enumerate(melted.groupby(['capture'])):
         dodge=True,
         s=5,
         alpha=0.8,
+        order=['AD', 'CRL', 'BSA'],
         hue_order=['noncoloc_T181', 'coloc_T181', 'noncoloc_AT8', 'coloc_AT8']
 
     )
@@ -313,7 +320,8 @@ fig, axes = plt.subplots(1, 2, figsize=(8, 4))
 fig.tight_layout()
 for x, (capture, df) in enumerate(for_plotting_intensity[for_plotting_intensity['sample'].isin(['13', '55', '246'])].groupby(['capture'])):
     f = sns.barplot(
-        data=df,
+        data=df.groupby(['disease_state', 'channel', 'sample',
+                        'antibody_state']).mean().reset_index(),
         x='disease_state',
         y='intensity_ratio',
         hue='antibody_state',
@@ -327,7 +335,8 @@ for x, (capture, df) in enumerate(for_plotting_intensity[for_plotting_intensity[
     )
 
     sns.stripplot(
-        data=df,
+        data=df.groupby(['disease_state', 'channel', 'sample',
+                        'antibody_state']).mean().reset_index(),
         x='disease_state',
         y='intensity_ratio',
         hue='antibody_state',
@@ -395,24 +404,24 @@ palette = sns.color_palette(['#ffffff'] +
                             list(sns.color_palette('magma', n_colors=200).as_hex())[66:])
 
 #from matplotlib.colors import LogNorm, Normalize
-for (capture, disease_state), df in for_plotting.groupby(['capture', 'disease_state']):
-    fig = sns.jointplot(data=df, x='mean_intensity_641', y='mean_intensity_488',
-                        kind="hex", joint_kws={"color": None, 'cmap': ListedColormap(palette)}, gridsize=(120, 120), marginal_kws={'color': 'darkgrey'}),
-    #fig.plot(sns.regplot, scatter=False)
-    plt.xlim(0, 8000)
-    plt.ylim(0, 3000)
-    plt.colorbar()
-    plt.title(f'{capture} {disease_state}')
+# for (capture, disease_state), df in for_plotting.groupby(['capture', 'disease_state']):
+#     fig = sns.jointplot(data=df, x='mean_intensity_641', y='mean_intensity_488',
+#                         kind="hex", joint_kws={"color": None, 'cmap': ListedColormap(palette)}, gridsize=(120, 120), marginal_kws={'color': 'darkgrey'}),
+#     #fig.plot(sns.regplot, scatter=False)
+#     plt.xlim(0, 8000)
+#     plt.ylim(0, 3000)
+#     plt.colorbar()
+#     plt.title(f'{capture} {disease_state}')
 
-for (capture, disease_state), df in for_plotting.groupby(['capture', 'disease_state']):
-    matplotlib.pyplot.hexbin(df['mean_intensity_641'], df['mean_intensity_488'],
-                             gridsize=120,
-                             vmax=6000,
-                             vmin=0,
-                             #cmap = palette
-                             )
-    plt.colorbar()
-    plt.title(f'{capture} {disease_state}')
+# for (capture, disease_state), df in for_plotting.groupby(['capture', 'disease_state']):
+#     matplotlib.pyplot.hexbin(df['mean_intensity_641'], df['mean_intensity_488'],
+#                              gridsize=120,
+#                              vmax=6000,
+#                              vmin=0,
+#                              #cmap = palette
+#                              )
+#     plt.colorbar()
+#     plt.title(f'{capture} {disease_state}')
 
 # adjust colour of lowest range
 # adjust adjust width of bins
