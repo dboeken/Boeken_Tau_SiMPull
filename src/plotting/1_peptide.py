@@ -64,11 +64,21 @@ mean_number_spots[['sample', 'concentration']
 
 # =================Read in example images=================
 
-example_BSA = imread(f'{root_path}data/peptide_images/X6Y1R3W3_641.tif')
+# example_BSA = imread(f'{root_path}data/peptide_images/X6Y1R3W3_641.tif')
+# example_BSA = np.mean(example_BSA[10:, :, :], axis=0)
+# example_monomer = imread(f'{root_path}data/peptide_images/X4Y1R3W2_641.tif')
+# example_monomer = np.mean(example_monomer[10:, :, :], axis=0)
+# example_dimer = imread(f'{root_path}data/peptide_images/X1Y1R2W2_641.tif')
+# example_dimer = np.mean(example_dimer[10:, :, :], axis=0)
+
+
+example_BSA = imread('/Users/dorotheaboeken/Documents/GitHub/Boeken_Tau_SiMPull/data/peptide_data/example_BSA.tif')
 example_BSA = np.mean(example_BSA[10:, :, :], axis=0)
-example_monomer = imread(f'{root_path}data/peptide_images/X4Y1R3W2_641.tif')
+example_monomer = imread(
+    '/Users/dorotheaboeken/Documents/GitHub/Boeken_Tau_SiMPull/data/peptide_data/example_monomer.tif')
 example_monomer = np.mean(example_monomer[10:, :, :], axis=0)
-example_dimer = imread(f'{root_path}data/peptide_images/X1Y1R2W2_641.tif')
+example_dimer = imread(
+    '/Users/dorotheaboeken/Documents/GitHub/Boeken_Tau_SiMPull/data/peptide_data/example_BSA.tif')
 example_dimer = np.mean(example_dimer[10:, :, :], axis=0)
 
 
@@ -117,7 +127,7 @@ axes[2].annotate('D', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='b
 axes[3].annotate('E', xy=(-0.3, 1.05), xycoords='axes fraction', size=24, weight='bold')
 
 plt.tight_layout()
-plt.savefig(f'{output_folder}1_peptide.svg')
+#plt.savefig(f'{output_folder}1_peptide.svg')
 plt.show()
 
 
@@ -126,18 +136,17 @@ plt.show()
 sns.set(rc={'figure.figsize': (3, 4)})
 sns.set_theme(style="ticks", font_scale=1.4)
 for (capture), df in mean_number_spots[mean_number_spots['capture'].isin(['AT8'])].groupby(['capture']):
-    sns.stripplot(data=df, x='sample', y='spots_count',)
+    sns.stripplot(data=df, x='sample', y='spots_count', color='#36454F',
+                  s=10)
     # plt.xlim(0, 6000)
 
-    sns.stripplot(
-        data=df.groupby(['capture', 'sample', 'detect',
-                         ]).mean().reset_index(),
+    sns.barplot(
+        data=df,
         x='sample',
         y='spots_count',
-        #hue='sample',
-        dodge=False,
-        s=12,
-        alpha=0.4
+        capsize=0.2,
+        errwidth=2,
+        color='darkgrey'
     )
 
     plt.ylim(0, 500)
@@ -145,4 +154,4 @@ for (capture), df in mean_number_spots[mean_number_spots['capture'].isin(['AT8']
 
     plt.title(f'{capture}')
     #plt.show()
-    plt.savefig(f'{output_folder}mean_number_spots_AT8.svg')
+    #plt.savefig(f'{output_folder}mean_number_spots_AT8.svg')
