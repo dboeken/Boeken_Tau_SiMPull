@@ -146,19 +146,12 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
     ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
     ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
 
-    # ax.annotate('Neonatal', xy=(1, -.1), xycoords=trans, ha="center", va="top")
     ax.annotate('AT8', xy=(0.25, group_label_y), xycoords='axes fraction', ha='center')
     ax.annotate('HT7', xy=(0.75, group_label_y), xycoords='axes fraction', ha='center')
     trans = ax.get_xaxis_transform()
     ax.plot([-0.25,0.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
     ax.plot([0.75,1.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
-    # ax.axhline(0.5, linestyle='-', color='black')
 
-
-    # handles, labels = plt.gca().get_legend_handles_labels()
-    # by_label = dict(zip(labels, handles))
-    # ax.legend(by_label.values(), by_label.keys(),
-    #                 bbox_to_anchor=(1.0, 1.0))
     ax.legend('', frameon=False)
 
 
@@ -250,7 +243,7 @@ def ecfd_plot(ycol, ylabel, palette, ax, df):
     ax.legend(frameon=False)
 
 
-def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, legend=False, left_lims=False, right_lims=False):
+def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, left_lims=False, right_lims=False, group_label_y=-0.18, group_line_y=-0.05):
     order = ['AT8', 'HT7']
     for i, detect in enumerate(order):
         if i == 0:
@@ -284,17 +277,23 @@ def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, legend=False, left
             dodge=True
         )
         if i == 0:
-            ax.set_title(detect, loc='left')
+            # ax.set_title(detect, loc='left')
             ax.set(ylabel=ylabel, xlabel='')
             ax.set_xticks([])
             if left_lims:
                 ax.set_ylim(*left_lims)
         else:
-            ax.set_title(detect, loc='right')
+            # ax.set_title(detect, loc='right')
             ax.set_ylabel(ylabel, rotation=270, labelpad=15)
             ax.set_xlabel('')
             ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
             ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
+            
+            ax.annotate('AT8', xy=(0.25, group_label_y), xycoords='axes fraction', ha='center')
+            ax.annotate('HT7', xy=(0.75, group_label_y), xycoords='axes fraction', ha='center')
+            trans = ax.get_xaxis_transform()
+            ax.plot([-0.25,0.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
+            ax.plot([0.75,1.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
             if left_lims:
                 ax.set_ylim(*right_lims)
 
@@ -388,26 +387,33 @@ proportion_intensity_plotting = proportion_intensity.groupby(['capture', 'sample
 
 proportion_intensity.to_csv(f'{output_folder}proportion_intensity_per_replicate.csv')
 
-# ---------------Generate compiled plot---------------
+# =====================Generate compiled plot=====================
 
 
 fig, axes = plt.subplots(3, 3, figsize=(12, 10))
 axes = axes.ravel()
+# --------Panel C--------
 scatbarplot_hue('spots_count', 'Number of spots',
                 palette_DL, axes[2], spots_summary, group_line_y=-0.115)
 
-multipanel_scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL, axes=axes[4], data=mean_intensity_plotting, left_lims=False, right_lims=False)
+# --------Panel E--------
+multipanel_scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL, axes=axes[4], data=mean_intensity_plotting, left_lims=False, right_lims=False, group_line_y=-0.115)
 axes[4].axvline(0.5, linestyle='-', color='black')
 
+# --------Panel F--------
 scatbarplot_hue(ycol='bright', ylabel='Proportion bright spots (%)',
                 palette=palette_DL, ax=axes[5], data=proportion_intensity_plotting,group_line_y=-0.115)
 axes[4].axvline(0.5, linestyle='-', color='black')
 
+# --------Panel G--------
 ecfd_plot('norm_mean_intensity', 'Mean intensity (AU)',
           palette, axes[6], fitted_ecdf_HT7)
 
+# --------Panel H--------
 ecfd_plot('norm_mean_intensity', 'Mean intensity (AU)',
           palette, axes[7], fitted_ecdf_AT8)
+
+# Legend for G,H
 handles, labels = axes[7].get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
 simple_legend = {'AD': by_label['13'],
