@@ -426,7 +426,7 @@ axB.set_title('CRL')
     
 # --------Panel C--------
 scatbarplot_hue('spots_count', 'Number of spots',
-                palette_DL, axC, spots_summary, group_line_y=-0.142, group_label_y=-0.23)
+                palette_DL, axC, spots_summary, group_line_y=-0.131, group_label_y=-0.2)
 
 # --------Panel D--------
 axD.axis('off')
@@ -438,7 +438,7 @@ scatbarplot(ycol='norm_mean_intensity', ylabel='', palette=palette_DL, ax=axE2, 
 axE2.set_title('HT7')
 
 # --------Panel F--------
-scatbarplot_hue(ycol='bright', ylabel='Bright spots (%)', palette=palette_DL, ax=axF, data=proportion_intensity_plotting, group_line_y=-0.142, group_label_y=-0.23)
+scatbarplot_hue(ycol='bright', ylabel='Bright spots (%)', palette=palette_DL, ax=axF, data=proportion_intensity_plotting, group_line_y=-0.131, group_label_y=-0.2)
 
 # --------Panel G--------
 ecfd_plot('norm_mean_intensity', 'Mean intensity (AU)',
