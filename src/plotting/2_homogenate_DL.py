@@ -137,7 +137,7 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
     annotator = Annotator(
         ax=ax, pairs=pairs, data=data, x='detect', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
     annotator.configure(test='t-test_ind', text_format='star',
-                        loc='inside', comparisons_correction='bonferroni')
+                        loc='inside')
     annotator.apply_and_annotate()
     
     ax.set(ylabel=ylabel)
@@ -220,12 +220,12 @@ def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
     return interpolated
 
 
-def fitting_ecfd_for_plotting(df_intensity, detect, maxval):
+def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col='mean_intensity'):
     fitted_ecdfs = []
     for (capture, sample, position), df in df_intensity.groupby(['capture', 'sample', 'slide_position']):
-        filtered_df = df[df['mean_intensity'] < maxval]
+        filtered_df = df[df[col] < maxval]
         fitted_ecdf = sample_ecdf(filtered_df, value_cols=[
-            'mean_intensity'], method='nearest', order=False)
+            col], method='nearest', order=False)
         fitted_ecdf['sample'] = sample
         fitted_ecdf['capture'] = capture
         fitted_ecdf['slide_position'] = position
@@ -239,7 +239,7 @@ def fitting_ecfd_for_plotting(df_intensity, detect, maxval):
 def ecfd_plot(ycol, ylabel, palette, ax, df):
     sns.lineplot(
         data=df.reset_index(),
-        y='mean_intensity',
+        y=ycol,
         x='ecdf',
         hue='sample',
         palette=palette,
@@ -247,7 +247,7 @@ def ecfd_plot(ycol, ylabel, palette, ax, df):
         ax=ax)
 
     ax.set(ylabel=ylabel, xlabel='')
-    ax.legend()
+    ax.legend(frameon=False)
 
 
 def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, legend=False, left_lims=False, right_lims=False):
@@ -329,10 +329,10 @@ spots_intensity_AT8 = f'{input_path}AT8_capture_compiled_spots.csv'
 
 AT8_spots_intensity = intensity_processing(
     slide_params_AT8_path, spots_intensity_AT8, 'AT8')
-
+AT8_spots_intensity['norm_mean_intensity'] = AT8_spots_intensity['mean_intensity'] / 1000
 HT7_spots_intensity = intensity_processing(
     slide_params_HT7_path, spots_intensity_HT7, 'HT7')
-
+HT7_spots_intensity['norm_mean_intensity'] = HT7_spots_intensity['mean_intensity'] / 1000
 ######brightness
 palette = {
     '9': 'royalblue',
@@ -347,30 +347,21 @@ palette = {
 }
 
 
-fitted_ecdf_HT7 = fitting_ecfd_for_plotting(HT7_spots_intensity, 'HT7', 15000)
+fitted_ecdf_HT7 = fitting_ecfd_for_plotting(HT7_spots_intensity, 'HT7', 15, col='norm_mean_intensity')
 
-fitted_ecdf_AT8 = fitting_ecfd_for_plotting(AT8_spots_intensity, 'AT8', 1000)
+fitted_ecdf_AT8 = fitting_ecfd_for_plotting(AT8_spots_intensity, 'AT8', 1, col='norm_mean_intensity')
 
 
 ############ Mean intensity for HT7 capture ################
-
-mean_intensity_HT7 = HT7_spots_intensity.groupby(
-    ['capture', 'sample', 'slide_position', 'detect']).mean().reset_index()
-
-mean_intensity_AT8 = AT8_spots_intensity.groupby(
-    ['capture', 'sample', 'slide_position', 'detect']).mean().reset_index()
-
-mean_intensity = pd.concat([mean_intensity_HT7, mean_intensity_AT8])
-
+compiled_spots = pd.concat([HT7_spots_intensity, AT8_spots_intensity])
 
 sample_dict = {'13': 'AD', '55': 'AD', '246': 'AD',
                '28': 'CRL', '159': 'CRL', '9': 'CRL', 'BSA': 'BSA'}
-mean_intensity['disease_state'] = mean_intensity['sample'].map(sample_dict)
+compiled_spots['disease_state'] = compiled_spots['sample'].map(sample_dict)
 
+compiled_spots = compiled_spots[compiled_spots.detect != 'IgG']
 
-mean_intensity = mean_intensity[mean_intensity.detect != 'IgG']
-
-mean_intensity_per_replicate = mean_intensity.groupby(
+mean_intensity_per_replicate = compiled_spots.groupby(
     ['capture', 'sample', 'slide_position', 'detect', 'disease_state']).mean().reset_index()
 
 mean_intensity_per_replicate.to_csv(
@@ -379,12 +370,23 @@ mean_intensity_per_replicate.to_csv(
 mean_intensity_plotting = mean_intensity_per_replicate.groupby(
     ['capture', 'sample', 'detect', 'disease_state']).mean().reset_index()
 
-mean_intensity_plotting['norm_mean_intensity'] = mean_intensity_plotting['mean_intensity'] / 1000
-
-# sns.set_theme(style="ticks", font_scale=1.4)
 mean_intensity_plotting.to_csv(f'{output_folder}mean_intensity.csv')
 
+# Calculate proportion of spots > threshold intensity
+thresholds = {'AT8': 500, 'HT7': 2000}
+compiled_spots['bright_cat'] = ['bright' if val > thresholds[detect] else 'dim' for val, detect in compiled_spots[['mean_intensity', 'detect']].values]
 
+proportion_intensity = (compiled_spots.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'layout', 'bright_cat']).count()['label'] / compiled_spots.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'layout']).count()['label']).reset_index()
+proportion_intensity = pd.pivot(
+    proportion_intensity,
+    index=['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'layout'],
+    columns='bright_cat',
+    values='label'
+).fillna(0).reset_index()
+
+proportion_intensity_plotting = proportion_intensity.groupby(['capture', 'sample', 'detect', 'disease_state']).mean().reset_index().drop('layout', axis=1)
+
+proportion_intensity.to_csv(f'{output_folder}proportion_intensity_per_replicate.csv')
 
 # ---------------Generate compiled plot---------------
 
@@ -392,17 +394,19 @@ mean_intensity_plotting.to_csv(f'{output_folder}mean_intensity.csv')
 fig, axes = plt.subplots(3, 3, figsize=(12, 10))
 axes = axes.ravel()
 scatbarplot_hue('spots_count', 'Number of spots',
-                palette_DL, axes[2], spots_summary, group_line_y=-0.11)
+                palette_DL, axes[2], spots_summary, group_line_y=-0.115)
 
-multipanel_scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL,
-                       axes=axes[4], data=mean_intensity_plotting, left_lims=False, right_lims=False)
+multipanel_scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL, axes=axes[4], data=mean_intensity_plotting, left_lims=False, right_lims=False)
 axes[4].axvline(0.5, linestyle='-', color='black')
 
+scatbarplot_hue(ycol='bright', ylabel='Proportion bright spots (%)',
+                palette=palette_DL, ax=axes[5], data=proportion_intensity_plotting,group_line_y=-0.115)
+axes[4].axvline(0.5, linestyle='-', color='black')
 
-ecfd_plot('mean_intensity', 'mean intensity',
+ecfd_plot('norm_mean_intensity', 'Mean intensity (AU)',
           palette, axes[6], fitted_ecdf_HT7)
 
-ecfd_plot('mean_intensity', 'mean intensity',
+ecfd_plot('norm_mean_intensity', 'Mean intensity (AU)',
           palette, axes[7], fitted_ecdf_AT8)
 handles, labels = axes[7].get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
