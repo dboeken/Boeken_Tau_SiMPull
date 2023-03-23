@@ -101,6 +101,67 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
     ax.legend('')
 
 
+def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
+    order = ['AT8', 'HT7']
+    hue_order = ['AD', 'CRL', 'BSA']
+    sns.barplot(
+        data=data,
+        x='detect',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        capsize=0.2,
+        errwidth=2,
+        ax=ax,
+        dodge=True,
+        order=order,
+        hue_order=hue_order,
+        edgecolor='white'
+    )
+    sns.stripplot(
+        data=data,
+        x='detect',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        ax=ax,
+        edgecolor='#fff',
+        linewidth=1,
+        s=15,
+        order=order,
+        hue_order=hue_order,
+        dodge=True,
+    )
+
+    pairs = [(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))]
+    annotator = Annotator(
+        ax=ax, pairs=pairs, data=data, x='detect', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
+    annotator.configure(test='t-test_ind', text_format='star',
+                        loc='inside', comparisons_correction='bonferroni')
+    annotator.apply_and_annotate()
+    
+    ax.set(ylabel=ylabel)
+    
+    ax.set_xlabel('')
+    ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
+    ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
+
+    # ax.annotate('Neonatal', xy=(1, -.1), xycoords=trans, ha="center", va="top")
+    ax.annotate('AT8', xy=(0.25, group_label_y), xycoords='axes fraction', ha='center')
+    ax.annotate('HT7', xy=(0.75, group_label_y), xycoords='axes fraction', ha='center')
+    trans = ax.get_xaxis_transform()
+    ax.plot([-0.25,0.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
+    ax.plot([0.75,1.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
+    # ax.axhline(0.5, linestyle='-', color='black')
+
+
+    # handles, labels = plt.gca().get_legend_handles_labels()
+    # by_label = dict(zip(labels, handles))
+    # ax.legend(by_label.values(), by_label.keys(),
+    #                 bbox_to_anchor=(1.0, 1.0))
+    ax.legend('', frameon=False)
+
+
 def intensity_processing(slide_params, spots_intensity, detect):
     slide_params = pd.read_csv(slide_params)
     slide_params.drop([col for col in slide_params.columns.tolist()
@@ -250,7 +311,8 @@ def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, legend=False, left
 
 spots_AT8 = read_in(f'{input_path}AT8_capture_spots_per_fov.csv', 'AT8')
 spots_HT7 = read_in(f'{input_path}HT7_capture_spots_per_fov.csv', 'HT7')
-
+spots_summary = pd.concat([spots_AT8, spots_HT7])
+spots_summary.to_csv(f'{output_folder}spots_count_summary.csv')
 
 palette_DL = {
     'CRL': '#345995',
@@ -317,6 +379,8 @@ mean_intensity_per_replicate.to_csv(
 mean_intensity_plotting = mean_intensity_per_replicate.groupby(
     ['capture', 'sample', 'detect', 'disease_state']).mean().reset_index()
 
+mean_intensity_plotting['norm_mean_intensity'] = mean_intensity_plotting['mean_intensity'] / 1000
+
 # sns.set_theme(style="ticks", font_scale=1.4)
 mean_intensity_plotting.to_csv(f'{output_folder}mean_intensity.csv')
 
@@ -325,17 +389,12 @@ mean_intensity_plotting.to_csv(f'{output_folder}mean_intensity.csv')
 # ---------------Generate compiled plot---------------
 
 
-fig, axes = plt.subplots(3, 3, figsize=(10, 10))
+fig, axes = plt.subplots(3, 3, figsize=(12, 10))
 axes = axes.ravel()
-scatbarplot('spots_count', 'Number of spots',
-            palette_DL, axes[0], spots_HT7)
-axes[0].set_title('HT7', y=1.2)
+scatbarplot_hue('spots_count', 'Number of spots',
+                palette_DL, axes[2], spots_summary, group_line_y=-0.11)
 
-scatbarplot('spots_count', 'Number of spots',
-            palette_DL, axes[1], spots_AT8)
-axes[1].set_title('AT8', y=1.2)
-
-multipanel_scatbarplot(ycol='mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL,
+multipanel_scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL,
                        axes=axes[4], data=mean_intensity_plotting, left_lims=False, right_lims=False)
 axes[4].axvline(0.5, linestyle='-', color='black')
 
