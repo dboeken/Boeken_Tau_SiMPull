@@ -390,38 +390,48 @@ proportion_intensity.to_csv(f'{output_folder}proportion_intensity_per_replicate.
 # =====================Generate compiled plot=====================
 
 
-fig, axes = plt.subplots(3, 3, figsize=(12, 10))
-axes = axes.ravel()
+fig = plt.figure(figsize=(12, 10))
+gs1 = fig.add_gridspec(nrows=3, ncols=6)
+axA = fig.add_subplot(gs1[0, 0:2])
+axB = fig.add_subplot(gs1[0, 2:4])
+axC = fig.add_subplot(gs1[0, 4:6])
+axD = fig.add_subplot(gs1[1, 0:2])
+axE = fig.add_subplot(gs1[1, 2:4])
+axF = fig.add_subplot(gs1[1, 4:6])
+axG = fig.add_subplot(gs1[2, 0:3])
+axH = fig.add_subplot(gs1[2, 3:6])
+
 # --------Panel C--------
 scatbarplot_hue('spots_count', 'Number of spots',
-                palette_DL, axes[2], spots_summary, group_line_y=-0.115)
+                palette_DL, axC, spots_summary, group_line_y=-0.115)
 
 # --------Panel E--------
-multipanel_scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL, axes=axes[4], data=mean_intensity_plotting, left_lims=False, right_lims=False, group_line_y=-0.115)
-axes[4].axvline(0.5, linestyle='-', color='black')
+multipanel_scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL, axes=axE, data=mean_intensity_plotting, left_lims=False, right_lims=False, group_line_y=-0.115)
+axE.axvline(0.5, linestyle='-', color='black')
 
 # --------Panel F--------
 scatbarplot_hue(ycol='bright', ylabel='Proportion bright spots (%)',
-                palette=palette_DL, ax=axes[5], data=proportion_intensity_plotting,group_line_y=-0.115)
-axes[4].axvline(0.5, linestyle='-', color='black')
+                palette=palette_DL, ax=axF, data=proportion_intensity_plotting,group_line_y=-0.115)
+axF.axvline(0.5, linestyle='-', color='black')
 
 # --------Panel G--------
 ecfd_plot('norm_mean_intensity', 'Mean intensity (AU)',
-          palette, axes[6], fitted_ecdf_HT7)
+          palette, axG, fitted_ecdf_HT7)
 
 # --------Panel H--------
 ecfd_plot('norm_mean_intensity', 'Mean intensity (AU)',
-          palette, axes[7], fitted_ecdf_AT8)
+          palette, axH, fitted_ecdf_AT8)
 
 # Legend for G,H
-handles, labels = axes[7].get_legend_handles_labels()
+handles, labels = axH.get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
 simple_legend = {'AD': by_label['13'],
                  'CRL': by_label['9'], 'BSA': by_label['BSA']}
 
-axes[7].legend(simple_legend.values(), simple_legend.keys(),
+axG.legend(simple_legend.values(), simple_legend.keys(),
                loc='upper left')
-axes[6].legend(simple_legend.values(), simple_legend.keys(),
+axH.legend(simple_legend.values(), simple_legend.keys(),
                loc='upper left')
 
 plt.tight_layout()
+plt.show()
