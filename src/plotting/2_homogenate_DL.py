@@ -73,8 +73,8 @@ spots_HT7 = read_in(input_path_HT7, 'HT7')
 
 
 palette_DL = {
-    'CRL': 'royalblue',
-    'AD': 'firebrick',
+    'CRL': '#345995',
+    'AD': '#FB4D3D',
     'BSA': 'darkgrey',
 }
 
@@ -486,6 +486,7 @@ def scatbarplot_combined(ycol, ylabel, palette, ax, data, legend=False):
         ax=ax,
         dodge=True,
         order=order,
+        edgecolor='white'
     )
     sns.stripplot(
         data=data,

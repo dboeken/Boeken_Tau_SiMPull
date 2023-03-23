@@ -487,4 +487,7 @@ for i, (group, df) in enumerate(filtered_disease.groupby('capture')):
 cb = fig.colorbar(hexplot, cax=axes[2])
 cb.set_label('Intensity')
 plt.tight_layout()
+
+plt.savefig(f'{output_folder}stochiometry_coloc.svg')
+
 plt.show()
