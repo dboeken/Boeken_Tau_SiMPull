@@ -21,7 +21,7 @@ logger.info('Import OK')
 if os.path.exists('data/data_path.txt'):
     root_path = open('data/data_path.txt', 'r').readlines()[0]
 else:
-    rooth_path =''
+    root_path =''
 
 input_path = f'{root_path}data/homogenate_DL_data/'
 output_folder = f'{root_path}results/2_homogenate_DL/'
