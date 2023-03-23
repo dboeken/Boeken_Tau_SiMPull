@@ -7,16 +7,12 @@ import seaborn as sns
 from loguru import logger
 import matplotlib
 from statannotations.Annotator import Annotator
+import matplotlib.transforms as mtransforms
+
+from microfilm.microplot import microshow
+from skimage.io import imread
 
 logger.info('Import OK')
-
-##### TO DO
-# run code for both capture antibodies, for plotting only plot
-# AT8-AT8 and HT7-HT7
-#####
-# also do number of spots for AT8 AT8 and HT7 HT7
-# currently in prism
-#######
 
 if os.path.exists('data/data_path.txt'):
     root_path = open('data/data_path.txt', 'r').readlines()[0]
@@ -29,7 +25,7 @@ output_folder = f'{root_path}results/2_homogenate_DL/'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
-font = {'family': 'normal',
+font = {'family': 'arial',
         'weight': 'normal',
         'size': 12}
 matplotlib.rc('font', **font)
@@ -87,18 +83,13 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
     )
 
     ax.set(ylabel=ylabel, xlabel='')
-    pairs = [('AD', 'CRL'), ('AD', 'BSA'), ('CRL', 'BSA')]
+    pairs = [('AD', 'CRL')]
     annotator = Annotator(
         ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
     annotator.configure(test='t-test_ind', text_format='star',
-                        loc='outside', comparisons_correction='bonferroni')
+                        loc='inside')
     annotator.apply_and_annotate()
-
-    # handles, labels = plt.gca().get_legend_handles_labels()
-    # by_label = dict(zip(labels, handles))
-    # ax.legend(by_label.values(), by_label.keys(),
-    #                 bbox_to_anchor=(1.0, 1.0))
-    ax.legend('')
+    ax.legend('', frameon=False)
 
 
 def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
@@ -239,7 +230,7 @@ def ecfd_plot(ycol, ylabel, palette, ax, df):
         ci='sd',
         ax=ax)
 
-    ax.set(ylabel=ylabel, xlabel='')
+    ax.set(ylabel=ylabel, xlabel='Proportion of spots')
     ax.legend(frameon=False)
 
 
@@ -313,13 +304,6 @@ spots_HT7 = read_in(f'{input_path}HT7_capture_spots_per_fov.csv', 'HT7')
 spots_summary = pd.concat([spots_AT8, spots_HT7])
 spots_summary.to_csv(f'{output_folder}spots_count_summary.csv')
 
-palette_DL = {
-    'CRL': '#345995',
-    'AD': '#FB4D3D',
-    'BSA': 'darkgrey',
-}
-
-
 #brightness
 slide_params_AT8_path = f'{input_path}AT8_capture_slide_parameters.csv'
 slide_params_HT7_path = f'{input_path}HT7_capture_slide_parameters.csv'
@@ -333,17 +317,6 @@ HT7_spots_intensity = intensity_processing(
     slide_params_HT7_path, spots_intensity_HT7, 'HT7')
 HT7_spots_intensity['norm_mean_intensity'] = HT7_spots_intensity['mean_intensity'] / 1000
 ######brightness
-palette = {
-    '9': 'royalblue',
-    '159': 'royalblue',
-    '28': 'royalblue',
-    '13': 'firebrick',
-    '55': 'firebrick',
-    '246': 'firebrick',
-    'BSA': 'lightgrey',
-    'AD Mix': 'darkgrey',
-
-}
 
 
 fitted_ecdf_HT7 = fitting_ecfd_for_plotting(HT7_spots_intensity, 'HT7', 15, col='norm_mean_intensity')
@@ -376,6 +349,7 @@ thresholds = {'AT8': 500, 'HT7': 2000}
 compiled_spots['bright_cat'] = ['bright' if val > thresholds[detect] else 'dim' for val, detect in compiled_spots[['mean_intensity', 'detect']].values]
 
 proportion_intensity = (compiled_spots.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'layout', 'bright_cat']).count()['label'] / compiled_spots.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'layout']).count()['label']).reset_index()
+proportion_intensity['label'] = proportion_intensity['label'] * 100
 proportion_intensity = pd.pivot(
     proportion_intensity,
     index=['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'layout'],
@@ -387,32 +361,84 @@ proportion_intensity_plotting = proportion_intensity.groupby(['capture', 'sample
 
 proportion_intensity.to_csv(f'{output_folder}proportion_intensity_per_replicate.csv')
 
+
+# -----------------Read in example images-----------------
+
+example_AD = imread(f'{root_path}data/homogenate_DL_images/X8Y2R2W2_641.tif')
+example_CRL = imread(f'{root_path}data/homogenate_DL_images/X1Y0R4W2_641.tif')
+# Max mean projection
+example_AD = np.mean(example_AD[10:, :, :], axis=0)
+example_CRL = np.mean(example_CRL[10:, :, :], axis=0)
+
+
 # =====================Generate compiled plot=====================
 
+palette = {
+    '9': '#345995',
+    '159': '#345995',
+    '28': '#345995',
+    '13': '#FB4D3D',
+    '55': '#FB4D3D',
+    '246': '#FB4D3D',
+    'BSA': 'lightgrey',
+    'AD Mix': 'darkgrey',
+
+}
+
+palette_DL = {
+    'CRL': '#345995',
+    'AD': '#FB4D3D',
+    'BSA': 'darkgrey',
+}
 
 fig = plt.figure(figsize=(12, 10))
-gs1 = fig.add_gridspec(nrows=3, ncols=6)
+gs1 = fig.add_gridspec(nrows=3, ncols=6, wspace=0.7, hspace=0.25)
 axA = fig.add_subplot(gs1[0, 0:2])
 axB = fig.add_subplot(gs1[0, 2:4])
 axC = fig.add_subplot(gs1[0, 4:6])
 axD = fig.add_subplot(gs1[1, 0:2])
-axE = fig.add_subplot(gs1[1, 2:4])
+axE1 = fig.add_subplot(gs1[1, 2:3])
+axE2 = fig.add_subplot(gs1[1, 3:4])
 axF = fig.add_subplot(gs1[1, 4:6])
 axG = fig.add_subplot(gs1[2, 0:3])
 axH = fig.add_subplot(gs1[2, 3:6])
 
+for ax, label in zip([axA, axB, axC, axD, axE1, axF, axG, axH], ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']):
+    # label physical distance to the left and up:
+    trans = mtransforms.ScaledTranslation(-40/72, -11/72, fig.dpi_scale_trans)
+    ax.text(0.0, 1.0, label, transform=ax.transAxes + trans,
+            fontsize=16, va='bottom', fontweight='bold')
+    
+# --------Panel A--------
+microim1 = microshow(images=[example_AD],
+                               cmaps=['Greys'], flip_map=[True],
+                               label_color='black', ax=axA,
+                               unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,
+                               rescale_type='limits', limits=[400, 1000])
+axA.set_title('AD')
+# --------Panel B--------
+microim1 = microshow(images=[example_CRL],
+                               cmaps=['Greys'], flip_map=[True],
+                               label_color='black', ax=axB,
+                               unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,
+                               rescale_type='limits', limits=[400, 1000])
+axB.set_title('CRL')
+    
 # --------Panel C--------
 scatbarplot_hue('spots_count', 'Number of spots',
-                palette_DL, axC, spots_summary, group_line_y=-0.115)
+                palette_DL, axC, spots_summary, group_line_y=-0.142, group_label_y=-0.23)
+
+# --------Panel D--------
+axD.axis('off')
 
 # --------Panel E--------
-multipanel_scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL, axes=axE, data=mean_intensity_plotting, left_lims=False, right_lims=False, group_line_y=-0.115)
-axE.axvline(0.5, linestyle='-', color='black')
+scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL, ax=axE1, data=mean_intensity_plotting[mean_intensity_plotting['detect'] == 'AT8'])
+axE1.set_title('AT8')
+scatbarplot(ycol='norm_mean_intensity', ylabel='', palette=palette_DL, ax=axE2, data=mean_intensity_plotting[mean_intensity_plotting['detect'] == 'HT7'])
+axE2.set_title('HT7')
 
 # --------Panel F--------
-scatbarplot_hue(ycol='bright', ylabel='Proportion bright spots (%)',
-                palette=palette_DL, ax=axF, data=proportion_intensity_plotting,group_line_y=-0.115)
-axF.axvline(0.5, linestyle='-', color='black')
+scatbarplot_hue(ycol='bright', ylabel='Bright spots (%)', palette=palette_DL, ax=axF, data=proportion_intensity_plotting, group_line_y=-0.142, group_label_y=-0.23)
 
 # --------Panel G--------
 ecfd_plot('norm_mean_intensity', 'Mean intensity (AU)',
@@ -429,9 +455,9 @@ simple_legend = {'AD': by_label['13'],
                  'CRL': by_label['9'], 'BSA': by_label['BSA']}
 
 axG.legend(simple_legend.values(), simple_legend.keys(),
-               loc='upper left')
+               loc='upper left', frameon=False)
 axH.legend(simple_legend.values(), simple_legend.keys(),
-               loc='upper left')
+               loc='upper left', frameon=False)
 
 plt.tight_layout()
 plt.show()
