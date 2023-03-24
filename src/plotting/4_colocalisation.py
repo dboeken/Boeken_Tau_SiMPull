@@ -485,25 +485,25 @@ fig, axes = plt.subplots(1, 3, figsize=(10, 4), gridspec_kw={
 
 filtered_disease = for_plotting[for_plotting['disease_state'] == 'AD'].copy()
 
-for i, (group, df) in enumerate(filtered_disease.groupby('capture')):
-    # add hex bin, with optional variable assignment to enable colorbar creation
-    hexplot = axes[i].hexbin(
-        data=df, x='mean_intensity_641', y='mean_intensity_488', cmap=cm, vmin=0, vmax=900)
-    # Add kde
-    sns.kdeplot(data=df, x='mean_intensity_641', y='mean_intensity_488', color='darkgrey',
-                linestyles='--', levels=np.arange(0, 1, 0.2), ax=axes[i])
-    # Adjust the usual things
-    axes[i].set_xlim(0, 9000)
-    axes[i].set_ylim(0, 3000)
-    axes[i].set_title(f'AD {group}')
-    # add a shared colorbar in the last axes
-cb = fig.colorbar(hexplot, cax=axes[2])
-cb.set_label('Intensity')
-plt.tight_layout()
+# for i, (group, df) in enumerate(filtered_disease.groupby('capture')):
+#     # add hex bin, with optional variable assignment to enable colorbar creation
+#     hexplot = axes[i].hexbin(
+#         data=df, x='mean_intensity_641', y='mean_intensity_488', cmap=cm, vmin=0, vmax=900)
+#     # Add kde
+#     sns.kdeplot(data=df, x='mean_intensity_641', y='mean_intensity_488', color='darkgrey',
+#                 linestyles='--', levels=np.arange(0, 1, 0.2), ax=axes[i])
+#     # Adjust the usual things
+#     axes[i].set_xlim(0, 9000)
+#     axes[i].set_ylim(0, 3000)
+#     axes[i].set_title(f'AD {group}')
+#     # add a shared colorbar in the last axes
+# cb = fig.colorbar(hexplot, cax=axes[2])
+# cb.set_label('Intensity')
+# plt.tight_layout()
 
-plt.savefig(f'{output_folder}stochiometry_coloc.svg')
+# plt.savefig(f'{output_folder}stochiometry_coloc.svg')
 
-plt.show()
+# plt.show()
 
 ##########
 
@@ -654,13 +654,15 @@ cm = ListedColormap(new_colors)
 def hexbinplotting(ylabel, colour, ax, data, capture):
 
     df = data[data['capture'] == capture].copy()
-    ax.hexbin(data=df, x='mean_intensity_641',
+    hexs = ax.hexbin(data=df, x='mean_intensity_641',
               y='mean_intensity_488', cmap=colour, vmin=0, vmax=900)
     ax.set(ylabel=ylabel)
-    sns.kdeplot(data=df, x='mean_intensity_641', y='mean_intensity_488', color='darkgrey',
-                linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
+    sns.kdeplot(data=df, x='mean_intensity_641', y='mean_intensity_488', color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
+
     ax.set_xlim(0, 9000)
     ax.set_ylim(0, 3000)
+
+    return hexs
 
 
 AT8_mean_for_plotting_proportion = mean_for_plotting_proportion[mean_for_plotting_proportion['capture']=='AT8'].copy()
@@ -691,12 +693,22 @@ brightness_ratio_stats['significance'] = ['****' if val < 0.0001 else ('***' if 
 
 fig, axes = plt.subplots(2, 3, figsize=(12, 6))
 axes = axes.ravel()
+plt.subplots_adjust(left=None, bottom=None, right=None,
+                top=None, wspace=0.7, hspace=0.1)
 
-scatbarplot_hue('proportion_coloc', 'Proportion colocalised',
+
+for x, label in enumerate(['A', 'B', 'C', 'D', 'E', 'F']):
+    # label physical distance to the left and up:
+    trans = mtransforms.ScaledTranslation(-0.6, 0., fig.dpi_scale_trans)
+    axes[x].text(0.0, 1.0, label, transform=axes[x].transAxes + trans,
+            fontsize=16, va='bottom', fontweight='bold')
+
+
+scatbarplot_hue('proportion_coloc', 'Colocalised [%]',
                 palette_DL, axes[1], AT8_mean_for_plotting_proportion, group_line_y=-0.2, group_label_y=-0.3)
 axes[1].set_ylim(0, 110)
 
-scatbarplot_hue('proportion_coloc', 'Proportion colocalised',
+scatbarplot_hue('proportion_coloc', 'Colocalised [%]',
                 palette_DL, axes[2], T181_mean_for_plotting_proportion, group_line_y=-0.2, group_label_y=-0.3)
 
 axes[2].set_ylim(0, 110)
@@ -707,11 +719,16 @@ scatbarplot_hue_intensity('intensity_ratio', 'Intensity Ratio',
 axes[3].set_ylim(0, 2.6)
 axes[3].axhline(1, linestyle='--', linewidth=1.2, color='#4c4c52')
 
-# hexbinplotting('mean intensity 488', cm, 
-#                axes[4], filtered_disease, 'AT8')
+hexs4 = hexbinplotting('mean intensity 488', cm, 
+               axes[4], filtered_disease, 'AT8')
+plt.colorbar(hexs4, ax=axes[4])
 
-# hexbinplotting('mean intensity 488', cm,
-#                axes[5], filtered_disease, 'T181')
+hexs5 = hexbinplotting('mean intensity 488', cm,
+               axes[5], filtered_disease, 'T181')
+plt.colorbar(hexs5, ax=axes[5])
+
+# cb = fig.colorbar(ax=axes[5])
+# cb.set_label('Count')
 
 plt.tight_layout()
 
