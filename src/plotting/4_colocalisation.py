@@ -553,6 +553,11 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
         dodge=True,
     )
 
+    #add by chance lines by disease state
+    for disease, df2 in data.groupby('disease_state'):
+        ax.axhline(df2['chance_proportion_coloc'].mean(),
+                   linestyle=linestyles[disease], linewidth=1.2, color='#4c4c52')
+
     pairs = [((641, 'AD'), (641, 'CRL')), ((488, 'AD'), (488, 'CRL'))]
     annotator = Annotator(
         ax=ax, pairs=pairs, data=data, x='channel', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
@@ -565,7 +570,8 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
     ax.set_xlabel('')
     ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
     ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
-
+    ax.set_yticks([0, 25, 50, 75, 100])
+    ax.set_yticklabels(['0', '25', '50', '75', '100'])
     ax.annotate('AT8', xy=(0.25, group_label_y),
                 xycoords='axes fraction', ha='center')
     ax.annotate('T181', xy=(0.75, group_label_y),
@@ -579,7 +585,7 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
     ax.legend('', frameon=False)
 
 
-def scatbarplot_hue_intensity(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
+def scatbarplot_hue_intensity(ycol, ylabel, palette, ax, data, stats_df, group_label_y=-0.18, group_line_y=-0.05,):
     order = ['AT8', 'T181']
     hue_order = [641, 488]
     sns.barplot(
@@ -611,17 +617,19 @@ def scatbarplot_hue_intensity(ycol, ylabel, palette, ax, data, group_label_y=-0.
         dodge=True,
     )
 
-    # pairs = [(('AT8', 488), ('AT8', 641)), ]
-    # annotator = Annotator(
-    #     ax=ax, pairs=pairs, data=data, x='capture', y=ycol, order=order, hue='channel', hue_order=hue_order)
-    # annotator.configure(test='t-test_ind', text_format='star',
-    #                     loc='inside')
-    # annotator.apply_and_annotate()
+    for i, capture in enumerate(order):
+        for detect in hue_order:
+            star = stats_df[(stats_df['capture'] == capture) & (stats_df['channel'] == detect)]['significance'].tolist()[0]
+            j = -0.2 if detect == 641 else 0.2
+            ax.annotate(star, xy=(i+j, 2.2),
+                    xycoords='data', ha='center')
+
 
     ax.set(ylabel=ylabel)
-
+    ax.set_yticks([0, 0.5, 1, 1.5, 2, 2.5])
+    ax.set_yticklabels(['0', '0.5', '1', '1.5', '2', '2.5'])
     ax.set_xlabel('')
-    ax.set_xticks([-0.25, 0.25, 0.75, 1.25])
+    ax.set_xticks([-0.2, 0.2, 0.8, 1.2])
     ax.set_xticklabels(['AT8', 'T181', 'AT8', 'T181'])
 
     ax.annotate('AT8', xy=(0.25, group_label_y),
@@ -666,34 +674,47 @@ AD_brightness_plotting = AD_brightness_per_replicate.groupby(
     ['capture', 'sample', 'channel', 'disease_state']).mean().reset_index()
 
 
+brightness_ratio_pval = []
+for (capture, channel), df in AD_brightness_plotting.groupby(['capture', 'channel']):
+    _, pval = stats.ttest_1samp(df['intensity_ratio'], popmean=1)
+    brightness_ratio_pval.append([capture, channel, pval])
+# make new df with channel, capture, p value and star rating
+brightness_ratio_stats = pd.DataFrame(brightness_ratio_pval, columns=[
+    'capture', 'channel', 'pval'])
+brightness_ratio_stats['significance'] = ['****' if val < 0.0001 else ('***' if val < 0.001 else (
+    '**' if val < 0.01 else ('*' if val < 0.05 else 'ns')))for val in brightness_ratio_stats['pval']]
 
-fig, axes = plt.subplots(2, 3, figsize=(20, 10))
+
+
+
+
+
+fig, axes = plt.subplots(2, 3, figsize=(12, 6))
 axes = axes.ravel()
 
-scatbarplot_hue('proportion_coloc', 'Proportion of colocalised spots',
-                palette_DL, axes[1], AT8_mean_for_plotting_proportion, group_line_y=-0.131, group_label_y=-0.2)
+scatbarplot_hue('proportion_coloc', 'Proportion colocalised',
+                palette_DL, axes[1], AT8_mean_for_plotting_proportion, group_line_y=-0.2, group_label_y=-0.3)
+axes[1].set_ylim(0, 110)
 
-scatbarplot_hue('proportion_coloc', 'Proportion of colocalised spots',
-                palette_DL, axes[2], T181_mean_for_plotting_proportion, group_line_y=-0.131, group_label_y=-0.2)
+scatbarplot_hue('proportion_coloc', 'Proportion colocalised',
+                palette_DL, axes[2], T181_mean_for_plotting_proportion, group_line_y=-0.2, group_label_y=-0.3)
 
-axes[2].set_ylim(0, 100)
+axes[2].set_ylim(0, 110)
 
 scatbarplot_hue_intensity('intensity_ratio', 'Intensity Ratio',
-                          palette_coloc, axes[3], AD_brightness_plotting, group_line_y=-0.131, group_label_y=-0.2)
+                          palette_coloc, axes[3], AD_brightness_plotting, brightness_ratio_stats, group_line_y=-0.2, group_label_y=-0.3)
 
-hexbinplotting('mean intensity 488', cm, 
-               axes[4], filtered_disease, 'AT8')
+axes[3].set_ylim(0, 2.6)
+axes[3].axhline(1, linestyle='--', linewidth=1.2, color='#4c4c52')
 
-hexbinplotting('mean intensity 488', cm,
-               axes[5], filtered_disease, 'T181')
+# hexbinplotting('mean intensity 488', cm, 
+#                axes[4], filtered_disease, 'AT8')
+
+# hexbinplotting('mean intensity 488', cm,
+#                axes[5], filtered_disease, 'T181')
 
 plt.tight_layout()
 
-
-for (capture, channel), df in AD_brightness_plotting.groupby(['capture', 'channel']):
-    print(stats.ttest_1samp(df['intensity_ratio'], popmean=1))
-    
-# make new df with channel, capture, p value and star rating
 
 
 
