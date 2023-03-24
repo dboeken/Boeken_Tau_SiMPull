@@ -654,13 +654,13 @@ cm = ListedColormap(new_colors)
 def hexbinplotting(ylabel, colour, ax, data, capture):
 
     df = data[data['capture'] == capture].copy()
-    hexs = ax.hexbin(data=df, x='mean_intensity_641',
-              y='mean_intensity_488', cmap=colour, vmin=0, vmax=900)
+    hexs = ax.hexbin(data=df, x='norm_mean_intensity_641',
+              y='norm_mean_intensity_488', cmap=colour, vmin=0, vmax=900)
     ax.set(ylabel=ylabel)
-    sns.kdeplot(data=df, x='mean_intensity_641', y='mean_intensity_488', color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
+    sns.kdeplot(data=df, x='norm_mean_intensity_641', y='norm_mean_intensity_488', color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
 
-    ax.set_xlim(0, 9000)
-    ax.set_ylim(0, 3000)
+    ax.set_xlim(0, 9)
+    ax.set_ylim(0, 3)
 
     return hexs
 
@@ -674,6 +674,12 @@ AD_brightness_per_replicate = for_plotting_intensity[for_plotting_intensity['sam
 
 AD_brightness_plotting = AD_brightness_per_replicate.groupby(
     ['capture', 'sample', 'channel', 'disease_state']).mean().reset_index()
+
+
+filtered_disease['norm_mean_intensity_488'] = filtered_disease['mean_intensity_488'] / 1000
+
+filtered_disease['norm_mean_intensity_641'] = filtered_disease['mean_intensity_641'] / 1000
+
 
 
 brightness_ratio_pval = []
@@ -721,20 +727,16 @@ axes[3].axhline(1, linestyle='--', linewidth=1.2, color='#4c4c52')
 
 hexs4 = hexbinplotting('mean intensity 488', cm, 
                axes[4], filtered_disease, 'AT8')
-plt.colorbar(hexs4, ax=axes[4])
+cb=plt.colorbar(hexs4, ax=axes[4])
+cb.set_label('Count')
 
 hexs5 = hexbinplotting('mean intensity 488', cm,
                axes[5], filtered_disease, 'T181')
-plt.colorbar(hexs5, ax=axes[5])
 
-# cb = fig.colorbar(ax=axes[5])
-# cb.set_label('Count')
+cb=plt.colorbar(hexs5, ax=axes[5])
+cb.set_label('Count')
 
 plt.tight_layout()
 
 
 
-
-AD_brightness_per_replicate['intensity_ratio']
-
-stats.ttest_1samp(AD_brightness_per_replicate['intensity_ratio'], popmean=1)
