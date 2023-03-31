@@ -18,7 +18,14 @@ import seaborn as sns
 from loguru import logger
 logger.info('Import OK')
 
-input_path = 'data/homogenate_SR_data/properties_compiled.csv'
+data_path = 'data/data_path.txt'
+
+if os.path.exists(data_path):
+    root_path = open(data_path, 'r').readlines()[0]
+else:
+    root_path = ''
+
+input_path = f'{root_path}data/homogenate_SR_data/properties_compiled.csv'
 #input_samplemap = 'raw_data/sample_map.csv'
 output_folder = 'results/super-res/summary/'
 
@@ -169,7 +176,7 @@ for_plotting = for_plotting[for_plotting['detect']=='AT8'].copy()
 
 
 ### Mean length >30 nm
-for_plotting_30nm = for_plotting[for_plotting['smoothed_length'] > 30].copy()
+for_plotting_30nm = for_plotting[for_plotting['smoothed_length'] > 50].copy()
 
 for_plotting_30nm_per_replicate = for_plotting_30nm.groupby(['disease_state', 'sample',
                                     'capture', 'well_info', 'detect']).mean().reset_index()
@@ -179,6 +186,13 @@ for_plotting_30nm_mean = for_plotting_30nm_per_replicate.groupby(['disease_state
 
 
 ### Mean area 
+for_plotting = properties[
+    (~properties['sample'].isin(['BSA', 'IgG'])) &
+    (properties['prop_type'] == 'cluster')
+].copy()
+
+for_plotting = for_plotting[for_plotting['detect'] == 'AT8'].copy()
+
 for_plotting['scaled_area'] = for_plotting['area'] * (107/8)**2
 for_plotting_area_per_replicate = for_plotting.groupby(['disease_state', 'sample',
                                     'capture', 'well_info', 'detect']).mean().reset_index()
@@ -209,7 +223,7 @@ proportion_length_plotting = proportion_length.groupby(
 
 
 # Calculate proportion of spots > threshold intensity
-thresholds = 4000
+thresholds = 200
 for_plotting['large_cat'] = ['large' if val > thresholds
                               else 'small' for val, detect in for_plotting[['scaled_area', 'detect']].values]
 
