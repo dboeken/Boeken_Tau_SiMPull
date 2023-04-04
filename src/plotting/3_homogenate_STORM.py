@@ -105,6 +105,73 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
     ax.legend('', frameon=False)
 
 
+def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
+    order = ['fibril', 'round']
+    hue_order = ['AD', 'CRL']
+    sns.barplot(
+        data=data,
+        x='ecc_cat',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        capsize=0.2,
+        errwidth=2,
+        ax=ax,
+        dodge=True,
+        order=order,
+        hue_order=hue_order,
+        edgecolor='white'
+    )
+    sns.stripplot(
+        data=data,
+        x='ecc_cat',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        ax=ax,
+        edgecolor='#fff',
+        linewidth=1,
+        s=15,
+        order=order,
+        hue_order=hue_order,
+        dodge=True,
+    )
+
+    # add by chance lines by disease state
+    # for disease, df2 in data.groupby('disease_state'):
+    #     ax.axhline(df2['chance_proportion_coloc'].mean(),
+    #                linestyle=linestyles[disease], linewidth=1.2, color='#4c4c52')
+
+    pairs = [(('fibril', 'AD'), ('round', 'AD')),
+             (('fibril', 'CRL'), ('round', 'CRL')), (('fibril', 'AD'), ('fibril', 'CRL'),)]
+    annotator = Annotator(
+        ax=ax, pairs=pairs, data=data, x='ecc_cat', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
+    annotator.configure(test='t-test_ind', text_format='star',
+                        loc='inside')
+    annotator.apply_and_annotate()
+
+    ax.set(ylabel=ylabel)
+
+    # ax.set_xlabel('')
+    # ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
+    # ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
+    # ax.set_yticks([0, 25, 50, 75, 100])
+    # ax.set_yticklabels(['0', '25', '50', '75', '100'])
+    # ax.annotate('AT8', xy=(0.25, group_label_y),
+    #             xycoords='axes fraction', ha='center')
+    # ax.annotate('T181', xy=(0.75, group_label_y),
+    #             xycoords='axes fraction', ha='center')
+    # trans = ax.get_xaxis_transform()
+    # ax.plot([-0.25, 0.25], [group_line_y, group_line_y],
+    #         color="black", transform=trans, clip_on=False)
+    # ax.plot([0.75, 1.25], [group_line_y, group_line_y],
+    #         color="black", transform=trans, clip_on=False)
+
+    ax.legend('', frameon=False)
+
+
+
+
 def fit_ecdf(x):
     x = np.sort(x)
 
@@ -122,11 +189,12 @@ def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
     test_vals['type'] = 'interpolated'
     interpolated = test_vals.copy()
     for col in value_cols:
-        test_df = df.dropna().drop_duplicates(subset=[col])
+        test_df = df.dropna(subset=[col])
         ecdf = fit_ecdf(test_df[col])
         test_df['ecdf'] = ecdf(
-            test_df.dropna().drop_duplicates(subset=[col])[col])
-        combined = pd.concat([test_df.sort_values('ecdf').dropna(), test_vals])
+            test_df.dropna(subset=[col])[col])
+        combined = pd.concat([test_df.sort_values(
+            'ecdf').dropna(subset=[col]), test_vals])
         combined = combined.set_index('ecdf').interpolate(
             method=method, order=order).reset_index()
         interpolated[col] = combined[combined['type'] == 'interpolated'].copy()[
@@ -135,15 +203,16 @@ def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
     return interpolated
 
 
-def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col='mean_intensity'):
+def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col):
     fitted_ecdfs = []
-    for (capture, sample, position), df in df_intensity.groupby(['capture', 'sample', 'slide_position']):
-        filtered_df = df[df[col] < maxval]
+    for (sample, disease_state), df in df_intensity.groupby(['sample', 'disease_state']):
+        filtered_df = df[df[col] < maxval].copy()
         fitted_ecdf = sample_ecdf(filtered_df, value_cols=[
             col], method='nearest', order=False)
         fitted_ecdf['sample'] = sample
-        fitted_ecdf['capture'] = capture
-        fitted_ecdf['slide_position'] = position
+        fitted_ecdf['disease_state'] = disease_state
+        # fitted_ecdf['capture'] = capture
+        # fitted_ecdf['slide_position'] = position
         fitted_ecdf['detect'] = detect
         fitted_ecdfs.append(fitted_ecdf)
 
@@ -151,12 +220,14 @@ def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col='mean_intensity'
     return fitted_ecdfs
 
 
+
+
 def ecfd_plot(ycol, ylabel, palette, ax, df):
     sns.lineplot(
         data=df.reset_index(),
         y=ycol,
         x='ecdf',
-        hue='sample',
+        hue='disease_state',
         palette=palette,
         ci='sd',
         ax=ax)
@@ -169,46 +240,35 @@ def ecfd_plot(ycol, ylabel, palette, ax, df):
 # remove things outside range of interest
 for_plotting = properties[
     (~properties['sample'].isin(['BSA', 'IgG'])) &
-    (properties['prop_type'] == 'smooth')
+    (properties['prop_type'] == 'smooth') &
+    (properties['detect'] == 'AT8') &
+    (properties['smoothed_length'] > 50) &
+    (properties['area'] > 2) 
 ].copy()
-
-for_plotting = for_plotting[for_plotting['detect']=='AT8'].copy()
-
-
-### Mean length >30 nm
-for_plotting_30nm = for_plotting[for_plotting['smoothed_length'] > 50].copy()
-
-for_plotting_30nm_per_replicate = for_plotting_30nm.groupby(['disease_state', 'sample',
-                                    'capture', 'well_info', 'detect']).mean().reset_index()
-
-for_plotting_30nm_mean = for_plotting_30nm_per_replicate.groupby(['disease_state', 'sample',
-                                    'capture', 'detect']).mean().reset_index()
-
-
-### Mean area 
-for_plotting = properties[
-    (~properties['sample'].isin(['BSA', 'IgG'])) &
-    (properties['prop_type'] == 'cluster')
-].copy()
-
-for_plotting = for_plotting[for_plotting['detect'] == 'AT8'].copy()
 
 for_plotting['scaled_area'] = for_plotting['area'] * (107/8)**2
-for_plotting_area_per_replicate = for_plotting.groupby(['disease_state', 'sample',
-                                    'capture', 'well_info', 'detect']).mean().reset_index()
+for_plotting['scaled_perimeter'] = for_plotting['perimeter'] * (107/8)
 
-for_plotting_area_mean = for_plotting_area_per_replicate.groupby(['disease_state', 'sample',
-                                    'capture', 'detect']).mean().reset_index()
+### Mean length >30 nm
+for_plotting_per_replicate = for_plotting.groupby(['disease_state', 'sample', 'capture', 'well_info', 'detect']).mean().reset_index()
+
+for_plotting_mean = for_plotting_per_replicate.groupby(['disease_state', 'sample','capture', 'detect']).mean().reset_index()
 
 
 ###
 # Calculate proportion of spots > threshold intensity
-thresholds = 130
-for_plotting_30nm['length_cat'] = ['long' if val > thresholds
-                                   else 'short' for val, detect in for_plotting_30nm[['smoothed_length', 'detect']].values]
+thresholds = {
+    'length': 200,
+    'scaled_area': 15000,
+    'eccentricity': 0.9, 
+    'perimeter': 550
+}
 
-proportion_length = (for_plotting_30nm.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'length_cat']).count(
-)['label'] / for_plotting_30nm.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
+for_plotting['length_cat'] = ['long' if val > thresholds['length']
+                                   else 'short' for val, detect in for_plotting[['smoothed_length', 'detect']].values]
+
+proportion_length = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'length_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
 proportion_length['label'] = proportion_length['label'] * 100
 proportion_length = pd.pivot(
     proportion_length,
@@ -223,18 +283,17 @@ proportion_length_plotting = proportion_length.groupby(
 
 
 # Calculate proportion of spots > threshold intensity
-thresholds = 200
-for_plotting['large_cat'] = ['large' if val > thresholds
-                              else 'small' for val, detect in for_plotting[['scaled_area', 'detect']].values]
+for_plotting['area_cat'] = ['large' if val > thresholds['scaled_area']
+                             else 'small' for val, detect in for_plotting[['scaled_area', 'detect']].values]
 
-proportion_size = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'large_cat']).count(
+proportion_size = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'area_cat']).count(
 )['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
 proportion_size['label'] = proportion_size['label'] * 100
 proportion_size = pd.pivot(
     proportion_size,
     index=['capture', 'sample', 'slide_position',
            'detect', 'disease_state'],
-    columns='large_cat',
+    columns='area_cat',
     values='label'
 ).fillna(0).reset_index()
 
@@ -242,39 +301,137 @@ proportion_size_plotting = proportion_size.groupby(
     ['capture', 'sample', 'detect', 'disease_state']).mean().reset_index()
 
 
+# perimeter ratio
+for_plotting['perimeter_cat'] = ['long' if val > thresholds['perimeter']
+                                 else 'short' for val, detect in for_plotting[['scaled_perimeter', 'detect']].values]
+
+proportion_perimeter = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'perimeter_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
+proportion_perimeter['label'] = proportion_perimeter['label'] * 100
+proportion_perimeter = pd.pivot(
+    proportion_perimeter,
+    index=['capture', 'sample', 'slide_position',
+           'detect', 'disease_state'],
+    columns='perimeter_cat',
+    values='label'
+).fillna(0).reset_index()
+
+proportion_perimeter_plotting = proportion_perimeter.groupby(
+    ['capture', 'sample', 'detect', 'disease_state']).mean().reset_index()
+
+
+
+#### calulcare proportion of fibrils
+
+for_plotting['ecc_cat'] = ['fibril' if val > thresholds['eccentricity']
+                              else 'round' for val, detect in for_plotting[['eccentricity', 'detect']].values]
+
+proportion_ecc = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
+proportion_ecc['label'] = proportion_ecc['label'] * 100
+proportion_ecc = pd.pivot(
+    proportion_ecc,
+    index=['capture', 'sample', 'slide_position',
+           'detect', 'disease_state'],
+    columns='ecc_cat',
+    values='label'
+).fillna(0).reset_index()
+
+proportion_ecc_plotting = proportion_ecc.groupby(
+    ['capture', 'sample', 'detect', 'disease_state']).mean().reset_index()
+
 
 
 #### ecdf
 
-fitted_ecdf_smoothed_length = fitting_ecfd_for_plotting(
-    for_plotting_30nm, 'AT8', 1000, col='smoothed_length')
+fitted_ecdf_area = fitting_ecfd_for_plotting(
+    for_plotting, 'AT8', 30000, col='scaled_area')
 
+fitted_ecdf_smoothed_length = fitting_ecfd_for_plotting(
+    for_plotting, 'AT8', 1000, col='smoothed_length')
+
+#### mean length/area of fibrils vs round
+
+whatever_per_replicate = for_plotting.groupby(
+    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter']].reset_index()
+
+whatever = for_plotting.groupby(
+    ['capture', 'sample', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter']].reset_index()
 
 
 
 
 # Make main figure
-fig, axes = plt.subplots(2, 3, figsize=(12, 6))
+fig, axes = plt.subplots(5, 3, figsize=(12, 18))
 axes = axes.ravel()
 plt.subplots_adjust(left=None, bottom=None, right=None,
                     top=None, wspace=0.7, hspace=0.1)
 
 
-scatbarplot('smoothed_length', 'Average length [nm])',
-            palette, axes[1], for_plotting_30nm_mean)
+scatbarplot('smoothed_length', 'Average length [nm]',
+            palette, axes[1], for_plotting_mean)
 
-scatbarplot('scaled_area', 'Mean area [nm$^2$])',
-            palette, axes[2], for_plotting_area_mean)
+scatbarplot('scaled_area', 'Mean area [nm$^2$]',
+            palette, axes[4], for_plotting_mean)
 
 ecfd_plot('smoothed_length', 'Length',
-          palette_repl, axes[3], fitted_ecdf_smoothed_length)
+          palette, axes[0], fitted_ecdf_smoothed_length)
 
+ecfd_plot('scaled_area', 'Area',
+          palette, axes[3], fitted_ecdf_area)
+#axes[3].set_ylim(0, 50000)
 
-scatbarplot('long', 'Long [%])',
-            palette, axes[4], proportion_length_plotting)
+scatbarplot('long', 'Long [%]',
+            palette, axes[2], proportion_length_plotting)
 
-scatbarplot('large', 'Large [%])',
+scatbarplot('large', 'Large [%]',
             palette, axes[5], proportion_size_plotting)
 
 
+scatbarplot('fibril', 'Fibrils [%]',
+            palette, axes[8], proportion_ecc_plotting)
 
+scatbarplot('eccentricity', 'Mean eccentricity',
+            palette, axes[7], for_plotting_mean)
+
+
+scatbarplot_hue(ycol='scaled_area', ylabel='area',
+                palette=palette, ax=axes[9], data=whatever)
+
+
+scatbarplot_hue(ycol='smoothed_length', ylabel='length',
+                palette=palette, ax=axes[10], data=whatever)
+
+scatbarplot_hue(ycol='smoothed_length', ylabel='perimeter',
+                palette=palette, ax=axes[11], data=whatever)
+
+
+scatbarplot('scaled_perimeter', 'Perimeter',
+            palette, axes[13], for_plotting_mean)
+
+scatbarplot('long', 'perimeter long [%]',
+            palette, axes[14], proportion_perimeter_plotting)
+
+
+
+plt.tight_layout()
+
+
+# # -------------------Cumulative distribution of length-------------------
+# # for_plotting = properties[
+# #     (~properties['sample'].isin(['BSA', 'IgG'])) &
+# #     (properties['prop_type'] == 'smooth')
+# # ].copy()
+# fig, axes = plt.subplots(1, 3, figsize=(20, 5))
+# for i, ((detect), df) in enumerate(for_plotting.groupby(['detect'])):
+#     sns.ecdfplot(
+#         data=df,
+#         x='scaled_area',
+#         hue='sample',
+#         # common_norm=False
+#         # palette=palette,
+#         ax=axes[i]
+#     )
+#     axes[i].set_xlabel('Particle length (nm)')
+#     #axes[i].set_title(f'{detect} {sample_type}')
+#     axes[i].legend('')
