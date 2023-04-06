@@ -277,8 +277,8 @@ axD.set_xlabel("")
 
 # scatbarplot('smoothed_length', 'Mean length [nm]',
 #             palette, axB1, for_plotting_mean)
-axB.set_title('Dimer')
-axC.set_title('Monomer')
+axB.set_title('Dimer', fontsize=8)
+axC.set_title('Monomer', fontsize=8)
 
 # scatbarplot('scaled_perimeter', 'Mean perimeter [nm]',
 #             palette, axB2, for_plotting_mean)

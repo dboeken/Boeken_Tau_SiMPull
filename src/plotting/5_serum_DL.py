@@ -349,8 +349,8 @@ plot_scatbar(data=SR_spots_mean, ycol='scaled_area', ylabel='Area (×10$^3$ nm$^
 
 # Plot LDA
 plot_lda(data=lda, palette=palette, hue='disease_state', style='tissue', ax=axC, s=100)
-axC.set(ylim=(-6, 6), xlim=(-12, 22))
-axC.legend(frameon=False, ncol=2, columnspacing=-0.1, loc='upper left', bbox_to_anchor=(-0.08, 1.1), handletextpad=0.2)
+axC.set(ylim=(-8, 8), xlim=(-22, 12))
+axC.legend(frameon=False, ncol=2, columnspacing=-0.1, loc='upper right', bbox_to_anchor=(1.05, 1.1), handletextpad=0.2)
 leg = axC.get_legend()
 new_labels = ['', 'AD', 'CRL', '', 'Homog.', 'Serum']
 for t, l in zip(leg.texts, new_labels):
