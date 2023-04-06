@@ -1,23 +1,15 @@
-from logging import captureWarnings
-from random import sample
-from statistics import mean
-import matplotlib
 import os
 import re
+import matplotlib
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-#from smma.src import visualise
-from loguru import logger
-from sklearn.decomposition import PCA
 from statannotations.Annotator import Annotator
-import matplotlib.transforms as mtransforms
-from microfilm.microplot import microshow
-from skimage.io import imread
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
-
-
+from loguru import logger
 logger.info('Import OK')
 
 if os.path.exists('data/data_path.txt'):
@@ -29,12 +21,13 @@ input_path_DL = f'{root_path}data/serum_DL_data/'
 input_path_SR = f'{root_path}data/serum_SR_data/'
 output_folder = f'{root_path}results/spot_detection/plot_summary/'
 
-# input_AT8 = '/Users/dorotheaboeken/Documents/GitHub/230112_serum_AT8/results/spot_detection/count_spots/spots_per_fov.csv'
-
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
+# input_AT8 = '/Users/dorotheaboeken/Documents/GitHub/230112_serum_AT8/results/spot_detection/count_spots/spots_per_fov.csv'
+
 font = {'family': 'normal',
+
         'weight': 'normal',
         'size': 12}
 matplotlib.rc('font', **font)
@@ -386,8 +379,7 @@ plt.tight_layout()
 
 
 ########
-from sklearn.decomposition import PCA
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
 # selecting super res data for dim reduction
 summary = SR_spots[(SR_spots['disease_state'].isin(['AD', 'CRL'])) & (SR_spots['capture'] == 'HT7') & (
     SR_spots['prop_type'] == 'smooth')].groupby(['capture', 'tissue', 'disease_state', 'sample']).mean().copy().reset_index()
