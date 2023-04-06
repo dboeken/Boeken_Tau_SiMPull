@@ -38,7 +38,7 @@ sample_dict = {'1': 'CRL', '2': 'CRL', 'BSA': 'BSA',
                '3': 'AD', '4': 'AD', '5': 'AD', '6': 'discard', '7': 'AD', '8': 'CRL', '9': 'AD', '10': 'AD', '11': 'AD', '12': 'CRL', '13': 'CRL', '15': 'AD', '16': 'CRL', '17': 'CRL', '18': 'CRL', '19': 'CRL', '20': 'AD'}
 
 
-def read_in(input_path, detect):
+def read_in(input_path, detect,):
     spots = pd.read_csv(f'{input_path}')
     spots.drop([col for col in spots.columns.tolist()
                 if 'Unnamed: ' in col], axis=1, inplace=True)
@@ -245,6 +245,73 @@ def plot_interpolated_ecdf(ycol, ylabel, properties, palette, for_plotting, samp
     return fig, axes
 
 
+def perform_lda(for_LDA, value_cols, category_col='key'):
+    # Select data columns (X) and category columns (Y)
+    X = for_LDA[value_cols].values
+    y = for_LDA[category_col].values
+
+    # fit LDA
+    lda = LinearDiscriminantAnalysis(n_components=2, solver='svd')
+    lda_model = lda.fit(X, y)
+
+    # Add LDA fit back to original data for plotting
+    for_LDA[['dim1', 'dim2']] = lda_model.transform(X)
+
+    return for_LDA, lda_model
+
+
+def visualise_scatter(for_LDA, palette, hue='ADStages', style='BrainRegion', ax=None, s=300):
+    if not ax:
+        fig, ax = plt.subplots(figsize=(6, 5.5))
+    sns.scatterplot(
+        data=for_LDA,
+        x='dim1',
+        y='dim2',
+        hue=hue,
+        style=style,
+        palette=palette,
+        s=s,
+        ax=ax
+    )
+
+    ax.legend(bbox_to_anchor=(1.0, 1.0))
+    ax.set_xlabel('Dimension 1')
+    ax.set_ylabel('Dimension 2')
+
+    return ax
+
+
+def visualise_eigens(model, X, labels=None, num_labels=5):
+
+    fitted = model.transform(X)
+    eigens = model.scalings_
+    xs = fitted[:, 0]
+    ys = fitted[:, 1]
+    n = eigens.shape[0]
+
+    dists = distance_eigens(model, labels=labels)
+
+    fig, ax = plt.subplots()
+    for i in range(n):
+        plt.arrow(0, 0, eigens[i, 0], eigens[i, 1],
+                  color='firebrick', linewidth=2)
+    if labels is not None:
+        for x, y, label in dists.sort_values('ori_dst', ascending=False).iloc[:num_labels][['xpos', 'ypos', 'label']].values:
+            plt.text((x) * 1.15, y * 1.15, label,
+                     color='firebrick', ha='center', va='center')
+
+    return fig, ax, dists
+
+
+def distance_eigens(model, labels):
+    eigens = model.scalings_
+    dist = pd.DataFrame([eigens[:, 0], eigens[:, 1]], index=['xpos', 'ypos']).T
+    dist['label'] = labels
+    dist['ori_dst'] = [distance.euclidean(
+        (xpos, ypos), (0, 0)) for xpos, ypos in dist[['xpos', 'ypos']].values]
+
+    return dist
+
 
 
 DL_spots_AT8 = read_in(f'{input_path_DL}AT8_spots_per_fov.csv', 'AT8')
@@ -381,69 +448,51 @@ plt.tight_layout()
 ########
 
 # selecting super res data for dim reduction
-summary = SR_spots[(SR_spots['disease_state'].isin(['AD', 'CRL'])) & (SR_spots['capture'] == 'HT7') & (
-    SR_spots['prop_type'] == 'smooth')].groupby(['capture', 'tissue', 'disease_state', 'sample']).mean().copy().reset_index()
-summary['key'] = summary['tissue'] + '_' + summary['disease_state']
-
+summary = SR_spots[
+    (SR_spots['disease_state'].isin(['AD', 'CRL'])) & 
+    (SR_spots['capture'] == 'HT7') & 
+    (SR_spots['prop_type'] == 'smooth')
+    ].copy()
 # map localisations from cluster to smoothed
 locs_dict = dict(SR_spots[SR_spots['prop_type'] ==
                  'cluster'][['key', '#locs']].values)
+summary['#locs'] = summary['key'].map(locs_dict)
+summary = summary.groupby(['capture', 'tissue', 'disease_state', 'sample']).mean().copy().reset_index()
 
-# Collect diff limited data for serum
-
-HT7_DL = pd.read_csv('results/2_homogenate_DL/spots_count_summary.csv')
-
+summary['key'] = summary['tissue'] + '_' + summary['disease_state'] + '_' + summary['sample']
 
 # Collect diff limited data for brain
+brain_DL = pd.read_csv(f'{root_path}results/2_homogenate_DL/spots_count_summary.csv')
+brain_DL.drop([col for col in brain_DL.columns.tolist() if 'Unnamed: ' in col], axis=1, inplace=True)
+brain_DL['key'] = 'brain_' + brain_DL['disease_state'] + '_' + brain_DL['sample']
 
+# Collect diff limited data for serum
+serum_DL = pd.read_csv(f'{input_path_DL}HT7_spots_per_fov.csv')
+serum_DL.drop([col for col in serum_DL.columns.tolist() if 'Unnamed: ' in col], axis=1, inplace=True)
+serum_DL[['capture', 'sample', 'detect']] = serum_DL['sample'].str.split('_', expand=True)
+serum_DL['disease_state'] = serum_DL['sample'].astype(str).map(sample_dict)
+serum_DL = serum_DL[(serum_DL['detect'] == 'HT7') & ~(serum_DL['disease_state'].isin(['discard', 'IgG', 'BSA']))].copy()
+serum_DL = serum_DL.groupby(['disease_state', 'channel', 'sample', 'capture', 'detect']).mean().reset_index()
+serum_DL['key'] = 'serum_' + serum_DL['disease_state'] + '_' + serum_DL['sample']
 
 # merge super res and diff limited datasets
+DL_spots = pd.concat([brain_DL, serum_DL])
+DL_spots = DL_spots[DL_spots['detect'] == 'HT7'].copy()
+summary = pd.merge(summary, DL_spots[['key', 'spots_count']], on='key', how='left')
+summary['tissue'] = summary['key'].str.split('_').str[0]
+summary['category'] = summary['tissue'] + '_' + summary['disease_state']
 
 
 # Select columns for dim reduction
 group_cols = ['tissue', 'disease_state', 'sample']
 value_cols = ['area', 'eccentricity', 'perimeter',
-              'minor_axis_length', 'major_axis_length','smoothed_length']
-
-
-# Complete PCA
-X = summary.set_index(group_cols)[value_cols].values
-pca = PCA(n_components=2)
-pca.fit(X)
-print(pca.explained_variance_ratio_)
-print(pca.singular_values_)
-
-summary[['dim1', 'dim2']] = pca.transform(X)
-
-fig, ax = plt.subplots(figsize=(6, 5.5))
-sns.scatterplot(
-    data=summary,
-    x='dim1',
-    y='dim2',
-    hue='disease_state',
-    style='tissue',
-    palette=palette,
-    s=300
-)
-
-plt.legend(bbox_to_anchor=(1.0, 1.0))
-plt.xlabel('Dimension 1')
-plt.ylabel('Dimension 2')
-plt.show()
-
-
-# Comlete LDA
-X = summary[value_cols].values
-y = summary['key'].values
-lda = LinearDiscriminantAnalysis(n_components=2, solver='svd')
-lda_model = lda.fit(X, y)
-
-summary[['dim1', 'dim2']] = lda_model.transform(X)
+              'minor_axis_length', 'major_axis_length','smoothed_length', '#locs', 'spots_count']
+lda, model = perform_lda(summary, value_cols, category_col='category')
 
 
 fig, ax = plt.subplots(figsize=(6, 5.5))
 sns.scatterplot(
-    data=summary,
+    data=lda,
     x='dim1',
     y='dim2',
     hue='disease_state',
