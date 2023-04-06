@@ -388,26 +388,33 @@ plt.tight_layout()
 ########
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-
+# selecting super res data for dim reduction
 summary = SR_spots[(SR_spots['disease_state'].isin(['AD', 'CRL'])) & (SR_spots['capture'] == 'HT7') & (
     SR_spots['prop_type'] == 'smooth')].groupby(['capture', 'tissue', 'disease_state', 'sample']).mean().copy().reset_index()
 summary['key'] = summary['tissue'] + '_' + summary['disease_state']
 
+# map localisations from cluster to smoothed
+locs_dict = dict(SR_spots[SR_spots['prop_type'] ==
+                 'cluster'][['key', '#locs']].values)
+
+# Collect diff limited data for serum
+
+HT7_DL = pd.read_csv('results/2_homogenate_DL/spots_count_summary.csv')
+
+
+# Collect diff limited data for brain
+
+
+# merge super res and diff limited datasets
+
+
+# Select columns for dim reduction
 group_cols = ['tissue', 'disease_state', 'sample']
 value_cols = ['area', 'eccentricity', 'perimeter',
               'minor_axis_length', 'major_axis_length','smoothed_length']
 
-# Visualise pairplot for serum vs tissue
-sns.pairplot(
-    summary[value_cols+['key']], hue='key', palette={'serum_AD': '#9A031E', 'serum_CRL': '#16507E', 'brain_AD': '#5F0F40', 'brain_CRL': '#CBE3F6'})
-plt.show()
 
 # Complete PCA
-# summary = pd.pivot(summary, index=group_cols, columns=[
-#                    'capture'], values=value_cols).reset_index().dropna()
-# summary.columns = [f'{i}_{j}' if j !=
-#                    '' else f'{i}' for i, j in summary.columns]
-summary = summary[summary['disease_state'] == 'AD'].copy()
 X = summary.set_index(group_cols)[value_cols].values
 pca = PCA(n_components=2)
 pca.fit(X)
@@ -433,18 +440,36 @@ plt.ylabel('Dimension 2')
 plt.show()
 
 
-summary = summary[summary['disease_state'] == 'AD'].copy()
-X = summary.set_index(group_cols)[value_cols].values
+# Comlete LDA
+X = summary[value_cols].values
 y = summary['key'].values
 lda = LinearDiscriminantAnalysis(n_components=2, solver='svd')
-lda.fit(X, y)
+lda_model = lda.fit(X, y)
 
-summary[['dim1', 'dim2']] = lda.transform(X)
-
-
+summary[['dim1', 'dim2']] = lda_model.transform(X)
 
 
+fig, ax = plt.subplots(figsize=(6, 5.5))
+sns.scatterplot(
+    data=summary,
+    x='dim1',
+    y='dim2',
+    hue='disease_state',
+    style='tissue',
+    palette=palette,
+    s=300
+)
 
+plt.legend(bbox_to_anchor=(1.0, 1.0))
+plt.xlabel('Dimension 1')
+plt.ylabel('Dimension 2')
+plt.show()
+
+
+# Visualise pairplot for serum vs tissue
+sns.pairplot(
+    summary[value_cols+['key']], hue='key', palette={'serum_AD': '#9A031E', 'serum_CRL': '#16507E', 'brain_AD': '#5F0F40', 'brain_CRL': '#CBE3F6'})
+plt.show()
 
 
 
