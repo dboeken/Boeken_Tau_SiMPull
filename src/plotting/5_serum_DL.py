@@ -8,7 +8,7 @@ import seaborn as sns
 from statannotations.Annotator import Annotator
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-
+import matplotlib.transforms as mtransforms
 from loguru import logger
 logger.info('Import OK')
 
@@ -19,17 +19,19 @@ else:
 
 input_path_DL = f'{root_path}data/serum_DL_data/'
 input_path_SR = f'{root_path}data/serum_SR_data/'
-output_folder = f'{root_path}results/spot_detection/plot_summary/'
+output_folder = f'results/serum/'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
+    
 
 # input_AT8 = '/Users/dorotheaboeken/Documents/GitHub/230112_serum_AT8/results/spot_detection/count_spots/spots_per_fov.csv'
 
-font = {'family': 'normal',
+cm = 1 / 2.54
+font = {'family': 'arial',
 
         'weight': 'normal',
-        'size': 12}
+        'size': 8}
 matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
 
@@ -52,7 +54,7 @@ def read_in(input_path, detect,):
     filtered_spots['disease_state'] = filtered_spots['sample'].astype(
         str).map(sample_dict)
     
-    filtered_spots = filtered_spots[filtered_spots.disease_state != 'CRL']
+    # filtered_spots = filtered_spots[filtered_spots.disease_state != 'CRL']
 
     filtered_spots = filtered_spots[filtered_spots.disease_state != 'discard']
 
@@ -77,21 +79,8 @@ palette = {
 }
 
 
-palette_repl = {
-    '9': '#345995',
-    '159': '#345995',
-    '28': '#345995',
-    '13': '#FB4D3D',
-    '55': '#FB4D3D',
-    '246': '#FB4D3D',
-    'BSA': 'lightgrey',
-    'AD Mix': 'darkgrey',
-
-}
-
-
-def scatbarplot_DL(ycol, ylabel, palette, ax, data):
-    order = ['AD', 'BSA']
+def plot_scatbar_DL(ycol, ylabel, palette, ax, data):
+    order = ['AD', 'CRL', 'BSA']
     sns.barplot(
         data=data,
         x='disease_state',
@@ -113,12 +102,12 @@ def scatbarplot_DL(ycol, ylabel, palette, ax, data):
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=15,
+        s=10,
         order=order
     )
 
     ax.set(ylabel=ylabel, xlabel='')
-    pairs = [('AD', 'BSA')]
+    pairs = [('AD', 'CRL'), ('CRL', 'BSA'), ('AD', 'BSA')]
     annotator = Annotator(
         ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
     annotator.configure(test='t-test_ind', text_format='star',
@@ -127,7 +116,9 @@ def scatbarplot_DL(ycol, ylabel, palette, ax, data):
     ax.legend('', frameon=False)
 
 
-def scatbarplot(ycol, ylabel, palette, axes, i, sample_type, detect, data):
+def plot_scatbar(data, ycol, ylabel, palette, order, pairs, hue_order=None, ax=None, s=15):
+    if not ax:
+        fig, ax = plt.subplots()
     sns.barplot(
         data=data,
         x='disease_state',
@@ -136,9 +127,10 @@ def scatbarplot(ycol, ylabel, palette, axes, i, sample_type, detect, data):
         palette=palette,
         capsize=0.2,
         errwidth=2,
-        ax=axes[i],
+        ax=ax,
         dodge=False,
-        order=['AD', 'CRL']
+        order=order,
+        hue_order=hue_order
     )
     sns.stripplot(
         data=data,
@@ -146,103 +138,22 @@ def scatbarplot(ycol, ylabel, palette, axes, i, sample_type, detect, data):
         y=ycol,
         hue='disease_state',
         palette=palette,
-        ax=axes[i],
+        ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=15,
-        order=['AD', 'CRL']
+        s=s,
+        order=order,
+        hue_order=hue_order
     )
 
-    axes[i].set(ylabel=ylabel, xlabel='')
-    axes[i].set_title(f'{detect}: {sample_type}', y=1.1)
-    order = ['AD', 'CRL']
-    pairs = [('AD', 'CRL')]
+    ax.set(ylabel=ylabel, xlabel='')
     annotator = Annotator(
-        ax=axes[i], pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
+        ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
     annotator.configure(test='t-test_ind', text_format='star',
-                        loc='outside', comparisons_correction='bonferroni')
+                        loc='inside', comparisons_correction='bonferroni')
     annotator.apply_and_annotate()
 
-    if i == 2:
-        handles, labels = plt.gca().get_legend_handles_labels()
-        by_label = dict(zip(labels, handles))
-        axes[i].legend(by_label.values(), by_label.keys(),
-                       bbox_to_anchor=(1.0, 1.0))
-    else:
-        axes[i].legend('')
-
-
-def fit_ecdf(x):
-    x = np.sort(x)
-
-    def result(v):
-        return np.searchsorted(x, v, side='right') / x.size
-    return result
-
-
-def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
-    test_vals = pd.DataFrame(
-        np.arange(0, 1.01, (1/num_points)), columns=['ecdf'])
-    test_vals['type'] = 'interpolated'
-    interpolated = test_vals.copy()
-    for col in value_cols:
-        col
-        test_df = df.dropna(subset=[col])
-        ecdf = fit_ecdf(test_df[col])
-        test_df['ecdf'] = ecdf(
-            test_df.dropna(subset=[col])[col])
-        combined = pd.concat([test_df.sort_values(
-            'ecdf').dropna(subset=[col]), test_vals])
-        combined = combined.set_index('ecdf').interpolate(
-            method=method, order=order).reset_index()
-        interpolated[col] = combined[combined['type'] == 'interpolated'].copy()[
-            col].tolist()
-    return interpolated
-
-
-# interpolate ecdf for combined visualisation
-def plot_interpolated_ecdf(ycol, ylabel, properties, palette, for_plotting, sample_ecdf, max_vals=False):
-    fitted_ecdfs = []
-    for (sample_type, position, detect, sample), df in for_plotting.groupby(['sample_type', 'slide_position', 'detect', 'sample']):
-        if max_vals:
-            maxval = max_vals[detect]
-            filtered_df = df[df[ycol] < maxval].copy()
-        else:
-            filtered_df = df.copy()
-        fitted_ecdf = sample_ecdf(df=filtered_df, value_cols=[
-                                  ycol], method='nearest', order=False)
-        fitted_ecdf['sample'] = sample
-        fitted_ecdf['detect'] = detect
-        fitted_ecdf['slide_position'] = position
-        fitted_ecdf['sample_type'] = sample_type
-        fitted_ecdfs.append(fitted_ecdf)
-    fitted_ecdfs = pd.concat(fitted_ecdfs)
-
-    sample_palette = properties[[
-        'sample_type', 'sample', 'disease_state']].drop_duplicates().copy()
-    sample_palette['color'] = sample_palette['disease_state'].map(palette)
-    sample_palette['key'] = sample_palette['sample_type'] + \
-        '_' + sample_palette['sample']
-    sample_palette = dict(sample_palette[['key', 'color']].values)
-
-    fitted_ecdfs['key'] = fitted_ecdfs['sample_type'] + \
-        '_' + fitted_ecdfs['sample']
-
-    fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-    for i, ((detect, sample_type), df) in enumerate(fitted_ecdfs.groupby(['detect', 'sample_type'])):
-        sns.lineplot(
-            data=df.reset_index(),
-            y=ycol,
-            x='ecdf',
-            hue='key',
-            palette=sample_palette,
-            ci='sd',
-            ax=axes[i]
-        )
-
-        axes[i].set(title=f'{detect} {sample_type}',
-                    xlabel='Cumulative distribtion', ylabel=ylabel)
-    return fig, axes
+    ax.legend('', frameon=False)
 
 
 def perform_lda(for_LDA, value_cols, category_col='key'):
@@ -260,11 +171,11 @@ def perform_lda(for_LDA, value_cols, category_col='key'):
     return for_LDA, lda_model
 
 
-def visualise_scatter(for_LDA, palette, hue='ADStages', style='BrainRegion', ax=None, s=300):
+def plot_lda(data, palette, hue='disease_state', style='tissue', ax=None, s=300):
     if not ax:
         fig, ax = plt.subplots(figsize=(6, 5.5))
     sns.scatterplot(
-        data=for_LDA,
+        data=data,
         x='dim1',
         y='dim2',
         hue=hue,
@@ -274,14 +185,14 @@ def visualise_scatter(for_LDA, palette, hue='ADStages', style='BrainRegion', ax=
         ax=ax
     )
 
-    ax.legend(bbox_to_anchor=(1.0, 1.0))
     ax.set_xlabel('Dimension 1')
     ax.set_ylabel('Dimension 2')
+    # plt.legend(loc='upper left', ncol=2, columnspacing=0.1, title='')
 
     return ax
 
 
-def visualise_eigens(model, X, labels=None, num_labels=5):
+def plot_eigens(model, X, labels=None, num_labels=5):
 
     fitted = model.transform(X)
     eigens = model.scalings_
@@ -303,7 +214,7 @@ def visualise_eigens(model, X, labels=None, num_labels=5):
     return fig, ax, dists
 
 
-def distance_eigens(model, labels):
+def calculate_eigens(model, labels):
     eigens = model.scalings_
     dist = pd.DataFrame([eigens[:, 0], eigens[:, 1]], index=['xpos', 'ypos']).T
     dist['label'] = labels
@@ -313,172 +224,94 @@ def distance_eigens(model, labels):
     return dist
 
 
-
+# Read in diff limited data
 DL_spots_AT8 = read_in(f'{input_path_DL}AT8_spots_per_fov.csv', 'AT8')
 DL_spots_HT7 = read_in(f'{input_path_DL}HT7_spots_per_fov.csv', 'HT7')
 DL_spots_summary = pd.concat([DL_spots_AT8, DL_spots_HT7]).reset_index()
-
 DL_spots_summary.to_csv(f'{output_folder}DL_spots_count_summary.csv')
 
+# Read in super-res data
 SR_spots = pd.read_csv(
     f'{input_path_SR}properties_compiled.csv')
-
 SR_spots.drop([col for col in SR_spots.columns.tolist()
                 if 'Unnamed: ' in col], axis=1, inplace=True)
-
 SR_spots = SR_spots.dropna(subset=['label']).copy()
 
+# Map tissue types for SR data
 tissue_dict = {'2022-07-06_21-19-49': 'brain',
                '2023-03-02_14-31-20': 'serum', '2023-03-02_18-25-28': 'serum'}
 SR_spots['tissue'] = SR_spots['folder'].astype(
     str).map(tissue_dict)
 
+# Map sample IDs  for SR data
 serum_dict = {'1': 'CRL', '2': 'CRL', 'BSA': 'discard',
               '3': 'AD', '4': 'AD', '5': 'AD', '6': 'discard', '7': 'AD', '8': 'CRL', '9': 'AD', '10': 'AD', '11': 'discard', '12': 'CRL', '13': 'CRL', '15': 'AD', '16': 'CRL', '17': 'CRL', '18': 'CRL', '19': 'CRL', '20': 'AD', 'IgG': 'discard'}
 brain_dict = {'13': 'AD', '9': 'CRL', 'BSA': 'discard',
               '28': 'CRL', '159': 'CRL', '55': 'AD', '246': 'AD', 'IgG': 'discard'}
-
-
-
 SR_spots['sample'] = [str(int(float(sample))) if sample not in ['BSA', 'IgG'] else sample for sample in SR_spots['sample']]
 SR_spots['disease_state'] = [serum_dict[sample] if tissue == 'serum' else brain_dict[sample] for sample, tissue in SR_spots[['sample', 'tissue']].values]
 
+# Remove IgG, BSA, outlier sample
 SR_spots = SR_spots[SR_spots['disease_state']!= 'discard'].copy()
 
+# Assign categories based on thresholds for length, area, ecc
 SR_spots['length_cat'] = ['long' if length >
                           150 else 'short' for length in SR_spots['smoothed_length']]
-
 SR_spots['area_cat'] = ['large' if area >
                         4000 else 'small' for area in SR_spots['area']]
-
 SR_spots['ecc_cat'] = ['round' if ecc <
                        0.9 else 'fibrillar' for ecc in SR_spots['eccentricity']]
+SR_spots_mean = SR_spots[
+    (SR_spots['smoothed_length'] > 50) & 
+    (SR_spots['tissue'] == 'serum')
+    ].groupby(['sample', 'detect', 'folder', 'well_info', 'tissue', 'disease_state']).mean().reset_index().groupby(['sample', 'tissue', 'disease_state']).mean().reset_index()
 
-
-
-#plot DL
-
-
-fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-axes = axes.ravel()
-plt.subplots_adjust(left=None, bottom=None, right=None,
-                    top=None, wspace=0.7, hspace=0.1)
-
-
-scatbarplot_DL('spots_count', 'Mean number spots',
-            palette, axes[0], data=DL_spots_summary[DL_spots_summary['detect'] == 'AT8'])
-
-scatbarplot_DL('spots_count', 'Mean number spots',
-            palette, axes[1], data=DL_spots_summary[DL_spots_summary['detect'] == 'HT7'])
-
-########
-
-
-for_plotting = SR_spots[
-    (SR_spots['prop_type'] == 'cluster')
-].copy()
-for_plotting = for_plotting[for_plotting['smoothed_length'] > 50].copy()
-
-fig, axes = plt.subplots(1, 3, figsize=(10, 5))
-for i, ((tissue, detect), df) in enumerate(for_plotting.groupby(['tissue', 'detect'])):
-    data = df.groupby(['folder', 'well_info', 'sample', 'disease_state']).mean(
-    ).reset_index().groupby(['sample', 'disease_state']).mean().reset_index()
-    #mean of replicate means per sample
-    scatbarplot('smoothed_length', 'Average length (nm)',
-                palette, axes, i, tissue, detect, data)
-plt.tight_layout()
-
-
-
-fig, axes = plt.subplots(1, 3, figsize=(10, 5))
-for i, ((tissue, detect), df) in enumerate(for_plotting.groupby(['tissue', 'detect'])):
-    data = df.groupby(['folder', 'well_info', 'sample', 'disease_state']).mean(
-    ).reset_index().groupby(['sample', 'disease_state']).mean().reset_index()
-    #mean of replicate means per sample
-    scatbarplot('eccentricity', 'Mean eccentricity',
-                palette, axes, i, tissue, detect, data)
-plt.tight_layout()
-plt.savefig(f'{output_folder}avg-eccentricity.svg')
-
-
-fig, axes = plt.subplots(1, 3, figsize=(10, 5))
-for i, ((tissue, detect), df) in enumerate(for_plotting.groupby(['tissue', 'detect'])):
-    data = df.groupby(['folder', 'well_info', 'sample', 'disease_state']).mean(
-    ).reset_index().groupby(['sample', 'disease_state']).mean().reset_index()
-    #mean of replicate means per sample
-    scatbarplot('area', 'Mean area',
-                palette, axes, i, tissue, detect, data)
-plt.tight_layout()
-
-
-for_plotting = SR_spots[
-    (~SR_spots['sample'].isin(['BSA', 'IgG'])) &
-    (SR_spots['prop_type'] == 'smooth') &
-    (SR_spots['smoothed_length'] > 30)
-].copy()
-
-# Proportion of > 30 nm are fibrillar
-proportion = (for_plotting.groupby(['detect', 'tissue', 'disease_state', 'sample', 'ecc_cat']).count()[
-              'smoothed_label'] / for_plotting.groupby(['detect', 'tissue', 'disease_state', 'sample', ]).count()['smoothed_label']).reset_index()
-
-fig, axes = plt.subplots(1, 3, figsize=(10, 5))
-for i, ((tissue, detect), df) in enumerate(proportion.groupby(['tissue', 'detect'])):
-    #mean of replicate means per sample
-    scatbarplot('smoothed_label', 'Proportion of fibrils (%)',
-                palette, axes, i, tissue, detect, df[df['ecc_cat'] == 'fibrillar'])
-    axes[i].set_ylim(0, 1)
-plt.tight_layout()
-plt.savefig(f'{output_folder}+30nm_prop-fibrils.svg')
-
-
-# Proportion of fibrillar > 150 nm
-proportion = (for_plotting[for_plotting['ecc_cat'] == 'fibrillar'].groupby(['detect', 'tissue', 'disease_state', 'sample', 'length_cat']).count()[
-              'smoothed_label'] / for_plotting[for_plotting['ecc_cat'] == 'fibrillar'].groupby(['detect', 'tissue', 'disease_state', 'sample', ]).count()['smoothed_label']).reset_index()
-
-fig, axes = plt.subplots(1, 3, figsize=(10, 5))
-for i, ((tissue, detect), df) in enumerate(proportion.groupby(['tissue', 'detect'])):
-    #mean of replicate means per sample
-    scatbarplot('smoothed_label', 'Proportion of fibrils > 150 nm (%)',
-                palette, axes, i, tissue, detect, df[df['length_cat'] == 'long'])
-    axes[i].set_ylim(0, 1)
-plt.tight_layout()
-
-
-
-########
+SR_spots_mean['scaled_area'] = SR_spots_mean['area'] * (107/8)**2 / 1000
+######## Compile summary data for LDA
 
 # selecting super res data for dim reduction
 summary = SR_spots[
-    (SR_spots['disease_state'].isin(['AD', 'CRL'])) & 
-    (SR_spots['capture'] == 'HT7') & 
+    (SR_spots['disease_state'].isin(['AD', 'CRL'])) &
+    (SR_spots['capture'] == 'HT7') &
     (SR_spots['prop_type'] == 'smooth')
-    ].copy()
+].copy()
 # map localisations from cluster to smoothed
 locs_dict = dict(SR_spots[SR_spots['prop_type'] ==
                  'cluster'][['key', '#locs']].values)
 summary['#locs'] = summary['key'].map(locs_dict)
-summary = summary.groupby(['capture', 'tissue', 'disease_state', 'sample']).mean().copy().reset_index()
+summary = summary.groupby(
+    ['capture', 'tissue', 'disease_state', 'sample']).mean().copy().reset_index()
 
-summary['key'] = summary['tissue'] + '_' + summary['disease_state'] + '_' + summary['sample']
+summary['key'] = summary['tissue'] + '_' + \
+    summary['disease_state'] + '_' + summary['sample']
 
 # Collect diff limited data for brain
-brain_DL = pd.read_csv(f'{root_path}results/2_homogenate_DL/spots_count_summary.csv')
-brain_DL.drop([col for col in brain_DL.columns.tolist() if 'Unnamed: ' in col], axis=1, inplace=True)
-brain_DL['key'] = 'brain_' + brain_DL['disease_state'] + '_' + brain_DL['sample']
+brain_DL = pd.read_csv(
+    f'{root_path}results/2_homogenate_DL/spots_count_summary.csv')
+brain_DL.drop([col for col in brain_DL.columns.tolist()
+              if 'Unnamed: ' in col], axis=1, inplace=True)
+brain_DL['key'] = 'brain_' + \
+    brain_DL['disease_state'] + '_' + brain_DL['sample']
 
 # Collect diff limited data for serum
 serum_DL = pd.read_csv(f'{input_path_DL}HT7_spots_per_fov.csv')
-serum_DL.drop([col for col in serum_DL.columns.tolist() if 'Unnamed: ' in col], axis=1, inplace=True)
-serum_DL[['capture', 'sample', 'detect']] = serum_DL['sample'].str.split('_', expand=True)
+serum_DL.drop([col for col in serum_DL.columns.tolist()
+              if 'Unnamed: ' in col], axis=1, inplace=True)
+serum_DL[['capture', 'sample', 'detect']
+         ] = serum_DL['sample'].str.split('_', expand=True)
 serum_DL['disease_state'] = serum_DL['sample'].astype(str).map(sample_dict)
-serum_DL = serum_DL[(serum_DL['detect'] == 'HT7') & ~(serum_DL['disease_state'].isin(['discard', 'IgG', 'BSA']))].copy()
-serum_DL = serum_DL.groupby(['disease_state', 'channel', 'sample', 'capture', 'detect']).mean().reset_index()
-serum_DL['key'] = 'serum_' + serum_DL['disease_state'] + '_' + serum_DL['sample']
+serum_DL = serum_DL[(serum_DL['detect'] == 'HT7') & ~(
+    serum_DL['disease_state'].isin(['discard', 'IgG', 'BSA']))].copy()
+serum_DL = serum_DL.groupby(
+    ['disease_state', 'channel', 'sample', 'capture', 'detect']).mean().reset_index()
+serum_DL['key'] = 'serum_' + \
+    serum_DL['disease_state'] + '_' + serum_DL['sample']
 
 # merge super res and diff limited datasets
 DL_spots = pd.concat([brain_DL, serum_DL])
 DL_spots = DL_spots[DL_spots['detect'] == 'HT7'].copy()
-summary = pd.merge(summary, DL_spots[['key', 'spots_count']], on='key', how='left')
+summary = pd.merge(
+    summary, DL_spots[['key', 'spots_count']], on='key', how='left')
 summary['tissue'] = summary['key'].str.split('_').str[0]
 summary['category'] = summary['tissue'] + '_' + summary['disease_state']
 
@@ -486,96 +319,43 @@ summary['category'] = summary['tissue'] + '_' + summary['disease_state']
 # Select columns for dim reduction
 group_cols = ['tissue', 'disease_state', 'sample']
 value_cols = ['area', 'eccentricity', 'perimeter',
-              'minor_axis_length', 'major_axis_length','smoothed_length', '#locs', 'spots_count']
+              'minor_axis_length', 'major_axis_length', 'smoothed_length', '#locs', 'spots_count']
 lda, model = perform_lda(summary, value_cols, category_col='category')
 
 
-fig, ax = plt.subplots(figsize=(6, 5.5))
-sns.scatterplot(
-    data=lda,
-    x='dim1',
-    y='dim2',
-    hue='disease_state',
-    style='tissue',
-    palette=palette,
-    s=300
-)
+######## Plot figure 
 
-plt.legend(bbox_to_anchor=(1.0, 1.0))
-plt.xlabel('Dimension 1')
-plt.ylabel('Dimension 2')
+fig = plt.figure(figsize=(18.4*cm, 6.1*cm))
+gs1 = fig.add_gridspec(nrows=1, ncols=6, wspace=1.0, hspace=1.0)
+axA = fig.add_subplot(gs1[0:2])
+axB1 = fig.add_subplot(gs1[2:3])
+axB2 = fig.add_subplot(gs1[3:4])
+axC = fig.add_subplot(gs1[4:6])
+
+for ax, label in zip([axA, axB1, axC ], ['A', 'B', 'C']):
+    # label physical distance to the left and up:
+    trans = mtransforms.ScaledTranslation(-35/72, -11/72, fig.dpi_scale_trans)
+    ax.text(0.0, 1.0, label, transform=ax.transAxes + trans,
+            fontsize=16, va='bottom', fontweight='bold')
+# DL spot count
+plot_scatbar_DL('spots_count', 'Number of spots',
+            palette, axA, data=DL_spots_summary[DL_spots_summary['detect'] == 'HT7'])
+axA.set_yticks(np.arange(0, 1550, 250))
+axA.set_yticklabels(np.arange(0, 1550, 250))
+# SR params
+plot_scatbar(data=SR_spots_mean, ycol='smoothed_length', ylabel='Length (nm)', palette=palette, order=['AD', 'CRL'], pairs=[('AD', 'CRL')], ax=axB1, s=10)
+
+plot_scatbar(data=SR_spots_mean, ycol='scaled_area', ylabel='Area (×10$^3$ nm$^2$)', palette=palette, order=['AD', 'CRL'], pairs=[('AD', 'CRL')], ax=axB2, s=10)
+
+# Plot LDA
+plot_lda(data=lda, palette=palette, hue='disease_state', style='tissue', ax=axC, s=100)
+axC.set(ylim=(-6, 6), xlim=(-12, 22))
+axC.legend(frameon=False, ncol=2, columnspacing=-0.1, loc='upper left', bbox_to_anchor=(-0.08, 1.1), handletextpad=0.2)
+leg = axC.get_legend()
+new_labels = ['', 'AD', 'CRL', '', 'Homog.', 'Serum']
+for t, l in zip(leg.texts, new_labels):
+    t.set_text(l)
+
+plt.tight_layout()
+plt.savefig(f'{output_folder}Figure5_serum.svg')
 plt.show()
-
-
-# Visualise pairplot for serum vs tissue
-sns.pairplot(
-    summary[value_cols+['key']], hue='key', palette={'serum_AD': '#9A031E', 'serum_CRL': '#16507E', 'brain_AD': '#5F0F40', 'brain_CRL': '#CBE3F6'})
-plt.show()
-
-
-
-########
-
-# # Read in summary FOV data
-# spots = pd.read_csv(f'{input_path}')
-# spots.drop([col for col in spots.columns.tolist()
-#             if 'Unnamed: ' in col], axis=1, inplace=True)
-# # Drop extra wells collected by default due to grid pattern
-# spots.dropna(subset=['sample'], inplace=True)
-
-# # expand sample info
-# spots[['capture', 'sample', 'detect']
-#       ] = spots['sample'].str.split('_', expand=True)
-# spots['spots_count'] = spots['spots_count'].fillna(0)
-# # spots['spots_count'] = spots['spots_count'].replace(0, np.nan)
-
-
-# mean_spots = spots.groupby(['sample', 'capture', 'slide_position'])[
-#     'spots_count'].median().round(0)
-
-# # mean_spots_AT8.to_csv(f'{output_folder}AT8_serum.csv')
-# # mean_spots.to_csv(f'{output_folder}HT7_serum.csv')
-
-
-# # AT8_HT7 = mean_spots_AT8.div(mean_spots)
-# # AT8_HT7 = mean_spots_AT8['']
-
-# sample_dict = {'1': 'CRL', '2': 'CRL', 'BSA': 'BSA',
-#                '3': 'AD', '4': 'AD', '5': 'AD', '6': 'discard', '7': 'AD', '8': 'CRL', '9': 'AD', '10': 'AD', '11': 'AD', '12': 'CRL', '13': 'CRL', '15': 'AD', '16': 'CRL', '17': 'CRL', '18': 'CRL', '19': 'CRL', '20': 'AD'}
-# spots['disease_state'] = spots['sample'].astype(
-#     str).map(sample_dict)
-
-
-# spots = spots.groupby(
-#     ['capture', 'sample', 'slide_position', 'detect', 'disease_state']).median().reset_index()
-
-
-# filtered_spots = spots[spots.disease_state != 'CRL']
-# filtered_spots = filtered_spots[filtered_spots.disease_state != 'discard']
-
-# spots.to_csv(f'{output_folder}filtered_HT7_serum.csv')
-
-# for (capture), df in filtered_spots.groupby(['capture']):
-#     sns.barplot(data=df, x='disease_state', y='spots_count',)
-#     # plt.xlim(0, 6000)
-#     # plt.ylim(0, 6000)
-
-#     plt.title(f'{capture}')
-#     plt.show()
-
-
-# sns.set_theme(style="ticks", font_scale=1.4)
-# for (capture), df in filtered_spots.groupby(['capture']):
-#     sns.stripplot(
-#         data=df.groupby(['capture', 'sample', 'detect', 'disease_state',
-#                          ]).mean().reset_index(),
-#         x='disease_state',
-#         y='spots_count',
-#         hue='sample',
-#         #ax=axes[x],
-#         #palette=palette4,
-#         dodge=False,
-#         #    s=12,
-#         #    alpha=0.4
-#     )
-#     plt.show()
