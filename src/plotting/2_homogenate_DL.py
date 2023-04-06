@@ -78,11 +78,12 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=15,
+        s=10,
         order=order
     )
 
     ax.set(ylabel=ylabel, xlabel='')
+    ax.tick_params(axis='x', labelrotation=45)
     pairs = [('AD', 'CRL')]
     annotator = Annotator(
         ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
@@ -118,7 +119,7 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=15,
+        s=10,
         order=order,
         hue_order=hue_order,
         dodge=True,
@@ -136,6 +137,7 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
     ax.set_xlabel('')
     ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
     ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
+    ax.tick_params(axis='x', labelrotation=45)
 
     ax.annotate('AT8', xy=(0.25, group_label_y), xycoords='axes fraction', ha='center')
     ax.annotate('HT7', xy=(0.75, group_label_y), xycoords='axes fraction', ha='center')
@@ -391,8 +393,8 @@ palette_DL = {
     'BSA': 'darkgrey',
 }
 
-fig = plt.figure(figsize=(12, 10))
-gs1 = fig.add_gridspec(nrows=3, ncols=6, wspace=0.7, hspace=0.25)
+fig = plt.figure(figsize=(12, 12))
+gs1 = fig.add_gridspec(nrows=3, ncols=6, wspace=0.95, hspace=0.3)
 axA = fig.add_subplot(gs1[0, 0:2])
 axB = fig.add_subplot(gs1[0, 2:4])
 axC = fig.add_subplot(gs1[0, 4:6])
@@ -406,7 +408,7 @@ axH = fig.add_subplot(gs1[2, 3:6])
 for ax, label in zip([axA, axB, axC, axD, axE1, axF, axG, axH], ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']):
     # label physical distance to the left and up:
     trans = mtransforms.ScaledTranslation(-40/72, -11/72, fig.dpi_scale_trans)
-    ax.text(0.0, 1.0, label, transform=ax.transAxes + trans,
+    ax.text(0.0, 1.05, label, transform=ax.transAxes + trans,
             fontsize=16, va='bottom', fontweight='bold')
     
 # --------Panel A--------
@@ -437,6 +439,7 @@ axE1.set_title('AT8')
 scatbarplot(ycol='norm_mean_intensity', ylabel='', palette=palette_DL, ax=axE2, data=mean_intensity_plotting[mean_intensity_plotting['detect'] == 'HT7'])
 axE2.set_title('HT7')
 
+
 # --------Panel F--------
 scatbarplot_hue(ycol='bright', ylabel='Bright spots (%)', palette=palette_DL, ax=axF, data=proportion_intensity_plotting, group_line_y=-0.131, group_label_y=-0.2)
 
@@ -459,5 +462,7 @@ axG.legend(simple_legend.values(), simple_legend.keys(),
 axH.legend(simple_legend.values(), simple_legend.keys(),
                loc='upper left', frameon=False)
 
+
 plt.tight_layout()
+plt.savefig(f'{output_folder}Figure2_homogenate_DL.svg')
 plt.show()

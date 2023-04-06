@@ -367,7 +367,7 @@ whatever = for_plotting.groupby(
     ['capture', 'sample', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter']].reset_index()
 
 
-####
+####tar
 
 
 length_ecc = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat', 'length_cat']).count(
