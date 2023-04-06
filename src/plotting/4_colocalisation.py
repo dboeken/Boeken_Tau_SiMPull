@@ -374,7 +374,7 @@ for x, label in enumerate(['A', 'B', 'C', 'D', 'E', 'F']):
 
 microim1 = microshow(
     images=[example_coloc[0, :, :], example_coloc[1, :, :]], 
-    cmaps=['pure_magenta', 'pure_cyan'], #flip_map=[True],
+    cmaps=['pure_magenta', 'pure_green'], #flip_map=[True],
     label_color='black', ax=axes[0], unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[[0, 7000], [0, 3500]])
 
 axes[0].axis('off')
