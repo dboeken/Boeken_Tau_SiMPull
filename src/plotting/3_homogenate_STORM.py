@@ -589,45 +589,113 @@ plt.show()
 
 #### supplemental figure
 
-fig, axes = plt.subplots(3, 4, figsize=(18.4 * cm, 3 * 6.1 * cm))
+# fig, axes = plt.subplots(3, 4, figsize=(18.4 * cm, 3 * 6.1 * cm))
+# axes = axes.ravel()
+# plt.subplots_adjust(left=None, bottom=None, right=None,
+#                     top=None, wspace=0.7, hspace=0.1)
+
+
+# scatbarplot_hue_ecc(ycol='scaled_area', ylabel='area',
+#                 palette=palette, ax=axes[0], data=whatever)
+
+
+# scatbarplot_hue_ecc(ycol='smoothed_length', ylabel='length',
+#                 palette=palette, ax=axes[1], data=whatever)
+
+# scatbarplot_hue_ecc(ycol='eccentricity', ylabel='perimeter',
+#                 palette=palette, ax=axes[2], data=whatever)
+
+# scatbarplot_hue_ecc(ycol='scaled_perimeter', ylabel='perimeter',
+#                     palette=palette, ax=axes[3], data=whatever)
+
+
+# scatbarplot_hue_length(ycol='scaled_area', ylabel='area',
+#                     palette=palette, ax=axes[4], data=whatever2)
+
+# scatbarplot_hue_length(ycol='smoothed_length', ylabel='length',
+#                        palette=palette, ax=axes[5], data=whatever2)
+
+# scatbarplot_hue_length(ycol='eccentricity', ylabel='eccentricity',
+#                     palette=palette, ax=axes[6], data=whatever2)
+
+# scatbarplot_hue_length(ycol='scaled_perimeter', ylabel='perimeter',
+#                     palette=palette, ax=axes[7], data=whatever2)
+
+# scatbarplot_hue_length('label', 'Fibril [%]',
+#             palette, axes[10], ecc_by_length_plotting)
+
+
+
+
+# plt.tight_layout()
+
+####supplementak figure####
+
+def hexbinplotting(colour, ax, data, disease_state):
+
+    df = data[data['disease_state'] == disease_state].copy()
+    hexs = ax.hexbin(data=df, x='eccentricity',
+                     y='smoothed_length', cmap=colour, vmin=0, vmax=1200)
+    ax.set(ylabel='Length [nm]')
+    ax.set(xlabel='Eccentricity')
+    # sns.kdeplot(data=df, x='smoothed_length', y='eccentricity',
+    #             color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
+
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 550)
+
+    return hexs
+
+
+new_colors = ['#ffffff'] + \
+    list(sns.color_palette('magma', n_colors=200).as_hex())[66:]
+# Turn this into a new colour map, and visualise it
+cmap = ListedColormap(new_colors)
+cmap
+
+
+fig, axes = plt.subplots(3, 2, figsize=(18.4 * cm, 3 * 6.1 * cm))
 axes = axes.ravel()
 plt.subplots_adjust(left=None, bottom=None, right=None,
-                    top=None, wspace=0.7, hspace=0.1)
+                    top=None, wspace=0.7, hspace=0.2)
+
+hexs0 = hexbinplotting(
+    colour=cmap, ax=axes[0], data=for_plotting, disease_state='AD')
+cb = plt.colorbar(hexs0, ax=axes[0])
+cb.set_label('Count', rotation=270, labelpad=15)
+axes[0].set_title('AD', fontsize=8)
+
+hexs1 = hexbinplotting(
+    colour=cmap, ax=axes[1], data=for_plotting, disease_state='CRL')
+cb = plt.colorbar(hexs1, ax=axes[1])
+cb.set_label('Count', rotation=270, labelpad=15)
+axes[1].set_title('CRL', fontsize=8)
+
+scatbarplot_hue_ecc(ycol='smoothed_length', ylabel='Mean length [nm]',
+                    palette=palette, ax=axes[2], data=whatever)
 
 
-scatbarplot_hue_ecc(ycol='scaled_area', ylabel='area',
-                palette=palette, ax=axes[0], data=whatever)
+# scatbarplot_hue_ecc(ycol='eccentricity', ylabel='eccentricity',
+#                     palette=palette, ax=axes[2], data=whatever)
 
 
-scatbarplot_hue_ecc(ycol='smoothed_length', ylabel='length',
-                palette=palette, ax=axes[1], data=whatever)
+# scatbarplot_hue_length(ycol='smoothed_length', ylabel='length',
+#                        palette=palette, ax=axes[5], data=whatever2)
 
-scatbarplot_hue_ecc(ycol='eccentricity', ylabel='perimeter',
-                palette=palette, ax=axes[2], data=whatever)
+scatbarplot_hue_length(ycol='eccentricity', ylabel='Mean eccentricity',
+                       palette=palette, ax=axes[3], data=whatever2)
 
-scatbarplot_hue_ecc(ycol='scaled_perimeter', ylabel='perimeter',
-                    palette=palette, ax=axes[3], data=whatever)
+scatbarplot_hue_ecc('label', 'Long [%]',
+                    palette, axes[4], length_ecc_plotting)
 
-
-scatbarplot_hue_length(ycol='scaled_area', ylabel='area',
-                    palette=palette, ax=axes[4], data=whatever2)
-
-scatbarplot_hue_length(ycol='smoothed_length', ylabel='length',
-                       palette=palette, ax=axes[5], data=whatever2)
-
-scatbarplot_hue_length(ycol='eccentricity', ylabel='eccentricity',
-                    palette=palette, ax=axes[6], data=whatever2)
-
-scatbarplot_hue_length(ycol='scaled_perimeter', ylabel='perimeter',
-                    palette=palette, ax=axes[7], data=whatever2)
 
 scatbarplot_hue_length('label', 'Fibril [%]',
-            palette, axes[10], ecc_by_length_plotting)
-
-
+                       palette, axes[5], ecc_by_length_plotting)
 
 
 plt.tight_layout()
+
+plt.savefig(f'{output_folder}Supp.svg')
 
 
 import statsmodels.api as sm
