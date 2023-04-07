@@ -16,10 +16,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.transforms as mtransforms
 
-from microfilm.microplot import microshow
-from skimage.io import imread
-
-
 from loguru import logger
 logger.info('Import OK')
 
@@ -31,7 +27,6 @@ else:
     root_path = ''
 
 input_path = f'{root_path}data/homogenate_SR_data/properties_compiled.csv'
-#input_samplemap = 'raw_data/sample_map.csv'
 output_folder = 'results/super-res/summary/'
 
 if not os.path.exists(output_folder):
@@ -50,7 +45,6 @@ plt.rcParams['svg.fonttype'] = 'none'
 properties = pd.read_csv(f'{input_path}')
 properties.drop([col for col in properties.columns.tolist()
                 if 'Unnamed: ' in col], axis=1, inplace=True)
-
 
 sample_dict = {'13': 'AD', '9': 'CRL', 'BSA': 'BSA',
                '28': 'CRL', '159': 'CRL', '55': 'AD', '246': 'AD'}
@@ -78,7 +72,6 @@ palette_repl = {
     'AD Mix': 'darkgrey',
 
 }
-
 
 
 def scatbarplot(ycol, ylabel, palette, ax, data):
@@ -260,8 +253,6 @@ def fit_ecdf(x):
     return result
 
 
-
-
 def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
 
     test_vals = pd.DataFrame(
@@ -298,8 +289,6 @@ def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col):
 
     fitted_ecdfs = pd.concat(fitted_ecdfs)
     return fitted_ecdfs
-
-
 
 
 def ecfd_plot(ycol, ylabel, palette, ax, df):
@@ -484,64 +473,6 @@ ecc_by_length_plotting = ecc_by_length_plotting[
 
 
 # # Make main figure
-# fig, axes = plt.subplots(5, 3, figsize=(12, 18))
-# axes = axes.ravel()
-# plt.subplots_adjust(left=None, bottom=None, right=None,
-#                     top=None, wspace=0.7, hspace=0.1)
-
-
-# scatbarplot('smoothed_length', 'Average length [nm]',
-#             palette, axes[1], for_plotting_mean)
-
-# scatbarplot('scaled_area', 'Mean area [nm$^2$]',
-#             palette, axes[4], for_plotting_mean)
-
-# ecfd_plot('smoothed_length', 'Length',
-#           palette, axes[0], fitted_ecdf_smoothed_length)
-
-# ecfd_plot('scaled_area', 'Area',
-#           palette, axes[3], fitted_ecdf_area)
-# #axes[3].set_ylim(0, 50000)
-
-# scatbarplot('long', 'Long [%]',
-#             palette, axes[2], proportion_length_plotting)
-
-# scatbarplot('large', 'Large [%]',
-#             palette, axes[5], proportion_size_plotting)
-
-
-# scatbarplot('fibril', 'Fibrils [%]',
-#             palette, axes[8], proportion_ecc_plotting)
-
-# scatbarplot('eccentricity', 'Mean eccentricity',
-#             palette, axes[7], for_plotting_mean)
-
-
-# scatbarplot_hue(ycol='scaled_area', ylabel='area',
-#                 palette=palette, ax=axes[9], data=whatever)
-
-
-# scatbarplot_hue(ycol='smoothed_length', ylabel='length',
-#                 palette=palette, ax=axes[10], data=whatever)
-
-# scatbarplot_hue(ycol='smoothed_length', ylabel='perimeter',
-#                 palette=palette, ax=axes[11], data=whatever)
-
-
-# scatbarplot('scaled_perimeter', 'Perimeter',
-#             palette, axes[13], for_plotting_mean)
-
-# scatbarplot('long', 'perimeter long [%]',
-#             palette, axes[14], proportion_perimeter_plotting)
-
-# scatbarplot('label', 'Large [%]',
-#             palette, axes[12], length_ecc_plotting)
-
-# plt.tight_layout()
-
-
-##### plot
-
 
 fig = plt.figure(figsize=(18.4 * cm, 2 * 6.1 * cm))
 gs1 = fig.add_gridspec(nrows=4, ncols=6, wspace=0.95, hspace=0.8)
@@ -698,96 +629,37 @@ scatbarplot_hue_length('label', 'Fibril [%]',
 
 plt.tight_layout()
 
-plt.savefig(f'{output_folder}Supp.svg')
 
-###### Supplements
-
-
-def hexbinplotting( colour, ax, data, disease_state):
-
-    df = data[data['disease_state'] == disease_state].copy()
-    hexs = ax.hexbin(data=df, x='eccentricity',
-                     y='smoothed_length', cmap=colour, vmin=0, vmax=1200)
-    ax.set(ylabel='Length [nm]')
-    ax.set(xlabel='Eccentricity')
-    # sns.kdeplot(data=df, x='smoothed_length', y='eccentricity',
-    #             color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
-
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 550)
-
-    return hexs
-
-new_colors = ['#ffffff'] + \
-    list(sns.color_palette('magma', n_colors=200).as_hex())[66:]
-# Turn this into a new colour map, and visualise it
-cmap = ListedColormap(new_colors)
-cmap
-
-
-fig, axes = plt.subplots(3, 2, figsize=(18.4 * cm, 3 * 6.1 * cm))
-axes = axes.ravel()
-plt.subplots_adjust(left=None, bottom=None, right=None,
-                    top=None, wspace=0.7, hspace=0.2)
-
-hexs0= hexbinplotting(colour= cmap, ax=axes[0], data=for_plotting, disease_state='AD' )
-cb = plt.colorbar(hexs0, ax=axes[0])
-cb.set_label('Count', rotation=270, labelpad=15)
-axes[0].set_title('AD', fontsize=8)
-
-hexs1= hexbinplotting(colour=cmap, ax=axes[1], data=for_plotting, disease_state='CRL')
-cb = plt.colorbar(hexs1, ax=axes[1])
-cb.set_label('Count', rotation=270, labelpad=15)
-axes[1].set_title('CRL', fontsize=8)
-
-scatbarplot_hue_ecc(ycol='smoothed_length', ylabel='Mean length [nm]',
-                    palette=palette, ax=axes[2], data=whatever)
-
-
-# scatbarplot_hue_ecc(ycol='eccentricity', ylabel='eccentricity',
-#                     palette=palette, ax=axes[2], data=whatever)
-
-
-# scatbarplot_hue_length(ycol='smoothed_length', ylabel='length',
-#                        palette=palette, ax=axes[5], data=whatever2)
-
-scatbarplot_hue_length(ycol='eccentricity', ylabel='Mean eccentricity',
-                       palette=palette, ax=axes[3], data=whatever2)
-
-scatbarplot_hue_ecc('label', 'Long [%]',
-                       palette, axes[4], length_ecc_plotting)
-
-
-scatbarplot_hue_length('label', 'Fibril [%]',
-                       palette, axes[5], ecc_by_length_plotting)
-
-
-plt.tight_layout()
-
-plt.savefig(f'{output_folder}Supp.svg')
-
-
-# plt.hist(for_plotting['eccentricity'], bins = 100)
-# plt.xlim(50, 300)
-
-# np.percentile(for_plotting['eccentricity'], 15)
-
-
-
-df = for_plotting[for_plotting['disease_state']== 'AD'].copy()
-plt.figure(figsize=(5, 3))
-plt.hexbin(data=df, x='eccentricity',
-           y='smoothed_length', cmap=cmap, vmin=0, vmax=1200)
-plt.ylim(0, 550)
-plt.xlim(0,1)
+import statsmodels.api as sm
+import numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.graphics.gofplots import qqplot_2samples
+x = for_plotting[for_plotting['disease_state'] == 'AD']['scaled_perimeter'].copy()
+y = for_plotting[for_plotting['disease_state'] == 'CRL']['scaled_perimeter'].copy()
+pp_x = sm.ProbPlot(x)
+pp_y = sm.ProbPlot(y)
+qqplot_2samples(pp_x, pp_y)
+sns.lineplot(
+    np.arange(0, 1000),
+    np.arange(0, 1000),
+    color='black',
+    linestyle='--'
+)
 plt.show()
 
-plt.figure(figsize=(5, 3))
-plt.scatter(data=df, x='eccentricity',
-            y='smoothed_length', alpha=0.1, )
-plt.ylim(0, 1000)
-plt.show
+mean_ecdf = fitted_ecdf_perimeter.groupby(['ecdf', 'disease_state']).mean().reset_index()
+mean_ecdf = pd.pivot(mean_ecdf, index=['ecdf'], columns='disease_state', values='scaled_perimeter').reset_index()
 
-sns.scatterplot(data=df, x='eccentricity',
-                y='smoothed_length', alpha=0.2, hue='disease_state')
-plt.ylim(0, 1000)
+fig, ax = plt.subplots()
+sns.lineplot(
+    np.arange(0, 1000),
+    np.arange(0, 1000),
+    color='black',
+    linestyle='--'
+)
+sns.scatterplot(
+    data=mean_ecdf,
+    x='AD',
+    y='CRL'
+    )
+
