@@ -1,3 +1,12 @@
+###include:
+
+# 1: example images
+# 2: cumulative distribution + error bar
+# 3: mean length and area
+# 4: ratios of large aggregates
+
+import matplotlib
+from sklearn.decomposition import PCA
 from statannotations.Annotator import Annotator
 import os
 import pandas as pd
@@ -21,6 +30,15 @@ output_folder = 'results/super-res/summary/'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
+
+
+font = {'family': 'arial',
+        'weight': 'normal',
+        'size': 8}
+cm = 1/2.54
+
+matplotlib.rc('font', **font)
+plt.rcParams['svg.fonttype'] = 'none'
 
 # Read in summary measurements
 properties = pd.read_csv(f'{input_path}')
@@ -78,7 +96,7 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=15,
+        s=10,
         order=order
     )
 
@@ -92,7 +110,7 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
     ax.legend('', frameon=False)
 
 
-def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
+def scatbarplot_hue_ecc(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
     order = ['fibril', 'round']
     hue_order = ['AD', 'CRL']
     sns.barplot(
@@ -118,7 +136,7 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=15,
+        s=10,
         order=order,
         hue_order=hue_order,
         dodge=True,
@@ -157,6 +175,75 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
     ax.legend('', frameon=False)
 
 
+def scatbarplot_hue_length(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
+    order = ['long', 'short']
+    hue_order = ['AD', 'CRL']
+    sns.barplot(
+        data=data,
+        x='length_cat',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        capsize=0.2,
+        errwidth=2,
+        ax=ax,
+        dodge=True,
+        order=order,
+        hue_order=hue_order,
+        edgecolor='white'
+    )
+    sns.stripplot(
+        data=data,
+        x='length_cat',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        ax=ax,
+        edgecolor='#fff',
+        linewidth=1,
+        s=10,
+        order=order,
+        hue_order=hue_order,
+        dodge=True,
+    )
+
+    # add by chance lines by disease state
+    # for disease, df2 in data.groupby('disease_state'):
+    #     ax.axhline(df2['chance_proportion_coloc'].mean(),
+    #                linestyle=linestyles[disease], linewidth=1.2, color='#4c4c52')
+
+    pairs = [(('long', 'AD'), ('short', 'AD')),
+             (('long', 'CRL'), ('short', 'CRL')), (('long', 'AD'), ('long', 'CRL')), (('short', 'AD'), ('short', 'CRL'))]
+    annotator = Annotator(
+        ax=ax, pairs=pairs, data=data, x='length_cat', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
+    annotator.configure(test='t-test_ind', text_format='star',
+                        loc='inside')
+    annotator.apply_and_annotate()
+
+    ax.set(ylabel=ylabel)
+
+    # ax.set_xlabel('')
+    # ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
+    # ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
+    # ax.set_yticks([0, 25, 50, 75, 100])
+    # ax.set_yticklabels(['0', '25', '50', '75', '100'])
+    # ax.annotate('AT8', xy=(0.25, group_label_y),
+    #             xycoords='axes fraction', ha='center')
+    # ax.annotate('T181', xy=(0.75, group_label_y),
+    #             xycoords='axes fraction', ha='center')
+    # trans = ax.get_xaxis_transform()
+    # ax.plot([-0.25, 0.25], [group_line_y, group_line_y],
+    #         color="black", transform=trans, clip_on=False)
+    # ax.plot([0.75, 1.25], [group_line_y, group_line_y],
+    #         color="black", transform=trans, clip_on=False)
+
+    ax.legend('', frameon=False)
+
+
+
+
+
+
 def fit_ecdf(x):
     x = np.sort(x)
 
@@ -188,14 +275,14 @@ def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
 
 def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col):
     fitted_ecdfs = []
-    for (sample, disease_state), df in df_intensity.groupby(['sample', 'disease_state']):
+    for (sample, position), df in df_intensity.groupby(['sample', 'slide_position']):
         filtered_df = df[df[col] < maxval].copy()
         fitted_ecdf = sample_ecdf(filtered_df, value_cols=[
             col], method='nearest', order=False)
         fitted_ecdf['sample'] = sample
-        fitted_ecdf['disease_state'] = disease_state
+        #fitted_ecdf['disease_state'] = disease_state
         # fitted_ecdf['capture'] = capture
-        # fitted_ecdf['slide_position'] = position
+        fitted_ecdf['slide_position'] = position
         fitted_ecdf['detect'] = detect
         fitted_ecdfs.append(fitted_ecdf)
 
@@ -208,8 +295,8 @@ def ecfd_plot(ycol, ylabel, palette, ax, df):
         data=df.reset_index(),
         y=ycol,
         x='ecdf',
-        hue='disease_state',
-        palette=palette,
+        hue='sample',
+        palette=palette_repl,
         ci='sd',
         ax=ax)
 
@@ -227,7 +314,7 @@ for_plotting = properties[
     (properties['area'] > 2) 
 ].copy()
 
-for_plotting['scaled_area'] = for_plotting['area'] * (107/8)**2
+for_plotting['scaled_area'] = (for_plotting['area'] * (107/8)**2)/1000
 for_plotting['scaled_perimeter'] = for_plotting['perimeter'] * (107/8)
 
 ### Mean length >30 nm
@@ -240,7 +327,7 @@ for_plotting_mean = for_plotting_per_replicate.groupby(['disease_state', 'sample
 # Calculate proportion of spots > threshold intensity
 thresholds = {
     'length': 250,
-    'scaled_area': 15000,
+    'scaled_area': 15000/1000,
     'eccentricity': 0.9, 
     'perimeter': 550
 }
@@ -338,10 +425,17 @@ fitted_ecdf_perimeter = fitting_ecfd_for_plotting(
 #### mean length/area of fibrils vs round
 
 whatever_per_replicate = for_plotting.groupby(
-    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter']].reset_index()
+    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
 
 whatever = for_plotting.groupby(
-    ['capture', 'sample', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter']].reset_index()
+    ['capture', 'sample', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+
+
+whatever2_per_replicate = for_plotting.groupby(
+    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'length_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+
+whatever2 = for_plotting.groupby(
+    ['capture', 'sample', 'detect', 'disease_state', 'length_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
 
 
 ####tar
@@ -361,10 +455,26 @@ length_ecc_plotting = length_ecc_plotting[
     length_ecc_plotting['length_cat'] == 'long'].copy().reset_index()
 
 
+###
+
+ecc_by_length = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat', 'length_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'length_cat']).count()['label']).reset_index()
+
+
+ecc_by_length_plotting = ecc_by_length.groupby(
+    ['capture', 'sample', 'detect', 'disease_state', 'length_cat', 'ecc_cat']).mean().reset_index()
+
+ecc_by_length_plotting = ecc_by_length_plotting[
+    ecc_by_length_plotting['ecc_cat'] == 'fibril'].copy()
+# ecc_by_length_plotting = ecc_by_length_plotting[
+#     ecc_by_length_plotting['disease_state'] == 'AD'].copy().reset_index()
+
+
+
 # # Make main figure
 
-fig = plt.figure(figsize=(12, 5))
-gs1 = fig.add_gridspec(nrows=4, ncols=6, wspace=0.9, hspace=0.8)
+fig = plt.figure(figsize=(18.4 * cm, 2 * 6.1 * cm))
+gs1 = fig.add_gridspec(nrows=4, ncols=6, wspace=0.95, hspace=0.8)
 axA1 = fig.add_subplot(gs1[0:1, 0:1])
 axA2 = fig.add_subplot(gs1[0:1, 1:2])
 axA3 = fig.add_subplot(gs1[1:2, 0:1])
@@ -374,7 +484,7 @@ axB2 = fig.add_subplot(gs1[0:2, 3:4])
 axB3 = fig.add_subplot(gs1[0:2, 4:5])
 axB4 = fig.add_subplot(gs1[0:2, 5:6])
 axC1 = fig.add_subplot(gs1[2:4, 0:2])
-axC2 = fig.add_subplot(gs1[2:3, 0:1])
+
 axD1 = fig.add_subplot(gs1[2:4, 2:3])
 axD2 = fig.add_subplot(gs1[2:4, 3:4])
 axD3 = fig.add_subplot(gs1[2:4, 4:5])
@@ -387,17 +497,16 @@ axD4 = fig.add_subplot(gs1[2:4, 5:6])
 
 for ax, label in zip([axA1, axB1, axC1, axD1 ], ['A', 'B', 'C', 'D']):
     # label physical distance to the left and up:
-    trans = mtransforms.ScaledTranslation(-40/72, -11/72, fig.dpi_scale_trans)
+    trans = mtransforms.ScaledTranslation(-30/72, -3/72, fig.dpi_scale_trans)
     ax.text(0.0, 1.0, label, transform=ax.transAxes + trans,
-            fontsize=16, va='bottom', fontweight='bold')
+            fontsize=12, va='bottom', fontweight='bold')
 
 # --------Panel A--------
-# microim1 = microshow(images=[example_AD],
-#                      cmaps=['Greys'], flip_map=[True],
-#                      label_color='black', ax=axA,
-#                      unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,
-#                      rescale_type='limits', limits=[400, 1000])
-# axA.set_title('AD')
+axA1.axis('off')
+axA2.axis('off')
+axA3.axis('off')
+axA4.axis('off')
+
 # --------Panel B--------
 scatbarplot('smoothed_length', 'Mean length [nm]',
             palette, axB1, for_plotting_mean)
@@ -407,7 +516,7 @@ scatbarplot('scaled_perimeter', 'Mean perimeter [nm]',
             palette, axB2, for_plotting_mean)
 axB2.set_title('Perimeter')
 
-scatbarplot('scaled_area', 'Mean area [nm$^2$]',
+scatbarplot('scaled_area', 'Mean area [x 10$^3$ nm$^2$]',
             palette, axB3, for_plotting_mean)
 axB3.set_title('Area')
 
@@ -418,10 +527,8 @@ axB4.set_title('Eccentricity')
 # --------Panel C--------
 ecfd_plot('scaled_perimeter', 'Perimeter',
           palette, axC1, fitted_ecdf_perimeter)
-axC2.set_xlim(0.7, 1)
-axC2.set(xlabel=None)
-axC2.yaxis.set_label_position("right")
-axC2.yaxis.tick_right()
+
+
 
 # --------Panel D--------
 scatbarplot('long', 'Long [%]',
@@ -437,27 +544,81 @@ scatbarplot('large', 'Large [%]',
 scatbarplot('fibril', 'Fibrils [%]',
             palette, axD4, proportion_ecc_plotting)
 
+
+# # --------Panel E--------
+# scatbarplot_hue(ycol='smoothed_length', ylabel='length',
+#                 palette=palette, ax=axE, data=whatever)
+
+# # --------Panel F--------
+# scatbarplot_hue(ycol='scaled_perimeter', ylabel='perimeter',
+#                 palette=palette, ax=axF, data=whatever)
+
+# # --------Panel G--------
+# scatbarplot_hue(ycol='scaled_area', ylabel='area',
+#                 palette=palette, ax=axG, data=whatever)
+
+
+
+# # Legend for G,H
+# handles, labels = axH.get_legend_handles_labels()
+# by_label = dict(zip(labels, handles))
+# simple_legend = {'AD': by_label['13'],
+#                  'CRL': by_label['9'], 'BSA': by_label['BSA']}
+
+# axG.legend(simple_legend.values(), simple_legend.keys(),
+#            loc='upper left', frameon=False)
+# axH.legend(simple_legend.values(), simple_legend.keys(),
+#            loc='upper left', frameon=False)
+
+
+handles, labels = axC1.get_legend_handles_labels()
+by_label = dict(zip(labels, handles))
+simple_legend = {'AD': by_label['13'],
+                 'CRL': by_label['9']}
+
+axC1.legend(simple_legend.values(), simple_legend.keys(),
+               loc='upper left', frameon=False)
+
+
+
 plt.tight_layout()
+plt.savefig(f'{output_folder}Figure3_homogenate_SR.svg')
 plt.show()
 
 
 #### supplemental figure
 
-fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+fig, axes = plt.subplots(3, 3, figsize=(18.4 * cm, 3 * 6.1 * cm))
 axes = axes.ravel()
 plt.subplots_adjust(left=None, bottom=None, right=None,
                     top=None, wspace=0.7, hspace=0.1)
 
 
-scatbarplot_hue(ycol='scaled_area', ylabel='area',
+scatbarplot_hue_ecc(ycol='scaled_area', ylabel='area',
                 palette=palette, ax=axes[0], data=whatever)
 
 
-scatbarplot_hue(ycol='smoothed_length', ylabel='length',
+scatbarplot_hue_ecc(ycol='smoothed_length', ylabel='length',
                 palette=palette, ax=axes[1], data=whatever)
 
-scatbarplot_hue(ycol='smoothed_length', ylabel='perimeter',
+scatbarplot_hue_ecc(ycol='scaled_perimeter', ylabel='perimeter',
                 palette=palette, ax=axes[2], data=whatever)
+
+
+scatbarplot_hue_length(ycol='scaled_area', ylabel='area',
+                    palette=palette, ax=axes[3], data=whatever2)
+
+scatbarplot_hue_length(ycol='eccentricity', ylabel='eccentricity',
+                    palette=palette, ax=axes[4], data=whatever2)
+
+scatbarplot_hue_length(ycol='scaled_perimeter', ylabel='perimeter',
+                    palette=palette, ax=axes[5], data=whatever2)
+
+scatbarplot_hue_length('label', 'Fibril [%]',
+            palette, axes[6], ecc_by_length_plotting)
+
+
+
 
 plt.tight_layout()
 

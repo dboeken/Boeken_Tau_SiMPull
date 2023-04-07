@@ -40,9 +40,10 @@ if not os.path.exists(output_folder):
 
 font = {'family': 'normal',
         'weight': 'normal',
-        'size': 12}
+        'size': 8}
 matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
+cm = 1/2.54
 
 # Read in summary FOV data
 coloc_spots = pd.read_csv(f'{input_path}')
@@ -160,8 +161,8 @@ palette = sns.color_palette(['#ffffff'] +
 new_colors = ['#ffffff'] + \
     list(sns.color_palette('magma', n_colors=200).as_hex())[66:]
 # Turn this into a new colour map, and visualise it
-cm = ListedColormap(new_colors)
-cm
+cmap = ListedColormap(new_colors)
+cmap
 
 filtered_disease = for_plotting[for_plotting['disease_state'] == 'AD'].copy()
 
@@ -186,7 +187,7 @@ palette_coloc = {
 new_colors = ['#ffffff'] + \
     list(sns.color_palette('magma', n_colors=200).as_hex())[66:]
 # Turn this into a new colour map, and visualise it
-cm = ListedColormap(new_colors)
+cmap = ListedColormap(new_colors)
 
 
 def hexbinplotting(ylabel, colour, ax, data, capture):
@@ -195,6 +196,7 @@ def hexbinplotting(ylabel, colour, ax, data, capture):
     hexs = ax.hexbin(data=df, x='norm_mean_intensity_641',
               y='norm_mean_intensity_488', cmap=colour, vmin=0, vmax=900)
     ax.set(ylabel=ylabel)
+    ax.set(xlabel ='mean intensity 638')
     sns.kdeplot(data=df, x='norm_mean_intensity_641', y='norm_mean_intensity_488', color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
 
     ax.set_xlim(0, 9)
@@ -229,7 +231,7 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=15,
+        s=10,
         order=order,
         hue_order=hue_order,
         dodge=True,
@@ -293,7 +295,7 @@ def scatbarplot_hue_intensity(ycol, ylabel, palette, ax, data, stats_df, group_l
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=15,
+        s=10,
         order=order,
         hue_order=hue_order,
         dodge=True,
@@ -314,9 +316,9 @@ def scatbarplot_hue_intensity(ycol, ylabel, palette, ax, data, stats_df, group_l
     ax.set_xticks([-0.2, 0.2, 0.8, 1.2])
     ax.set_xticklabels(['AT8', 'T181', 'AT8', 'T181'])
 
-    ax.annotate('AT8', xy=(0.25, group_label_y),
+    ax.annotate('AT8 capture', xy=(0.25, group_label_y),
                 xycoords='axes fraction', ha='center')
-    ax.annotate('T181', xy=(0.75, group_label_y),
+    ax.annotate('T181 capture', xy=(0.75, group_label_y),
                 xycoords='axes fraction', ha='center')
     trans = ax.get_xaxis_transform()
     ax.plot([-0.25, 0.25], [group_line_y, group_line_y],
@@ -360,17 +362,17 @@ brightness_ratio_stats['significance'] = ['****' if val < 0.0001 else ('***' if 
 example_coloc = imread(image_path)
 
 # Make main figure
-fig, axes = plt.subplots(2, 3, figsize=(12, 6))
+fig, axes = plt.subplots(2, 3, figsize=(18.4 * cm, 2 * 6.1 * cm))
 axes = axes.ravel()
 plt.subplots_adjust(left=None, bottom=None, right=None,
-                top=None, wspace=0.7, hspace=0.1)
+                top=None, wspace=-1, hspace=1)
 
 
 for x, label in enumerate(['A', 'B', 'C', 'D', 'E', 'F']):
     # label physical distance to the left and up:
     trans = mtransforms.ScaledTranslation(-0.6, 0., fig.dpi_scale_trans)
     axes[x].text(0.0, 1.0, label, transform=axes[x].transAxes + trans,
-            fontsize=16, va='bottom', fontweight='bold')
+            fontsize=12, va='bottom', fontweight='bold')
 
 microim1 = microshow(
     images=[example_coloc[0, :, :], example_coloc[1, :, :]], 
@@ -380,32 +382,40 @@ microim1 = microshow(
 axes[0].axis('off')
 
 scatbarplot_hue('proportion_coloc', 'Colocalised [%]',
-                palette_DL, axes[1], AT8_mean_for_plotting_proportion, group_line_y=-0.2, group_label_y=-0.3)
+                palette_DL, axes[1], AT8_mean_for_plotting_proportion, group_line_y=-0.15, group_label_y=-0.22)
 axes[1].set_ylim(0, 110)
+axes[1].set_title('AT8 capture', fontsize=8)
+
 
 scatbarplot_hue('proportion_coloc', 'Colocalised [%]',
-                palette_DL, axes[2], T181_mean_for_plotting_proportion, group_line_y=-0.2, group_label_y=-0.3)
+                palette_DL, axes[2], T181_mean_for_plotting_proportion, group_line_y=-0.15, group_label_y=-0.22)
 
 axes[2].set_ylim(0, 110)
+axes[2].set_title('T181 capture', fontsize=8)
 
 scatbarplot_hue_intensity('intensity_ratio', 'Intensity Ratio',
-                          palette_coloc, axes[3], AD_brightness_plotting, brightness_ratio_stats, group_line_y=-0.2, group_label_y=-0.3)
+                          palette_coloc, axes[3], AD_brightness_plotting, brightness_ratio_stats, group_line_y=-0.15, group_label_y=-0.22)
 
 axes[3].set_ylim(0, 2.6)
 axes[3].axhline(1, linestyle='--', linewidth=1.2, color='#4c4c52')
 
-hexs4 = hexbinplotting('mean intensity 488', cm, 
+hexs4 = hexbinplotting('mean intensity 488', cmap,
                axes[4], filtered_disease, 'AT8')
+               
 cb=plt.colorbar(hexs4, ax=axes[4])
-cb.set_label('Count', rotation=270, labelpad=15)
+axes[4].set_title('AT8 capture', fontsize=8)
 
-hexs5 = hexbinplotting('mean intensity 488', cm,
+
+hexs5 = hexbinplotting('mean intensity 488', cmap,
                axes[5], filtered_disease, 'T181')
 
 cb=plt.colorbar(hexs5, ax=axes[5])
 cb.set_label('Count', rotation=270, labelpad=15)
+axes[5].set_title('T181 capture', fontsize=8)
 
 plt.tight_layout()
+
+plt.savefig(f'{output_folder}Figure4_coloc.svg')
 
 
 
