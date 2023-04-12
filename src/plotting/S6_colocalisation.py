@@ -75,23 +75,27 @@ def plot_colocalisation(seed_spots, test_spots, threshold=False, ax=None):
         data=seed_spots,
         x='centroid-0',
         y='centroid-1',
-        color='magenta',
-        alpha=0.3,
+        color='orchid',
+        alpha=0.6,
         size=5,
-        ax=ax
+        ax=ax,
+        label='AT8',
+        marker='^'
     )
     sns.scatterplot(
         data=test_spots,
         x='centroid-0',
         y='centroid-1',
         color='forestgreen',
-        marker='x',
-        size=2,
-        ax=ax
+        marker='v',
+        alpha=0.6,
+        size=5,
+        ax=ax,
+        label='T181'
     )
 
-    for x1, y1, x2, y2, dist_pair in pairs.dropna(subset=['test_coord_1']).values:
-        ax.plot([x1, x2], [y1, y2], color='black', linewidth=0.1)
+    # for x1, y1, x2, y2, dist_pair in pairs.dropna(subset=['test_coord_1']).values:
+    #     ax.plot([x1, x2], [y1, y2], color='black', linewidth=0.1)
 
     sns.scatterplot(
         data=pairs.dropna(subset=['test_coord_1']),
@@ -100,7 +104,8 @@ def plot_colocalisation(seed_spots, test_spots, threshold=False, ax=None):
         color='firebrick',
         ec="black", fc="none",
         s=50,
-        ax=ax
+        ax=ax,
+        label='Colocalised'
     )
 
     return pairs
@@ -151,9 +156,9 @@ fig, axes = plt.subplots(2, 3, figsize=(18.4 * cm, 2 * 6.1 * cm))
 axes = axes.ravel()
 
 # Add panel labels
-for x, label in enumerate(['A', 'B', 'C', 'D', 'E', 'F']):
+for x, (label, offset)in enumerate(zip(['A', ' ', 'B', 'C', ' ', ' '], [-0.25, 0, -0.5, -0.25, 0, 0])):
     # label physical distance to the left and up:
-    trans = mtransforms.ScaledTranslation(-0.25, 0., fig.dpi_scale_trans)
+    trans = mtransforms.ScaledTranslation(offset, 0.01, fig.dpi_scale_trans)
     axes[x].text(0.0, 1.0, label, transform=axes[x].transAxes + trans,
                  fontsize=12, va='bottom', fontweight='bold')
 
@@ -171,15 +176,19 @@ red_spots = colocalised[colocalised['channel'] == 641].copy()
 green_spots = colocalised[colocalised['channel'] == 488].copy()
 green_spots['centroid-1'] = 512 - green_spots['centroid-1']
 plot_colocalisation(seed_spots=red_spots, test_spots=green_spots, threshold=4, ax=axes[1])
+handles, labels = axes[0].get_legend_handles_labels()
 axes[1].legend('', frameon=False)
 axes[1].set_ylim(512, 0)
 axes[1].axis('off')
+
+legend_labels = dict(zip(labels, handles))
+fig.legend([legend_labels[lab] for lab in ['AT8', 'T181', 'Colocalised']], ['AT8', 'T181', 'Colocalised'], loc='upper center', ncol=3, bbox_to_anchor=(0.35, 0.55), frameon=False)
 
 # visualise threshold effect
 sns.lineplot(data=optimisation, x='threshold', y='coloc', ax=axes[2], color='black', linestyle='-', label='Original')
 sns.lineplot(data=optimisation, x='threshold', y='chance', ax=axes[2], color='black', linestyle='--', label='Randomised')
 axes[2].set(ylabel='Number of colocalised spots', xlabel='Distance threshold (px)', ylim=(-2, 102))
-axes[2].legend(frameon=False, loc='upper left')
+axes[2].legend(frameon=False, loc='upper left', handletextpad=0.2, bbox_to_anchor=(0.01, 1.01))
 
 # -------Add image panels-------
 microim1 = microshow(
@@ -211,7 +220,8 @@ for i, channel in enumerate([641, 488]):
         ax=axes[i+3],
         facecolor='None',
         edgecolor='#fff',
-        linewidth=0.1
+        linewidth=0.1,
+        label='Colocalised'
     )
     sns.scatterplot(
         data=df[df['pair_id'].isnull()],
@@ -221,14 +231,23 @@ for i, channel in enumerate([641, 488]):
         s=10,
         ax=axes[i+3],
         color='white',
-        linewidth=0.1
+        linewidth=0.1,
+        label='Non-colocalised'
     )
     # axes[i].set_xlim(0, 512)
     # axes[i].set_ylim(0, 512)
+    if i ==0:
+        handles, labels = axes[i+3].get_legend_handles_labels()
+        legend_labels = dict(zip(labels, handles))
+        # handles[0].set_color('black')
+        # handles[1].set_edgecolor('black')
+    axes[i+3].legend('', frameon=False)
+
+fig.legend([legend_labels[lab] for lab in ['Non-colocalised', 'Colocalised']], ['Non-colocalised',
+           'Colocalised'], loc='upper center', ncol=3, bbox_to_anchor=(0.5, 0.035), frameon=False)
 
 # Add colocalised spots to overlay
 df = colocalised[colocalised['channel'] == 641].copy().dropna(subset=['pair_id'])
-
 sns.scatterplot(
     data=df,
     x='centroid-0',
@@ -253,7 +272,7 @@ plt.tight_layout()
 plt.savefig(f'{output_folder}S6_colocalisation.svg')
 
 """ 
-Figure S6: Colocalisation 
+Figure S6: Exemplar colocalisation analysis. (A) Spots in each channel are isolated using ComDet 
 
 
 
