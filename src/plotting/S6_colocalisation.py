@@ -272,7 +272,7 @@ plt.tight_layout()
 plt.savefig(f'{output_folder}S6_colocalisation.svg')
 
 """ 
-Figure S6: Exemplar colocalisation analysis. (A) Spots in each channel are isolated using ComDet 
+Figure S6: Colocalisation analysis. (A) Shown are individual spots detected using ComDet in each channel (in this case, AF647-labelled AT8 △ and AF488-labelled T181 ∇). Spots for a given chennel are compared with those from the opposing channel, and pairs of spots for which the euclidean distance is less than the threshold value are considered colocalised (O). In the event that more than one spot passes the threshold, the spot with the shortest distance is selected. To estimate the likelihood of these spots being colocalised by chance, the second channel coordinates are inverted and the colocalisation calculation repeated (Randomised). (B) The number of colocalised spots as calculated for the original or randomised spots shown in A at threshold distances ranging from 1 to 10. (C) Detected spots shown in A overlayed onto the source AT8 or T181 images, demonstrating those which were found to be colocalised (O) or non-colocalised (X).
 
 
 
