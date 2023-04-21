@@ -28,11 +28,15 @@ from skimage.io import imread
 
 logger.info('Import OK')
 
+if os.path.exists('data\data_path.txt'):
+    root_path = open('data\data_path.txt', 'r').readlines()[0]
+else:
+    root_path = ''
 
-input_path = 'data/colocalisation_data/colocalisation_summary.csv'
-input_path_spots = 'data/colocalisation_data/colocalisation_spots.csv'
+input_path = f'{root_path}data/colocalisation_data/colocalisation_summary.csv'
+input_path_spots = f'{root_path}data/colocalisation_data/colocalisation_spots.csv'
 output_folder = 'results/4_colocalisation/'
-image_path = 'data/colocalisation_images/Composite.tif'
+image_path = f'{root_path}data/colocalisation_images/Composite.tif'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
@@ -130,7 +134,7 @@ for_plotting_intensity['log2_intensity_ratio'] = np.log2(
 
 
 ########### stochiometry
-input_path_spots = 'data/colocalisation_data/colocalisation_spots.csv'
+input_path_spots = f'{root_path}data/colocalisation_data/colocalisation_spots.csv'
 
 colocalised_summary = pd.read_csv(f'{input_path_spots}')
 
