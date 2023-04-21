@@ -168,7 +168,7 @@ for (capture), df in mean_number_spots[mean_number_spots['capture'].isin(['AT8']
 
     plt.title(f'{capture}')
     #plt.show()
-    #plt.savefig(f'{output_folder}mean_number_spots_AT8.svg')
+    plt.savefig(f'{output_folder}mean_number_spots_AT8.svg')
 
 
 
