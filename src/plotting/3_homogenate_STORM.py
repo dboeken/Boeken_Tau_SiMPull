@@ -330,7 +330,8 @@ thresholds = {
     'length': 250,
     'scaled_area': 15000/1000,
     'eccentricity': 0.9, 
-    'perimeter': 550
+    'perimeter': 550, 
+    'bright': 100
 }
 
 for_plotting['length_cat'] = ['long' if val > thresholds['length']
@@ -696,6 +697,69 @@ scatbarplot_hue_length('label', 'Fibril [%]',
 plt.tight_layout()
 
 plt.savefig(f'{output_folder}Supp.svg')
+
+
+###################################################
+###################################################
+
+fitted_ecdf_locs = fitting_ecfd_for_plotting(
+    for_plotting, 'AT8', 800, col='smoothed_length')
+
+
+for_plotting['bright_cat'] = ['bright' if val > thresholds['scaled_area']
+                            else 'small' for val, detect in for_plotting[['scaled_area', 'detect']].values]
+
+proportion_bright = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'bright_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
+proportion_bright['label'] = proportion_bright['label'] * 100
+proportion_bright = pd.pivot(
+    proportion_bright,
+    index=['capture', 'sample', 'slide_position',
+           'detect', 'disease_state'],
+    columns='bright_cat',
+    values='label'
+).fillna(0).reset_index()
+
+proportion_bright_plotting = proportion_bright.groupby(
+    ['capture', 'sample', 'detect', 'disease_state']).mean().reset_index()
+
+
+whatever3_per_replicate = for_plotting.groupby(
+    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'bright_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+
+whatever3 = for_plotting.groupby(
+    ['capture', 'sample', 'detect', 'disease_state', 'bright_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+
+
+
+
+
+
+
+
+
+fig, axes = plt.subplots(3, 2, figsize=(18.4 * cm, 3 * 6.1 * cm))
+axes = axes.ravel()
+plt.subplots_adjust(left=None, bottom=None, right=None,
+                    top=None, wspace=0.7, hspace=0.2)
+
+
+ecfd_plot('smoothed_length', 'Perimeter',
+          palette, axes[0], fitted_ecdf_locs)
+
+scatbarplot('smoothed_length', 'Mean length [nm]',
+            palette, axes[1], for_plotting_mean)
+
+
+scatbarplot('bright', 'Bright [%]',
+            palette, axes[2], proportion_bright_plotting)
+
+
+
+######
+######
+######
+
 
 
 import statsmodels.api as sm
