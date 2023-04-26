@@ -26,7 +26,7 @@ if os.path.exists(data_path):
 else:
     root_path = ''
 
-input_path = f'{root_path}data/homogenate_SR_data/properties_compiled.csv'
+input_path = f'{root_path}data/homogenate_SR_data/properties_compiled_old.csv'
 output_folder = 'results/super-res/summary/'
 
 if not os.path.exists(output_folder):
@@ -308,7 +308,7 @@ for_plotting = properties[
     (~properties['sample'].isin(['BSA', 'IgG'])) &
     (properties['prop_type'] == 'smooth') &
     (properties['detect'] == 'AT8') &
-    (properties['smoothed_length'] > 50) &
+    (properties['smoothed_length'] > 40) &
     (properties['area'] > 2) 
 ].copy()
 
@@ -327,7 +327,8 @@ thresholds = {
     'length': 250,
     'scaled_area': 15000/1000,
     'eccentricity': 0.9, 
-    'perimeter': 550
+    'perimeter': 550, 
+    'bright': 100
 }
 
 for_plotting['length_cat'] = ['long' if val > thresholds['length']
@@ -441,6 +442,7 @@ whatever2 = for_plotting.groupby(
 
 length_ecc = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat', 'length_cat']).count(
 )['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat']).count()['label']).reset_index()
+length_ecc['label'] = length_ecc['label'] * 100
 
 
 
@@ -457,7 +459,7 @@ length_ecc_plotting = length_ecc_plotting[
 
 ecc_by_length = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat', 'length_cat']).count(
 )['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'length_cat']).count()['label']).reset_index()
-
+ecc_by_length['label'] = ecc_by_length['label'] * 100
 
 ecc_by_length_plotting = ecc_by_length.groupby(
     ['capture', 'sample', 'detect', 'disease_state', 'length_cat', 'ecc_cat']).mean().reset_index()
@@ -498,6 +500,76 @@ filtered.head()[['minor_axis_length', 'major_axis_length', 'orientation',
 
 
 
+
+
+from scipy.stats import f_oneway
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+
+
+length_ecc = ecc_by_length_plotting[ecc_by_length_plotting['length_cat']!='medium'].copy()
+ecc_by_length_plotting = pd.pivot(
+    ecc_by_length_plotting,
+    index=['capture', 'sample',
+           'detect', 'disease_state'],
+    columns='length_cat',
+    values='label'
+).fillna(0).reset_index()
+
+AD_df = ecc_by_length_plotting[ecc_by_length_plotting['disease_state']=='AD']
+CRL_df = ecc_by_length_plotting[ecc_by_length_plotting['disease_state'] == 'CRL']
+a= AD_df['long'].values
+b= AD_df['short'].values
+c = CRL_df['long'].values
+d = CRL_df['short'].values
+
+
+f_oneway(a, b, c, d)
+joined = [*a, *b, *c, *d]
+
+df_tukey = pd.DataFrame({'score': joined,
+                   'group': np.repeat(['a', 'b', 'c', 'd'], repeats=3)})
+
+# perform Tukey's test
+tukey = pairwise_tukeyhsd(endog=df_tukey['score'],
+                          groups=df_tukey['group'],
+                          alpha=0.05)
+
+#display results
+print(tukey)
+
+
+length_ecc = length_ecc_plotting[length_ecc_plotting['ecc_cat'] != 'medium'].copy(
+)
+length_ecc = pd.pivot(
+    length_ecc,
+    index=['capture', 'sample',
+           'detect', 'disease_state'],
+    columns='ecc_cat',
+    values='label'
+).fillna(0).reset_index()
+
+AD_df = length_ecc[length_ecc['disease_state'] == 'AD']
+CRL_df = length_ecc[length_ecc['disease_state'] == 'CRL']
+a = AD_df['fibril'].values
+b = AD_df['round'].values
+c = CRL_df['fibril'].values
+d = CRL_df['round'].values
+
+
+f_oneway(a, b, c, d)
+joined = [*a, *b, *c, *d]
+
+df_tukey = pd.DataFrame({'score': joined,
+                         'group': np.repeat(['a', 'b', 'c', 'd'], repeats=3)})
+
+# perform Tukey's test
+tukey = pairwise_tukeyhsd(endog=df_tukey['score'],
+                          groups=df_tukey['group'],
+                          alpha=0.05)
+
+#display results
+print(tukey)
 
 # # Make main figure
 
@@ -656,7 +728,16 @@ plt.show()
 
 # plt.tight_layout()
 
-####supplementak figure####
+
+
+
+
+
+
+
+
+
+# ####supplementak figure####
 
 def hexbinplotting(colour, ax, data, disease_state):
 
@@ -723,6 +804,69 @@ scatbarplot_hue_length('label', 'Fibril [%]',
 plt.tight_layout()
 
 plt.savefig(f'{output_folder}Supp.svg')
+
+
+###################################################
+###################################################
+
+fitted_ecdf_locs = fitting_ecfd_for_plotting(
+    for_plotting, 'AT8', 800, col='smoothed_length')
+
+
+for_plotting['bright_cat'] = ['bright' if val > thresholds['scaled_area']
+                            else 'small' for val, detect in for_plotting[['scaled_area', 'detect']].values]
+
+proportion_bright = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'bright_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
+proportion_bright['label'] = proportion_bright['label'] * 100
+proportion_bright = pd.pivot(
+    proportion_bright,
+    index=['capture', 'sample', 'slide_position',
+           'detect', 'disease_state'],
+    columns='bright_cat',
+    values='label'
+).fillna(0).reset_index()
+
+proportion_bright_plotting = proportion_bright.groupby(
+    ['capture', 'sample', 'detect', 'disease_state']).mean().reset_index()
+
+
+whatever3_per_replicate = for_plotting.groupby(
+    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'bright_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+
+whatever3 = for_plotting.groupby(
+    ['capture', 'sample', 'detect', 'disease_state', 'bright_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+
+
+
+
+
+
+
+
+
+fig, axes = plt.subplots(3, 2, figsize=(18.4 * cm, 3 * 6.1 * cm))
+axes = axes.ravel()
+plt.subplots_adjust(left=None, bottom=None, right=None,
+                    top=None, wspace=0.7, hspace=0.2)
+
+
+ecfd_plot('smoothed_length', 'Perimeter',
+          palette, axes[0], fitted_ecdf_locs)
+
+scatbarplot('smoothed_length', 'Mean length [nm]',
+            palette, axes[1], for_plotting_mean)
+
+
+scatbarplot('bright', 'Bright [%]',
+            palette, axes[2], proportion_bright_plotting)
+
+
+
+######
+######
+######
+
 
 
 import statsmodels.api as sm
