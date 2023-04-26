@@ -10,6 +10,8 @@ from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 import matplotlib.transforms as mtransforms
 from loguru import logger
+from scipy.spatial import distance
+
 logger.info('Import OK')
 
 if os.path.exists('data/data_path.txt'):
@@ -224,6 +226,15 @@ def calculate_eigens(model, labels):
     return dist
 
 
+def distance_eigens(model, labels):
+    eigens = model.scalings_
+    dist = pd.DataFrame([eigens[:, 0], eigens[:, 1]], index=['xpos', 'ypos']).T
+    dist['label'] = labels
+    dist['ori_dst'] = [distance.euclidean(
+        (xpos, ypos), (0, 0)) for xpos, ypos in dist[['xpos', 'ypos']].values]
+
+    return dist
+
 # Read in diff limited data
 DL_spots_AT8 = read_in(f'{input_path_DL}AT8_spots_per_fov.csv', 'AT8')
 DL_spots_HT7 = read_in(f'{input_path_DL}HT7_spots_per_fov.csv', 'HT7')
@@ -359,3 +370,7 @@ for t, l in zip(leg.texts, new_labels):
 plt.tight_layout()
 plt.savefig(f'{output_folder}Figure5_serum.svg')
 plt.show()
+
+
+# plot pseudo-eigens
+plot_eigens(model, summary[value_cols].values, labels=value_cols, num_labels=5)
