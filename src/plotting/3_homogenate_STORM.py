@@ -242,9 +242,6 @@ def scatbarplot_hue_length(ycol, ylabel, palette, ax, data, group_label_y=-0.18,
 
 
 
-
-
-
 def fit_ecdf(x):
     x = np.sort(x)
 
@@ -469,6 +466,36 @@ ecc_by_length_plotting = ecc_by_length_plotting[
     ecc_by_length_plotting['ecc_cat'] == 'fibril'].copy()
 # ecc_by_length_plotting = ecc_by_length_plotting[
 #     ecc_by_length_plotting['disease_state'] == 'AD'].copy().reset_index()
+
+
+# ----------Reset props df to original----------
+filtered = properties[
+    (~properties['sample'].isin(['BSA', 'IgG'])) &
+    (properties['prop_type'] == 'smooth') &
+    (properties['detect'] == 'AT8')
+    # (properties['smoothed_length'] > 50) &
+    # (properties['area'] > 2) 
+].copy()
+
+# map number of localisations from clustered to smooth ROIs
+
+
+# Size and shape of 'brightest' (number locs) objects
+filtered = filtered.dropna(subset=['smoothed_label', 'key']) # loose two objects with no smooth label
+locs_dict = dict(properties[properties['prop_type'] == 'cluster'][['key', '#locs']].values)
+filtered['#locs'] = filtered['key'].map(locs_dict)
+
+
+filtered.head()[['minor_axis_length', 'major_axis_length', 'orientation',
+                 'well_info', '#locs', 'smoothed_label', ]]
+
+
+# Localisation density (number locs / area) - fibrils have larger surface area?
+
+
+
+# length of smallest fibrillar (ecc > 0.9) aggregate for each sample type?
+
 
 
 
