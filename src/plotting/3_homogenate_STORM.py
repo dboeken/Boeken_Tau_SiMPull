@@ -26,7 +26,7 @@ if os.path.exists(data_path):
 else:
     root_path = ''
 
-input_path = f'{root_path}data/homogenate_SR_data/properties_compiled_old.csv'
+input_path = f'{root_path}data/homogenate_SR_data/properties_compiled.csv'
 output_folder = 'results/super-res/summary/'
 
 if not os.path.exists(output_folder):
@@ -493,7 +493,7 @@ filtered.head()[['minor_axis_length', 'major_axis_length', 'orientation',
 
 
 # Localisation density (number locs / area) - fibrils have larger surface area?
-
+# --> New column in properties_compiled (smoothed) which has #locs_density
 
 
 # length of smallest fibrillar (ecc > 0.9) aggregate for each sample type?
@@ -813,8 +813,8 @@ fitted_ecdf_locs = fitting_ecfd_for_plotting(
     for_plotting, 'AT8', 800, col='smoothed_length')
 
 
-for_plotting['bright_cat'] = ['bright' if val > thresholds['scaled_area']
-                            else 'small' for val, detect in for_plotting[['scaled_area', 'detect']].values]
+for_plotting['bright_cat'] = ['bright' if val > thresholds['#locs']
+                            else 'small' for val, detect in for_plotting[['#locs', 'detect']].values]
 
 proportion_bright = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'bright_cat']).count(
 )['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
