@@ -5,6 +5,8 @@
 # 3: mean length and area
 # 4: ratios of large aggregates
 
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+from scipy.stats import f_oneway
 from matplotlib.colors import ListedColormap
 import matplotlib
 from sklearn.decomposition import PCA
@@ -26,7 +28,7 @@ if os.path.exists(data_path):
 else:
     root_path = ''
 
-input_path = f'{root_path}data/homogenate_SR_data/properties_compiled_old.csv'
+input_path = f'{root_path}data/homogenate_SR_data/properties_compiled.csv'
 output_folder = 'results/super-res/summary/'
 
 if not os.path.exists(output_folder):
@@ -311,9 +313,12 @@ for_plotting = properties[
     (~properties['sample'].isin(['BSA', 'IgG'])) &
     (properties['prop_type'] == 'smooth') &
     (properties['detect'] == 'AT8') &
-    (properties['smoothed_length'] > 40) &
-    (properties['area'] > 2) 
+    (properties['#locs'] >2) #&
+    #(properties['smoothed_length'] > 40) 
+    #(properties['area'] > 2) 
 ].copy()
+
+#for_plotting.to_csv(f'{output_folder}test.csv')
 
 for_plotting['scaled_area'] = (for_plotting['area'] * (107/8)**2)/1000
 for_plotting['scaled_perimeter'] = for_plotting['perimeter'] * (107/8)
@@ -330,8 +335,9 @@ thresholds = {
     'length': 250,
     'scaled_area': 15000/1000,
     'eccentricity': 0.9, 
-    'perimeter': 550, 
-    'bright': 100
+    'perimeter': 600, 
+    'bright': 30, 
+    'dense': 0.7
 }
 
 for_plotting['length_cat'] = ['long' if val > thresholds['length']
@@ -427,17 +433,17 @@ fitted_ecdf_perimeter = fitting_ecfd_for_plotting(
 #### mean length/area of fibrils vs round
 
 whatever_per_replicate = for_plotting.groupby(
-    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity', '#locs']].reset_index()
 
 whatever = for_plotting.groupby(
-    ['capture', 'sample', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+    ['capture', 'sample', 'detect', 'disease_state', 'ecc_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity', '#locs']].reset_index()
 
 
 whatever2_per_replicate = for_plotting.groupby(
-    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'length_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+    ['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'length_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity', '#locs']].reset_index()
 
 whatever2 = for_plotting.groupby(
-    ['capture', 'sample', 'detect', 'disease_state', 'length_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity']].reset_index()
+    ['capture', 'sample', 'detect', 'disease_state', 'length_cat']).mean()[['scaled_area', 'smoothed_length', 'scaled_perimeter', 'eccentricity', '#locs']].reset_index()
 
 
 ####tar
@@ -473,76 +479,6 @@ ecc_by_length_plotting = ecc_by_length_plotting[
 #     ecc_by_length_plotting['disease_state'] == 'AD'].copy().reset_index()
 
 
-
-
-from scipy.stats import f_oneway
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
-
-
-
-length_ecc = ecc_by_length_plotting[ecc_by_length_plotting['length_cat']!='medium'].copy()
-ecc_by_length_plotting = pd.pivot(
-    ecc_by_length_plotting,
-    index=['capture', 'sample',
-           'detect', 'disease_state'],
-    columns='length_cat',
-    values='label'
-).fillna(0).reset_index()
-
-AD_df = ecc_by_length_plotting[ecc_by_length_plotting['disease_state']=='AD']
-CRL_df = ecc_by_length_plotting[ecc_by_length_plotting['disease_state'] == 'CRL']
-a= AD_df['long'].values
-b= AD_df['short'].values
-c = CRL_df['long'].values
-d = CRL_df['short'].values
-
-
-f_oneway(a, b, c, d)
-joined = [*a, *b, *c, *d]
-
-df_tukey = pd.DataFrame({'score': joined,
-                   'group': np.repeat(['a', 'b', 'c', 'd'], repeats=3)})
-
-# perform Tukey's test
-tukey = pairwise_tukeyhsd(endog=df_tukey['score'],
-                          groups=df_tukey['group'],
-                          alpha=0.05)
-
-#display results
-print(tukey)
-
-
-length_ecc = length_ecc_plotting[length_ecc_plotting['ecc_cat'] != 'medium'].copy(
-)
-length_ecc = pd.pivot(
-    length_ecc,
-    index=['capture', 'sample',
-           'detect', 'disease_state'],
-    columns='ecc_cat',
-    values='label'
-).fillna(0).reset_index()
-
-AD_df = length_ecc[length_ecc['disease_state'] == 'AD']
-CRL_df = length_ecc[length_ecc['disease_state'] == 'CRL']
-a = AD_df['fibril'].values
-b = AD_df['round'].values
-c = CRL_df['fibril'].values
-d = CRL_df['round'].values
-
-
-f_oneway(a, b, c, d)
-joined = [*a, *b, *c, *d]
-
-df_tukey = pd.DataFrame({'score': joined,
-                         'group': np.repeat(['a', 'b', 'c', 'd'], repeats=3)})
-
-# perform Tukey's test
-tukey = pairwise_tukeyhsd(endog=df_tukey['score'],
-                          groups=df_tukey['group'],
-                          alpha=0.05)
-
-#display results
-print(tukey)
 
 # # Make main figure
 
@@ -783,11 +719,14 @@ plt.savefig(f'{output_folder}Supp.svg')
 ###################################################
 
 fitted_ecdf_locs = fitting_ecfd_for_plotting(
-    for_plotting, 'AT8', 800, col='smoothed_length')
+    for_plotting, 'AT8', 100, col='#locs')
+
+fitted_ecdf_locsdense = fitting_ecfd_for_plotting(
+    for_plotting, 'AT8', 2, col='#locs_density')
 
 
-for_plotting['bright_cat'] = ['bright' if val > thresholds['scaled_area']
-                            else 'small' for val, detect in for_plotting[['scaled_area', 'detect']].values]
+for_plotting['bright_cat'] = ['bright' if val > thresholds['bright']
+                              else ('dim' if val < 10 else 'medium') for val, detect in for_plotting[['#locs', 'detect']].values]
 
 proportion_bright = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'bright_cat']).count(
 )['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
@@ -812,29 +751,183 @@ whatever3 = for_plotting.groupby(
 
 
 
+#####
+
+
+for_plotting['dense_cat'] = ['dense' if val > thresholds['dense']
+                              else 'small' for val, detect in for_plotting[['#locs_density', 'detect']].values]
+
+proportion_dense = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'dense_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state']).count()['label']).reset_index()
+proportion_dense['label'] = proportion_dense['label'] * 100
+proportion_dense = pd.pivot(
+    proportion_dense,
+    index=['capture', 'sample', 'slide_position',
+           'detect', 'disease_state'],
+    columns='dense_cat',
+    values='label'
+).fillna(0).reset_index()
+
+proportion_dense_plotting = proportion_dense.groupby(
+    ['capture', 'sample', 'detect', 'disease_state']).mean().reset_index()
+
+
+def scatbarplot_hue_bright(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
+    order = ['bright', 'dim']
+    hue_order = ['AD', 'CRL']
+    sns.barplot(
+        data=data,
+        x='bright_cat',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        capsize=0.2,
+        errwidth=2,
+        ax=ax,
+        dodge=True,
+        order=order,
+        hue_order=hue_order,
+        edgecolor='white'
+    )
+    sns.stripplot(
+        data=data,
+        x='bright_cat',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        ax=ax,
+        edgecolor='#fff',
+        linewidth=1,
+        s=10,
+        order=order,
+        hue_order=hue_order,
+        dodge=True,
+    )
+
+    # add by chance lines by disease state
+    # for disease, df2 in data.groupby('disease_state'):
+    #     ax.axhline(df2['chance_proportion_coloc'].mean(),
+    #                linestyle=linestyles[disease], linewidth=1.2, color='#4c4c52')
+
+    pairs = [(('bright', 'AD'), ('dim', 'AD')),
+             (('bright', 'CRL'), ('dim', 'CRL')), (('bright', 'AD'), ('bright', 'CRL')), (('dim', 'AD'), ('dim', 'CRL'))]
+    annotator = Annotator(
+        ax=ax, pairs=pairs, data=data, x='bright_cat', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
+    annotator.configure(test='t-test_ind', text_format='star',
+                        loc='inside')
+    annotator.apply_and_annotate()
+
+    ax.set(ylabel=ylabel)
+
+    # ax.set_xlabel('')
+    # ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
+    # ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
+    # ax.set_yticks([0, 25, 50, 75, 100])
+    # ax.set_yticklabels(['0', '25', '50', '75', '100'])
+    # ax.annotate('AT8', xy=(0.25, group_label_y),
+    #             xycoords='axes fraction', ha='center')
+    # ax.annotate('T181', xy=(0.75, group_label_y),
+    #             xycoords='axes fraction', ha='center')
+    # trans = ax.get_xaxis_transform()
+    # ax.plot([-0.25, 0.25], [group_line_y, group_line_y],
+    #         color="black", transform=trans, clip_on=False)
+    # ax.plot([0.75, 1.25], [group_line_y, group_line_y],
+    #         color="black", transform=trans, clip_on=False)
+
+    ax.legend('', frameon=False)
+
+
+ecc_by_bright = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat', 'bright_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'bright_cat']).count()['label']).reset_index()
+ecc_by_bright['label'] = ecc_by_bright['label'] * 100
+
+ecc_by_bright_plotting = ecc_by_bright.groupby(
+    ['capture', 'sample', 'detect', 'disease_state', 'bright_cat', 'ecc_cat']).mean().reset_index()
+
+ecc_by_bright_plotting = ecc_by_bright_plotting[
+    ecc_by_bright_plotting['ecc_cat'] == 'fibril'].copy()
+# ecc_by_length_plotting = ecc_by_length_plotting[
+
+
+length_by_bright = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'length_cat', 'bright_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'bright_cat']).count()['label']).reset_index()
+length_by_bright['label'] = length_by_bright['label'] * 100
+
+length_by_bright_plotting = length_by_bright.groupby(
+    ['capture', 'sample', 'detect', 'disease_state', 'bright_cat', 'length_cat']).mean().reset_index()
+
+length_by_bright_plotting = length_by_bright_plotting[
+    length_by_bright_plotting['length_cat'] == 'long'].copy()
+# ecc_by_length_plotting = ecc_by_length_plotting[
+
+
+
+
+
+bright_by_ecc = (for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat', 'bright_cat']).count(
+)['label'] / for_plotting.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'ecc_cat']).count()['label']).reset_index()
+bright_by_ecc['label'] = bright_by_ecc['label'] * 100
+
+
+bright_by_ecc_plotting = bright_by_ecc.groupby(
+    ['capture', 'sample', 'detect', 'disease_state', 'bright_cat', 'ecc_cat']).mean().reset_index()
+
+# bright_by_ecc_plotting = bright_by_ecc_plotting[
+#     bright_by_ecc_plotting['ecc_cat'] == 'fibril'].copy()
+bright_by_ecc_plotting = bright_by_ecc_plotting[
+    bright_by_ecc_plotting['bright_cat'] == 'bright'].copy().reset_index()
 
 
 
 
 
 
-fig, axes = plt.subplots(3, 2, figsize=(18.4 * cm, 3 * 6.1 * cm))
+fig, axes = plt.subplots(6, 2, figsize=(18.4 * cm, 6 * 6.1 * cm))
 axes = axes.ravel()
 plt.subplots_adjust(left=None, bottom=None, right=None,
                     top=None, wspace=0.7, hspace=0.2)
 
 
-ecfd_plot('smoothed_length', 'Perimeter',
+ecfd_plot('#locs', 'Number of locs per cluster',
           palette, axes[0], fitted_ecdf_locs)
 
-scatbarplot('smoothed_length', 'Mean length [nm]',
-            palette, axes[1], for_plotting_mean)
+scatbarplot('#locs', 'Mean number of locs per cluster',
+            palette, axes[2], for_plotting_mean)
 
 
 scatbarplot('bright', 'Bright [%]',
-            palette, axes[2], proportion_bright_plotting)
+            palette, axes[4], proportion_bright_plotting)
+
+ecfd_plot('#locs_density', 'locs density',
+          palette, axes[1], fitted_ecdf_locsdense)
+
+scatbarplot('#locs_density', 'Mean locs density',
+            palette, axes[3], for_plotting_mean)
 
 
+scatbarplot('dense', 'dense [%]',
+            palette, axes[5], proportion_dense_plotting)
+
+scatbarplot_hue_bright(ycol='eccentricity', ylabel='Mean eccentricity',
+                       palette=palette, ax=axes[6], data=whatever3)
+
+scatbarplot_hue_bright(ycol='smoothed_length', ylabel='Length',
+                       palette=palette, ax=axes[7], data=whatever3)
+
+scatbarplot_hue_bright(ycol='label', ylabel='Fibril %',
+                       palette=palette, ax=axes[8], data=ecc_by_bright_plotting)
+
+
+scatbarplot_hue_bright(ycol='label', ylabel='Long %',
+                       palette=palette, ax=axes[9], data=length_by_bright_plotting)
+
+
+scatbarplot_hue_ecc(ycol='label', ylabel='Bright %',
+                    palette=palette, ax=axes[10], data=bright_by_ecc_plotting)
+
+
+scatbarplot_hue_ecc(ycol='#locs', ylabel='#locs',
+                    palette=palette, ax=axes[11], data=whatever)
 
 ######
 ######
@@ -842,36 +935,114 @@ scatbarplot('bright', 'Bright [%]',
 
 
 
-import statsmodels.api as sm
-import numpy as np
-import matplotlib.pyplot as plt
-from statsmodels.graphics.gofplots import qqplot_2samples
-x = for_plotting[for_plotting['disease_state'] == 'AD']['scaled_perimeter'].copy()
-y = for_plotting[for_plotting['disease_state'] == 'CRL']['scaled_perimeter'].copy()
-pp_x = sm.ProbPlot(x)
-pp_y = sm.ProbPlot(y)
-qqplot_2samples(pp_x, pp_y)
-sns.lineplot(
-    np.arange(0, 1000),
-    np.arange(0, 1000),
-    color='black',
-    linestyle='--'
-)
-plt.show()
+# import statsmodels.api as sm
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from statsmodels.graphics.gofplots import qqplot_2samples
+# x = for_plotting[for_plotting['disease_state'] == 'AD']['scaled_perimeter'].copy()
+# y = for_plotting[for_plotting['disease_state'] == 'CRL']['scaled_perimeter'].copy()
+# pp_x = sm.ProbPlot(x)
+# pp_y = sm.ProbPlot(y)
+# qqplot_2samples(pp_x, pp_y)
+# sns.lineplot(
+#     np.arange(0, 1000),
+#     np.arange(0, 1000),
+#     color='black',
+#     linestyle='--'
+# )
+# plt.show()
 
-mean_ecdf = fitted_ecdf_perimeter.groupby(['ecdf', 'disease_state']).mean().reset_index()
-mean_ecdf = pd.pivot(mean_ecdf, index=['ecdf'], columns='disease_state', values='scaled_perimeter').reset_index()
+# mean_ecdf = fitted_ecdf_perimeter.groupby(['ecdf', 'disease_state']).mean().reset_index()
+# mean_ecdf = pd.pivot(mean_ecdf, index=['ecdf'], columns='disease_state', values='scaled_perimeter').reset_index()
 
-fig, ax = plt.subplots()
-sns.lineplot(
-    np.arange(0, 1000),
-    np.arange(0, 1000),
-    color='black',
-    linestyle='--'
-)
-sns.scatterplot(
-    data=mean_ecdf,
-    x='AD',
-    y='CRL'
-    )
+# fig, ax = plt.subplots()
+# sns.lineplot(
+#     np.arange(0, 1000),
+#     np.arange(0, 1000),
+#     color='black',
+#     linestyle='--'
+# )
+# sns.scatterplot(
+#     data=mean_ecdf,
+#     x='AD',
+#     y='CRL'
+#     )
 
+
+
+
+
+
+
+
+
+#######
+
+
+#########
+
+
+# length_ecc = ecc_by_length_plotting[ecc_by_length_plotting['length_cat'] != 'medium'].copy(
+# )
+# ecc_by_length_plotting = pd.pivot(
+#     ecc_by_length_plotting,
+#     index=['capture', 'sample',
+#            'detect', 'disease_state'],
+#     columns='length_cat',
+#     values='label'
+# ).fillna(0).reset_index()
+
+# AD_df = ecc_by_length_plotting[ecc_by_length_plotting['disease_state'] == 'AD']
+# CRL_df = ecc_by_length_plotting[ecc_by_length_plotting['disease_state'] == 'CRL']
+# a = AD_df['long'].values
+# b = AD_df['short'].values
+# c = CRL_df['long'].values
+# d = CRL_df['short'].values
+
+
+# f_oneway(a, b, c, d)
+# joined = [*a, *b, *c, *d]
+
+# df_tukey = pd.DataFrame({'score': joined,
+#                          'group': np.repeat(['a', 'b', 'c', 'd'], repeats=3)})
+
+# # perform Tukey's test
+# tukey = pairwise_tukeyhsd(endog=df_tukey['score'],
+#                           groups=df_tukey['group'],
+#                           alpha=0.05)
+
+# #display results
+# print(tukey)
+
+
+# length_ecc = length_ecc_plotting[length_ecc_plotting['ecc_cat'] != 'medium'].copy(
+# )
+# length_ecc = pd.pivot(
+#     length_ecc,
+#     index=['capture', 'sample',
+#            'detect', 'disease_state'],
+#     columns='ecc_cat',
+#     values='label'
+# ).fillna(0).reset_index()
+
+# AD_df = length_ecc[length_ecc['disease_state'] == 'AD']
+# CRL_df = length_ecc[length_ecc['disease_state'] == 'CRL']
+# a = AD_df['fibril'].values
+# b = AD_df['round'].values
+# c = CRL_df['fibril'].values
+# d = CRL_df['round'].values
+
+
+# f_oneway(a, b, c, d)
+# joined = [*a, *b, *c, *d]
+
+# df_tukey = pd.DataFrame({'score': joined,
+#                          'group': np.repeat(['a', 'b', 'c', 'd'], repeats=3)})
+
+# # perform Tukey's test
+# tukey = pairwise_tukeyhsd(endog=df_tukey['score'],
+#                           groups=df_tukey['group'],
+#                           alpha=0.05)
+
+# #display results
+# print(tukey)
