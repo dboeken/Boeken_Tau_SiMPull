@@ -169,15 +169,17 @@ def intensity_processing(slide_params, spots_intensity, detect):
 
     spots_intensity = pd.merge(
         slide_params[['slide_position', 'layout',
-                      'sample', 'capture', 'detect']],
+                      'sample', 'capture', 'detect', 'well_info']],
         spots_intensity,
-        on=['slide_position', 'layout'],
+        on=['slide_position', 'layout', 'well_info'],
         how='right')
 
     spots_intensity['log_intensity'] = np.log(
         spots_intensity['mean_intensity'])
     filtered_spots_intensity = spots_intensity[spots_intensity['detect'] == detect].copy(
     )
+    # if detect == 'HT7':
+    #     filtered_spots_intensity = filtered_spots_intensity[filtered_spots_intensity['mean_intensity']>600].copy()
 
     return filtered_spots_intensity
 
