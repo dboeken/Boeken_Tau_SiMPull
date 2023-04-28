@@ -244,9 +244,6 @@ def scatbarplot_hue_length(ycol, ylabel, palette, ax, data, group_label_y=-0.18,
 
 
 
-
-
-
 def fit_ecdf(x):
     x = np.sort(x)
 
@@ -479,6 +476,106 @@ ecc_by_length_plotting = ecc_by_length_plotting[
 #     ecc_by_length_plotting['disease_state'] == 'AD'].copy().reset_index()
 
 
+# ----------Reset props df to original----------
+filtered = properties[
+    (~properties['sample'].isin(['BSA', 'IgG'])) &
+    (properties['prop_type'] == 'smooth') &
+    (properties['detect'] == 'AT8')
+    # (properties['smoothed_length'] > 50) &
+    # (properties['area'] > 2) 
+].copy()
+
+# map number of localisations from clustered to smooth ROIs
+
+
+# Size and shape of 'brightest' (number locs) objects
+filtered = filtered.dropna(subset=['smoothed_label', 'key']) # loose two objects with no smooth label
+locs_dict = dict(properties[properties['prop_type'] == 'cluster'][['key', '#locs']].values)
+filtered['#locs'] = filtered['key'].map(locs_dict)
+
+
+filtered.head()[['minor_axis_length', 'major_axis_length', 'orientation',
+                 'well_info', '#locs', 'smoothed_label', ]]
+
+
+# Localisation density (number locs / area) - fibrils have larger surface area?
+# --> New column in properties_compiled (smoothed) which has #locs_density
+
+
+# length of smallest fibrillar (ecc > 0.9) aggregate for each sample type?
+
+
+
+
+
+from scipy.stats import f_oneway
+from statsmodels.stats.multicomp import pairwise_tukeyhsd
+
+
+
+length_ecc = ecc_by_length_plotting[ecc_by_length_plotting['length_cat']!='medium'].copy()
+ecc_by_length_plotting = pd.pivot(
+    ecc_by_length_plotting,
+    index=['capture', 'sample',
+           'detect', 'disease_state'],
+    columns='length_cat',
+    values='label'
+).fillna(0).reset_index()
+
+AD_df = ecc_by_length_plotting[ecc_by_length_plotting['disease_state']=='AD']
+CRL_df = ecc_by_length_plotting[ecc_by_length_plotting['disease_state'] == 'CRL']
+a= AD_df['long'].values
+b= AD_df['short'].values
+c = CRL_df['long'].values
+d = CRL_df['short'].values
+
+
+f_oneway(a, b, c, d)
+joined = [*a, *b, *c, *d]
+
+df_tukey = pd.DataFrame({'score': joined,
+                   'group': np.repeat(['a', 'b', 'c', 'd'], repeats=3)})
+
+# perform Tukey's test
+tukey = pairwise_tukeyhsd(endog=df_tukey['score'],
+                          groups=df_tukey['group'],
+                          alpha=0.05)
+
+#display results
+print(tukey)
+
+
+length_ecc = length_ecc_plotting[length_ecc_plotting['ecc_cat'] != 'medium'].copy(
+)
+length_ecc = pd.pivot(
+    length_ecc,
+    index=['capture', 'sample',
+           'detect', 'disease_state'],
+    columns='ecc_cat',
+    values='label'
+).fillna(0).reset_index()
+
+AD_df = length_ecc[length_ecc['disease_state'] == 'AD']
+CRL_df = length_ecc[length_ecc['disease_state'] == 'CRL']
+a = AD_df['fibril'].values
+b = AD_df['round'].values
+c = CRL_df['fibril'].values
+d = CRL_df['round'].values
+
+
+f_oneway(a, b, c, d)
+joined = [*a, *b, *c, *d]
+
+df_tukey = pd.DataFrame({'score': joined,
+                         'group': np.repeat(['a', 'b', 'c', 'd'], repeats=3)})
+
+# perform Tukey's test
+tukey = pairwise_tukeyhsd(endog=df_tukey['score'],
+                          groups=df_tukey['group'],
+                          alpha=0.05)
+
+#display results
+print(tukey)
 
 # # Make main figure
 
