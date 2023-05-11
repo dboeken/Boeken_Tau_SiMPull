@@ -269,10 +269,10 @@ def plot_skeletonisation(clusters: np.array, viewport=None, output_folder=False)
 
     arrays = {
         'Clusters': clusters,
-        'Labelled clusters\nDilate ×4, Erode ×3': clustered_arr,
-        'Clustered skeleton': clustered_skeleton,
-        'Relabelled array': labelled_arr,
-        'Relabelled skeleton': labelled_skeleton,
+        'Labelled ROIs\nDilate ×4, Erode ×3': clustered_arr,
+        'Labelled skeleton': clustered_skeleton,
+        'Final ROIs': labelled_arr,
+        'Final skeleton': labelled_skeleton,
     }
 
     fig, ax = plt.subplots(1, 5, figsize=(30, 5))
@@ -295,6 +295,23 @@ def plot_skeletonisation(clusters: np.array, viewport=None, output_folder=False)
 clustered_df = pd.read_csv(input_localisations)
 clustered_df.drop([col for col in clustered_df.columns.tolist() if 'Unnamed: ' in col], axis=1, inplace=True)
 
+# remove single-localisation clusters
+locs = clustered_df.groupby('group').count()
+locs = locs[locs['frame'] > 1].copy().reset_index()['group'].tolist()
+clustered_df = clustered_df[clustered_df['group'].isin(locs)].copy()
+
+cluster_arr = make_cluster_array(clustered_df, cluster_col='group', scale=8)
+clustered_arr, clustered_skeleton, labelled_arr, labelled_skeleton = make_skeleton(
+    cluster_arr)
+
+arrays = {
+    'Clustered localisations': cluster_arr,
+    'Labelled ROIs\nDilate ×4, Erode ×3': clustered_arr,
+    # 'Labelled skeleton': clustered_skeleton,
+    'Final ROIs': labelled_arr,
+    'Final skeleton': labelled_skeleton,
+}
+
 # Read in raw image
 original = imread(input_srimage, key=np.arange(0, 5000))
 original_image = transform.rescale(
@@ -303,16 +320,37 @@ original_image = transform.rescale(
 
 # =======================Supplementary figure=======================
 # Generate figure panels
-fig, axes = plt.subplots(2, 3, figsize=(18.4 * cm, 2 * 6.1 * cm))
+fig, axes = plt.subplots(2, 2, figsize=(12.1 * cm, 2 * 6.1 * cm))
 axes = axes.ravel()
 
 # Add panel labels
-for x, (label, offset)in enumerate(zip(['A', ' ', 'B', 'C', ' ', ' '], [-0.25, 0, -0.5, -0.25, 0, 0])):
+for x, (label, offset)in enumerate(zip(['A', 'B', 'C', 'D'], [-0.25, -0.25, -0.25, -0.25])):
     # label physical distance to the left and up:
     trans = mtransforms.ScaledTranslation(offset, 0.01, fig.dpi_scale_trans)
     axes[x].text(0.0, 1.0, label, transform=axes[x].transAxes + trans,
                  fontsize=12, va='bottom', fontweight='bold')
-    
-cluster_arr = make_cluster_array(clustered_df, cluster_col='group', scale=8)
 
-plot_skeletonisation(cluster_arr, viewport = [(700,800), (400,500)], output_folder=False)
+viewport = [(700,800), (400,500)]
+(xmin, xmax), (ymin, ymax) = viewport
+
+# A random colormap for matplotlib
+new_cmap = rand_cmap(len(np.unique(arr)+1), type='bright',
+                        first_color_black=True, last_color_black=False)
+for i, (label, arr) in enumerate(arrays.items()):
+
+    axes[i].imshow(arr[xmin:xmax, ymin:ymax],
+                    interpolation='none', cmap=new_cmap)
+    axes[i].set_title(label)
+    axes[i].axis('off')
+
+
+# Save final figure
+plt.tight_layout()
+plt.savefig(f'{output_folder}S7_superres.svg')
+
+""" 
+Figure S6: **Super-resolution measurement of individual molecules.** (A) Localisations are first clustered using DBSCAN with permissive parameters to discard isolated localisations (~noise). (B) The resultant localisations are subjected to rounds of morphological dilation, closing and erosion to arive at single connected regions of interest (ROIs). (C) The resultant ROIs are then relabelled such that individual ROIs are given a single unique identifier. (D) Each ROI is skeletonised to allow for length measurements. In all panels, pixel color represents the pixel/object identifier.
+
+
+
+"""
