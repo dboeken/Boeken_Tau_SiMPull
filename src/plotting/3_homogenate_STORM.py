@@ -666,22 +666,29 @@ for parameter in parameters:
 ###########
 
 # # Make main figure
-fig = plt.figure(figsize=(18.4 * cm, 2 * 6.1 * cm))
-gs1 = fig.add_gridspec(nrows=4, ncols=6, wspace=0.95, hspace=0.8)
+fig = plt.figure(figsize=(12.1 * cm, 4 * 6.1 * cm))
+gs1 = fig.add_gridspec(nrows=8, ncols=4, wspace=0.95, hspace=0.8)
 axA1 = fig.add_subplot(gs1[0:1, 0:1])
 axA2 = fig.add_subplot(gs1[0:1, 1:2])
 axA3 = fig.add_subplot(gs1[1:2, 0:1])
 axA4 = fig.add_subplot(gs1[1:2, 1:2])
-axB1 = fig.add_subplot(gs1[0:2, 2:3])
-axB2 = fig.add_subplot(gs1[0:2, 3:4])
-axB3 = fig.add_subplot(gs1[0:2, 4:5])
-axB4 = fig.add_subplot(gs1[0:2, 5:6])
-axC1 = fig.add_subplot(gs1[2:4, 0:2])
+axA5 = fig.add_subplot(gs1[0:1, 2:3])
+axA6 = fig.add_subplot(gs1[1:2, 2:3])
+axA7 = fig.add_subplot(gs1[0:1, 3:4])
+axA8 = fig.add_subplot(gs1[1:2, 3:4])
 
-axD1 = fig.add_subplot(gs1[2:4, 2:3])
-axD2 = fig.add_subplot(gs1[2:4, 3:4])
-axD3 = fig.add_subplot(gs1[2:4, 4:5])
-axD4 = fig.add_subplot(gs1[2:4, 5:6])
+axB1 = fig.add_subplot(gs1[2:4, 0:1])
+axB2 = fig.add_subplot(gs1[2:4, 1:2])
+axB3 = fig.add_subplot(gs1[2:4, 2:3])
+axB4 = fig.add_subplot(gs1[2:4, 3:4])
+
+axC1 = fig.add_subplot(gs1[4:6, 0:2])
+axC2 = fig.add_subplot(gs1[4:6, 2:4])
+
+axD1 = fig.add_subplot(gs1[6:8, 0:1])
+axD2 = fig.add_subplot(gs1[6:8, 1:2])
+axD3 = fig.add_subplot(gs1[6:8, 2:3])
+axD4 = fig.add_subplot(gs1[6:8, 3:4])
 
 
 
@@ -696,6 +703,10 @@ axA1.axis('off')
 axA2.axis('off')
 axA3.axis('off')
 axA4.axis('off')
+axA5.axis('off')
+axA6.axis('off')
+axA7.axis('off')
+axA8.axis('off')
 
 # --------Panel B--------
 scatbarplot('smoothed_length', 'Mean length [nm]',
@@ -717,7 +728,8 @@ axB4.set_title('Eccentricity')
 # --------Panel C--------
 ecfd_plot('smoothed_length', 'Length',
           palette, axC1, fitted_ecdf['smoothed_length'])
-
+ecfd_plot('eccentricity', 'Eccentricity',
+          palette, axC2, fitted_ecdf['eccentricity'])
 
 # --------Panel D--------
 scatbarplot('high', 'Long [%]',
