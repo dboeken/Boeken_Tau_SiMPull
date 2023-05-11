@@ -43,6 +43,7 @@ cm = 1/2.54
 
 matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
+plt.rcParams['figure.dpi']= 300
 
 # Read in summary measurements
 properties = pd.read_csv(f'{input_path}')
@@ -117,6 +118,7 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
         ax=ax,
         dodge=False,
         order=order,
+        ci = 'sd'
     )
     sns.stripplot(
         data=data,
@@ -128,7 +130,8 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
         edgecolor='#fff',
         linewidth=1,
         s=10,
-        order=order
+        order=order, 
+        
     )
 
     ax.set(ylabel=ylabel, xlabel='')
@@ -475,6 +478,7 @@ def hexbinplotting(colour, ax, data, disease_state):
 
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 550)
+    
 
     return hexs
 
@@ -485,7 +489,7 @@ for_plotting = properties[
     (~properties['sample'].isin(['BSA', 'IgG'])) &
     (properties['prop_type'] == 'smooth') &
     (properties['detect'] == 'AT8') &
-    (properties['#locs'] > 2)  #&
+    (properties['#locs'] > 2)  #5&
     #(properties['smoothed_length'] > 53)
     #(properties['area'] > 2)
 ].copy()
@@ -501,7 +505,11 @@ for_plotting_per_replicate = for_plotting.groupby(
 for_plotting_mean = for_plotting_per_replicate.groupby(
     ['disease_state', 'sample', 'capture', 'detect']).mean().reset_index()
 
-
+## calculating the coefficients of variation (pre filtering)
+# do additional filtering to get coefficients post filtering 
+for_plotting_SD = for_plotting_mean.groupby(
+    ['disease_state', 'capture', 'detect']).agg(['mean', 'std'])['smoothed_length'].reset_index()
+for_plotting_SD['variation'] = for_plotting_SD['std'] / for_plotting_SD['mean']
 
 
 parameters = ['smoothed_length', 'eccentricity', 'scaled_perimeter', 'scaled_area', '#locs', '#locs_density']
