@@ -298,14 +298,14 @@ clustered_df.drop([col for col in clustered_df.columns.tolist() if 'Unnamed: ' i
 # remove single-localisation clusters
 locs = clustered_df.groupby('group').count()
 locs = locs[locs['frame'] > 1].copy().reset_index()['group'].tolist()
-clustered_df = clustered_df[clustered_df['group'].isin(locs)].copy()
+# clustered_df = clustered_df[clustered_df['group'].isin(locs)].copy()
 
-cluster_arr = make_cluster_array(clustered_df, cluster_col='group', scale=8)
+cluster_arr = make_cluster_array(clustered_df[clustered_df['group'].isin(locs)].copy(), cluster_col='group', scale=8)
 clustered_arr, clustered_skeleton, labelled_arr, labelled_skeleton = make_skeleton(
     cluster_arr)
 
 arrays = {
-    'Clustered localisations': cluster_arr,
+    'Clustered localisations': make_cluster_array(clustered_df, cluster_col='group', scale=8),
     'Labelled ROIs\nDilate ×4, Erode ×3': clustered_arr,
     # 'Labelled skeleton': clustered_skeleton,
     'Final ROIs': labelled_arr,
