@@ -18,8 +18,8 @@ else:
     root_path = ''
 
 input_spots = f'{root_path}data/colocalisation_data/colocalisation_spots.csv'
-input_image_r = f'{root_path}data/homogenate_DL_images/X8Y2R2W2_641.tif'
-input_image_g = f'{root_path}data/homogenate_DL_images/X8Y2R2W2_641.tif'
+input_image_r = f'{root_path}data/colocalisation_images/X5Y1R3W1_641.tif'
+input_image_g = f'{root_path}data/colocalisation_images/X5Y1R3W1_488.tif'
 output_folder = f'{root_path}results/S6_colocalisation/'
 
 if not os.path.exists(output_folder):
@@ -31,6 +31,7 @@ font = {'family' : 'arial',
 'size'   : 8 }
 matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
+plt.rcParams['figure.dpi'] = 300
 
 cm = 1/2.54
 
@@ -105,7 +106,8 @@ def plot_colocalisation(seed_spots, test_spots, threshold=False, ax=None):
         ec="black", fc="none",
         s=50,
         ax=ax,
-        label='Colocalised'
+        label='Colocalised',
+        alpha=0.4
     )
 
     return pairs
@@ -118,7 +120,7 @@ spots.drop([col for col in spots.columns.tolist() if 'Unnamed: ' in col], axis=1
 # filter to image of interest
 colocalised = spots[
     (spots['layout'] == 1) &
-    (spots['well_info'].str.contains('X0Y0R1W2'))
+    (spots['well_info'].str.contains('X5Y1R3W1'))
     ].copy()
 colocalised['pair_id'].unique()
 
@@ -187,14 +189,14 @@ fig.legend([legend_labels[lab] for lab in ['AT8', 'T181', 'Colocalised']], ['AT8
 # visualise threshold effect
 sns.lineplot(data=optimisation, x='threshold', y='coloc', ax=axes[2], color='black', linestyle='-', label='Original')
 sns.lineplot(data=optimisation, x='threshold', y='chance', ax=axes[2], color='black', linestyle='--', label='Randomised')
-axes[2].set(ylabel='Number of colocalised spots', xlabel='Distance threshold (px)', ylim=(-2, 102))
-axes[2].legend(frameon=False, loc='upper left', handletextpad=0.2, bbox_to_anchor=(0.01, 1.01))
+axes[2].set(ylabel='Number of colocalised spots', xlabel='Distance threshold (px)', ylim=(-2, 552))
+axes[2].legend(frameon=False, loc='upper left', handletextpad=0.2, handlelength=1.5, bbox_to_anchor=(0.01, 1.01))
 
 # -------Add image panels-------
 microim1 = microshow(
     images=[red_proj], 
     cmaps=['pure_magenta'], #flip_map=[True],
-    label_color='black', ax=axes[3], unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[[0, 2000]])
+    label_color='black', ax=axes[3], unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[[0, 3500]])
 
 microim1 = microshow(
     images=[grn_proj], 
@@ -204,7 +206,7 @@ microim1 = microshow(
 microim1 = microshow(
     images=[red_proj, grn_proj],
     cmaps=['pure_magenta', 'pure_green'],  # flip_map=[True],
-    label_color='black', ax=axes[5], unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[[0, 2000], [0, 2000]])
+    label_color='black', ax=axes[5], unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[[0, 3500], [0, 2000]])
 
 # Add spots for individual channels
 for i, channel in enumerate([641, 488]):
@@ -213,8 +215,8 @@ for i, channel in enumerate([641, 488]):
 
     sns.scatterplot(
         data=df[~df['pair_id'].isnull()],
-        x='centroid-0',
-        y='centroid-1',
+        x='centroid-1',
+        y='centroid-0',
         marker='o',
         s=10,
         ax=axes[i+3],
@@ -225,8 +227,8 @@ for i, channel in enumerate([641, 488]):
     )
     sns.scatterplot(
         data=df[df['pair_id'].isnull()],
-        x='centroid-0',
-        y='centroid-1',
+        x='centroid-1',
+        y='centroid-0',
         marker='x',
         s=10,
         ax=axes[i+3],
@@ -234,8 +236,9 @@ for i, channel in enumerate([641, 488]):
         linewidth=0.1,
         label='Non-colocalised'
     )
-    # axes[i].set_xlim(0, 512)
-    # axes[i].set_ylim(0, 512)
+    # axes[i].set_xlim(512, 0)
+    axes[i].set_ylim(512, 0)
+
     if i ==0:
         handles, labels = axes[i+3].get_legend_handles_labels()
         legend_labels = dict(zip(labels, handles))
@@ -250,8 +253,8 @@ fig.legend([legend_labels[lab] for lab in ['Non-colocalised', 'Colocalised']], [
 df = colocalised[colocalised['channel'] == 641].copy().dropna(subset=['pair_id'])
 sns.scatterplot(
     data=df,
-    x='centroid-0',
-    y='centroid-1',
+    x='centroid-1',
+    y='centroid-0',
     marker='o',
     s=10,
     ax=axes[5],
@@ -259,6 +262,7 @@ sns.scatterplot(
     edgecolor='#fff',
     linewidth=0.1
 )
+axes[5].set_ylim(512, 0)
 
 # Add channel/detection labels to each panel
 axes[0].set_title('Original')
