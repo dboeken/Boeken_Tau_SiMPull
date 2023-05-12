@@ -10,7 +10,7 @@ from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 import matplotlib.transforms as mtransforms
 from loguru import logger
-from scipy.spatial import distance
+import pingouin as pg
 
 logger.info('Import OK')
 
@@ -36,10 +36,17 @@ font = {'family': 'arial',
         'size': 8}
 matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
+plt.rcParams['figure.dpi']= 300
 
 
 sample_dict = {'1': 'CRL', '2': 'CRL', 'BSA': 'BSA',
                '3': 'AD', '4': 'AD', '5': 'AD', '6': 'discard', '7': 'AD', '8': 'CRL', '9': 'AD', '10': 'AD', '11': 'AD', '12': 'CRL', '13': 'CRL', '15': 'AD', '16': 'CRL', '17': 'CRL', '18': 'CRL', '19': 'CRL', '20': 'AD'}
+
+# sex_dict = {'1': 'M', '2': 'F', 'BSA': 'BSA',
+#             '3': 'F', '4': 'F', '5': 'F', '6': 'F', '7': 'M', '8': 'F', '9': 'F', '10': 'F', '11': 'M', '12': 'F', '13': 'F', '15': 'M', '16': 'M', '17': 'M', '18': 'M', '19': 'M', '20': 'F', 'IgG': 'BSA'}
+
+sex_dict = {'1': 'O', '2': 'F', 'BSA': 'BSA',
+            '3': 'F', '4': 'F', '5': 'F', '6': 'F', '7': 'M', '8': 'F', '9': 'F', '10': 'O', '11': 'M', '12': 'F', '13': 'F', '15': 'M', '16': 'O', '17': 'O', '18': 'M', '19': 'O', '20': 'F', 'IgG': 'BSA'}
 
 
 def read_in(input_path, detect,):
@@ -56,6 +63,9 @@ def read_in(input_path, detect,):
     filtered_spots['disease_state'] = filtered_spots['sample'].astype(
         str).map(sample_dict)
     
+    filtered_spots['sex'] = filtered_spots['sample'].astype(
+        str).map(sex_dict)
+    
     # filtered_spots = filtered_spots[filtered_spots.disease_state != 'CRL']
 
     filtered_spots = filtered_spots[filtered_spots.disease_state != 'discard']
@@ -64,10 +74,10 @@ def read_in(input_path, detect,):
 
     filtered_spots = filtered_spots[filtered_spots.disease_state != 'BSA']
 
-    mean_spots = filtered_spots.groupby(['disease_state', 'channel', 'sample', 'capture', 'detect']).mean().reset_index()
+    mean_spots = filtered_spots.groupby(['disease_state', 'channel', 'sample', 'capture', 'detect', 'sex']).mean().reset_index()
 
     BSA = BSA.groupby(
-        ['disease_state', 'channel', 'sample', 'capture', 'detect', 'slide_position']).mean().reset_index()
+        ['disease_state', 'channel', 'sample', 'capture', 'detect', 'slide_position', 'sex']).mean().reset_index()
 
     DL_mean_spots = pd.concat([BSA, mean_spots])
 
@@ -78,8 +88,12 @@ palette = {
     'CRL': '#345995',
     'AD': '#FB4D3D',
     'BSA': 'lightgrey',
+    'F': '#FB4D3D',
+    'M': '#345995', 
+    'O': 'lightgrey'
 }
 
+pvalues = [0.443, 0.00063, 0.00013]
 
 def plot_scatbar_DL(ycol, ylabel, palette, ax, data):
     order = ['AD', 'CRL', 'BSA']
@@ -104,7 +118,7 @@ def plot_scatbar_DL(ycol, ylabel, palette, ax, data):
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=10,
+        s=5,
         order=order
     )
 
@@ -112,13 +126,16 @@ def plot_scatbar_DL(ycol, ylabel, palette, ax, data):
     pairs = [('AD', 'CRL'), ('CRL', 'BSA'), ('AD', 'BSA')]
     annotator = Annotator(
         ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
-    annotator.configure(test='t-test_ind', text_format='star',
-                        loc='inside')
-    annotator.apply_and_annotate()
+    # annotator.configure(test='t-test_ind', text_format='star',
+    #                     loc='inside')
+    # annotator.apply_and_annotate()
+    #annotator = Annotator(ax, pairs)
+    annotator.set_pvalues(pvalues)
+    annotator.annotate()
     ax.legend('', frameon=False)
 
 
-def plot_scatbar(data, ycol, ylabel, palette, order, pairs, hue_order=None, ax=None, s=15):
+def plot_scatbar(data, ycol, ylabel, palette, order, pairs, hue_order=None, ax=None, s=5):
     if not ax:
         fig, ax = plt.subplots()
     sns.barplot(
@@ -143,7 +160,7 @@ def plot_scatbar(data, ycol, ylabel, palette, order, pairs, hue_order=None, ax=N
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=s,
+        s=5,
         order=order,
         hue_order=hue_order
     )
@@ -226,15 +243,6 @@ def calculate_eigens(model, labels):
     return dist
 
 
-def distance_eigens(model, labels):
-    eigens = model.scalings_
-    dist = pd.DataFrame([eigens[:, 0], eigens[:, 1]], index=['xpos', 'ypos']).T
-    dist['label'] = labels
-    dist['ori_dst'] = [distance.euclidean(
-        (xpos, ypos), (0, 0)) for xpos, ypos in dist[['xpos', 'ypos']].values]
-
-    return dist
-
 # Read in diff limited data
 DL_spots_AT8 = read_in(f'{input_path_DL}AT8_spots_per_fov.csv', 'AT8')
 DL_spots_HT7 = read_in(f'{input_path_DL}HT7_spots_per_fov.csv', 'HT7')
@@ -257,10 +265,14 @@ SR_spots['tissue'] = SR_spots['folder'].astype(
 # Map sample IDs  for SR data
 serum_dict = {'1': 'CRL', '2': 'CRL', 'BSA': 'discard',
               '3': 'AD', '4': 'AD', '5': 'AD', '6': 'discard', '7': 'AD', '8': 'CRL', '9': 'AD', '10': 'AD', '11': 'discard', '12': 'CRL', '13': 'CRL', '15': 'AD', '16': 'CRL', '17': 'CRL', '18': 'CRL', '19': 'CRL', '20': 'AD', 'IgG': 'discard'}
+
+
 brain_dict = {'13': 'AD', '9': 'CRL', 'BSA': 'discard',
               '28': 'CRL', '159': 'CRL', '55': 'AD', '246': 'AD', 'IgG': 'discard'}
 SR_spots['sample'] = [str(int(float(sample))) if sample not in ['BSA', 'IgG'] else sample for sample in SR_spots['sample']]
 SR_spots['disease_state'] = [serum_dict[sample] if tissue == 'serum' else brain_dict[sample] for sample, tissue in SR_spots[['sample', 'tissue']].values]
+
+SR_spots['sex'] = [sex_dict[sample] if tissue == 'serum' else np.NaN for sample, tissue in SR_spots[['sample', 'tissue']].values]
 
 # Remove IgG, BSA, outlier sample
 SR_spots = SR_spots[SR_spots['disease_state']!= 'discard'].copy()
@@ -275,7 +287,7 @@ SR_spots['ecc_cat'] = ['round' if ecc <
 SR_spots_mean = SR_spots[
     (SR_spots['smoothed_length'] > 50) & 
     (SR_spots['tissue'] == 'serum')
-    ].groupby(['sample', 'detect', 'folder', 'well_info', 'tissue', 'disease_state']).mean().reset_index().groupby(['sample', 'tissue', 'disease_state']).mean().reset_index()
+    ].groupby(['sample', 'detect', 'folder', 'well_info', 'tissue', 'disease_state', 'sex']).mean().reset_index().groupby(['sample', 'tissue', 'disease_state', 'sex']).mean().reset_index()
 
 SR_spots_mean['scaled_area'] = SR_spots_mean['area'] * (107/8)**2 / 1000
 ######## Compile summary data for LDA
@@ -360,7 +372,7 @@ plot_scatbar(data=SR_spots_mean, ycol='scaled_area', ylabel='Area (×10$^3$ nm$^
 
 # Plot LDA
 plot_lda(data=lda, palette=palette, hue='disease_state', style='tissue', ax=axC, s=100)
-axC.set(ylim=(-8, 8), xlim=(-22, 12))
+axC.set(ylim=(-8, 8), xlim=(-22, 17))
 axC.legend(frameon=False, ncol=2, columnspacing=-0.1, loc='upper right', bbox_to_anchor=(1.05, 1.1), handletextpad=0.2)
 leg = axC.get_legend()
 new_labels = ['', 'AD', 'CRL', '', 'Homog.', 'Serum']
@@ -372,5 +384,8 @@ plt.savefig(f'{output_folder}Figure5_serum.svg')
 plt.show()
 
 
-# plot pseudo-eigens
-plot_eigens(model, summary[value_cols].values, labels=value_cols, num_labels=5)
+pg.anova(
+    data=DL_spots_summary[DL_spots_summary['detect']=='HT7'], dv='spots_count', between=['disease_state']).round(6)
+
+pg.pairwise_tukey(
+    data=DL_spots_summary[DL_spots_summary['detect'] == 'HT7'], dv='spots_count', between=['disease_state']).round(5)
