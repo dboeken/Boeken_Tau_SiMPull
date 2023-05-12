@@ -5,12 +5,12 @@
 # 3: mean length and area
 # 4: ratios of large aggregates
 
-import pingouin as pg
+# import pingouin as pg
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 from scipy.stats import f_oneway
 from matplotlib.colors import ListedColormap
 import matplotlib
-from sklearn.decomposition import PCA
+# from sklearn.decomposition import PCA
 from statannotations.Annotator import Annotator
 import os
 import pandas as pd
@@ -181,6 +181,52 @@ def scatbarplot2(ycol, ylabel, palette, ax, data):
     ax.set_xticklabels(['Long', 'Short'])
     ax.legend('', frameon=False)
 
+
+def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orientation=None):
+
+    # sample_palette = fitted_ecdfs[['sample', huecol]].drop_duplicates()
+    # sample_palette['color'] = sample_palette[huecol].map(palette)
+    # sample_palette = dict(sample_palette[['sample', 'color']].values)
+    # fitted_ecdfs['color'] = fitted_ecdfs['sample'].map(sample_palette)
+
+    if not ax:
+        fig, ax = plt.subplots()
+
+    if orientation == 'h':
+        means = fitted_ecdfs[fitted_ecdfs['type'] == 'interpolated'].groupby(
+            [huecol, 'ecdf']).agg(['mean', 'std']).reset_index()
+        means.columns = [huecol, 'ecdf', 'mean', 'std']
+        means['pos_err'] = means['mean'] + means['std']
+        means['neg_err'] = means['mean'] - means['std']
+
+        for hue, data in means.groupby([huecol]):
+
+            ax.plot(
+                data['mean'],
+                data['ecdf'],
+                color=palette[hue],
+                label=hue
+            )
+            ax.fill_betweenx(
+                y=data['ecdf'].tolist(),
+                x1=(data['neg_err']).tolist(),
+                x2=(data['pos_err']).tolist(),
+                color=palette[hue],
+                alpha=0.3
+            )
+
+    else:
+        sns.lineplot(
+            data=fitted_ecdfs,
+            y=ycol,
+            x='ecdf',
+            hue=huecol,
+            palette=palette,
+            ci='sd',
+            ax=ax
+        )
+
+    return fitted_ecdfs, ax
 
 
 
@@ -726,10 +772,12 @@ scatbarplot('eccentricity', 'Mean eccentricity',
 axB4.set_title('Eccentricity')
 
 # --------Panel C--------
-ecfd_plot('smoothed_length', 'Length',
-          palette, axC1, fitted_ecdf['smoothed_length'])
-ecfd_plot('eccentricity', 'Eccentricity',
-          palette, axC2, fitted_ecdf['eccentricity'])
+
+plot_interpolated_ecdf(fitted_ecdf['smoothed_length'], ycol='smoothed_length', huecol='sample', palette=palette_repl, ax=axC1, orientation='h')
+
+plot_interpolated_ecdf(fitted_ecdf['eccentricity'], ycol='eccentricity', huecol='sample', palette=palette_repl, ax=axC2, orientation='h')
+# ecfd_plot('smoothed_length', 'Length',
+#           palette, axC1, fitted_ecdf['smoothed_length'])
 
 # --------Panel D--------
 scatbarplot('high', 'Long [%]',
@@ -750,9 +798,10 @@ handles, labels = axC1.get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
 simple_legend = {'AD': by_label['13'],
                  'CRL': by_label['9']}
-
-axC1.legend(simple_legend.values(), simple_legend.keys(),
-            loc='upper left', frameon=False)
+for label, ax in zip(['Length (nm)', 'Eccentricity'], [axC1, axC2]):
+    ax.legend(simple_legend.values(), simple_legend.keys(), frameon=False)
+    ax.set_xlabel(label)
+    ax.set_ylabel('Proportion')
 
 
 plt.tight_layout()
