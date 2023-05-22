@@ -203,7 +203,7 @@ brightness_ratio_stats = pd.read_csv(
 
 # =========Generate figure========
 fig = plt.figure(figsize=(18.4 * cm, 2 * 6.1 * cm))
-gs1 = fig.add_gridspec(nrows=2, ncols=3, wspace=0.5, hspace=0.3)
+gs1 = fig.add_gridspec(nrows=2, ncols=3, wspace=0.5, hspace=0.5)
 axA = fig.add_subplot(gs1[0, 0])
 axB = fig.add_subplot(gs1[0, 1])
 axC = fig.add_subplot(gs1[0, 2])
@@ -218,10 +218,10 @@ for ax, label in zip([axA, axB, axC, axD, axE, axF], ['A', 'B', 'C', 'D', 'E', '
             fontsize=12, va='bottom', fontweight='bold')
 
 # --------Panel A--------
-microim1 = microshow(
-    images=[example_coloc[0, :, :], example_coloc[1, :, :]], 
-    cmaps=['pure_magenta', 'pure_green'],
-    label_color='black', ax=axA, unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[[0, 7000], [0, 3500]])
+# microim1 = microshow(
+#     images=[example_coloc[0, :, :], example_coloc[1, :, :]], 
+#     cmaps=['pure_magenta', 'pure_green'],
+#     label_color='black', ax=axA, unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[[0, 7000], [0, 3500]])
 
 axA.axis('off')
 
@@ -252,7 +252,8 @@ scatbar(
     xcol='capture', ycol='intensity_ratio', ax=axD, xorder=['AT8', 'T181'],
     dotpalette=palette, barpalette=palette,
     hue_col='antibody_state', hue_order=['AT8', 'T181'],
-    groups=['AT8', 'T181'], group_label_y=-0.22, group_line_y=-0.15
+    groups=['AT8', 'T181'], group_label_y=-0.22, group_line_y=-0.15,
+    edgecolor='white'
 )
 for i, capture in enumerate(['AT8', 'T181']):
     for detect in [641, 488]:
