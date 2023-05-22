@@ -8,7 +8,7 @@ import pandas as pd
 from loguru import logger
 from microfilm.microplot import microshow
 
-from utils import scatbar
+from src.utils import scatbar
 
 logger.info('Import OK')
 
