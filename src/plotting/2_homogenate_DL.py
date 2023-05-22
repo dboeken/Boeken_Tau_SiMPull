@@ -440,8 +440,10 @@ HT7_spots_intensity['norm_mean_intensity'] = HT7_spots_intensity['mean_intensity
 
 
 fitted_ecdf_HT7 = fitting_ecfd_for_plotting(HT7_spots_intensity, 'HT7', 15, col='norm_mean_intensity')
+fitted_ecdf_HT7.to_csv(f'{output_folder}fitted_ecdf_HT7.csv')
 
 fitted_ecdf_AT8 = fitting_ecfd_for_plotting(AT8_spots_intensity, 'AT8', 1, col='norm_mean_intensity')
+fitted_ecdf_AT8.to_csv(f'{output_folder}fitted_ecdf_AT8.csv')
 
 
 ############ Mean intensity for HT7 capture ################
@@ -481,7 +483,7 @@ proportion_intensity = pd.pivot(
 
 proportion_intensity_plotting = proportion_intensity.groupby(['capture', 'sample', 'detect', 'disease_state']).mean().reset_index().drop('layout', axis=1)
 
-proportion_intensity.to_csv(f'{output_folder}proportion_intensity_per_replicate.csv')
+proportion_intensity.to_csv(f'{output_folder}proportion_intensity.csv')
 
 
 # -----------------Read in example images-----------------
