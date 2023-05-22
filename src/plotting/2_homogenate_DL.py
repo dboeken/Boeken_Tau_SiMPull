@@ -11,6 +11,8 @@ import matplotlib.transforms as mtransforms
 
 from microfilm.microplot import microshow
 
+from src.utils import scatbar, plot_interpolated_ecdf
+
 logger.info('Import OK')
 
 # =================Set paths=================
@@ -37,232 +39,10 @@ palette = {
     '246': '#F03A47',
     'BSA': '#A9A9A9',
     'AD Mix': '#A9A9A9',
-
-}
-
-palette_DL = {
     'CRL': '#345995',
     'AD': '#F03A47',
     'BSA': '#A9A9A9',
 }
-
-def scatbarplot(ycol, ylabel, palette, ax, data):
-    order = ['AD', 'CRL']
-    sns.barplot(
-        data=data,
-        x='disease_state',
-        y=ycol,
-        hue='disease_state',
-        palette=palette,
-        capsize=0.4,
-        errwidth=2,
-        ax=ax,
-        dodge=False,
-        order=order,
-    )
-    sns.stripplot(
-        data=data,
-        x='disease_state',
-        y=ycol,
-        hue='disease_state',
-        palette=palette,
-        ax=ax,
-        edgecolor='#fff',
-        linewidth=1,
-        s=5,
-        order=order
-    )
-
-    ax.set(ylabel=ylabel, xlabel='')
-    ax.tick_params(axis='x', labelrotation=0)
-    ax.set_xticklabels(['AD', 'CRL'])
-    pairs = [('AD', 'CRL')]
-    annotator = Annotator(
-        ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
-    annotator.configure(test='t-test_ind', text_format='star',
-                        loc='inside')
-    annotator.apply_and_annotate()
-    ax.legend('', frameon=False)
-
-
-def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
-    order = ['AT8', 'HT7']
-    hue_order = ['AD', 'CRL', 'BSA']
-    sns.barplot(
-        data=data,
-        x='detect',
-        y=ycol,
-        hue='disease_state',
-        palette=palette,
-        capsize=0.1,
-        errwidth=2,
-        ax=ax,
-        dodge=True,
-        order=order,
-        hue_order=hue_order,
-        edgecolor='white'
-    )
-    sns.stripplot(
-        data=data,
-        x='detect',
-        y=ycol,
-        hue='disease_state',
-        palette=palette,
-        ax=ax,
-        edgecolor='#fff',
-        linewidth=1,
-        s=5,
-        order=order,
-        hue_order=hue_order,
-        dodge=True,
-    )
-
-    pairs = [(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))]
-    annotator = Annotator(
-        ax=ax, pairs=pairs, data=data, x='detect', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
-    annotator.configure(test='t-test_ind', text_format='star',
-                        loc='inside')
-    annotator.apply_and_annotate()
-    
-    ax.set(ylabel=ylabel)
-    
-    ax.set_xlabel('')
-    ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
-    ax.set_xticklabels(['AD  ', 'CRL', '    BSA', 'AD  ', 'CRL', '    BSA'])
-    ax.tick_params(axis='x', labelrotation=0)
-
-    ax.annotate('AT8', xy=(0.25, group_label_y), xycoords='axes fraction', ha='center')
-    ax.annotate('HT7', xy=(0.75, group_label_y), xycoords='axes fraction', ha='center')
-    trans = ax.get_xaxis_transform()
-    ax.plot([-0.25,0.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
-    ax.plot([0.75,1.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
-
-    ax.legend('', frameon=False)
-
-
-def scatbarplot_hue2(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
-    order = ['AT8', 'HT7']
-    hue_order = ['AD', 'CRL']
-    sns.barplot(
-        data=data,
-        x='detect',
-        y=ycol,
-        hue='disease_state',
-        palette=palette,
-        capsize=0.1,
-        errwidth=2,
-        ax=ax,
-        dodge=True,
-        order=order,
-        hue_order=hue_order,
-        edgecolor='white'
-    )
-    sns.stripplot(
-        data=data,
-        x='detect',
-        y=ycol,
-        hue='disease_state',
-        palette=palette,
-        ax=ax,
-        edgecolor='#fff',
-        linewidth=1,
-        s=5,
-        order=order,
-        hue_order=hue_order,
-        dodge=True,
-    )
-
-    pairs = [(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))]
-    annotator = Annotator(
-        ax=ax, pairs=pairs, data=data, x='detect', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
-    annotator.configure(test='t-test_ind', text_format='star',
-                        loc='inside')
-    annotator.apply_and_annotate()
-
-    ax.set(ylabel=ylabel)
-
-    ax.set_xlabel('')
-    ax.set_xticks([-0.2, 0.2, 0.8, 1.2])
-    ax.set_xticklabels(['AD', 'CRL', 'AD', 'CRL'])
-    ax.tick_params(axis='x', labelrotation=0)
-
-    ax.annotate('AT8', xy=(0.25, group_label_y),
-                xycoords='axes fraction', ha='center')
-    ax.annotate('HT7', xy=(0.75, group_label_y),
-                xycoords='axes fraction', ha='center')
-    trans = ax.get_xaxis_transform()
-    ax.plot([-0.25, 0.25], [group_line_y, group_line_y],
-            color="black", transform=trans, clip_on=False)
-    ax.plot([0.75, 1.25], [group_line_y, group_line_y],
-            color="black", transform=trans, clip_on=False)
-
-    ax.legend('', frameon=False)
-
-
-def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, left_lims=False, right_lims=False, group_label_y=-0.18, group_line_y=-0.05):
-    order = ['AT8', 'HT7']
-    for i, detect in enumerate(order):
-        if i == 0:
-            ax = axes
-        else:
-            ax = axes.twinx()
-        sns.barplot(
-            data=data[data['detect'] == detect],
-            x='detect',
-            y=ycol,
-            hue='disease_state',
-            palette=palette,
-            capsize=0.1,
-            errwidth=2,
-            ax=ax,
-            dodge=True,
-            order=order,
-            edgecolor='white'
-        )
-        sns.stripplot(
-            data=data[data['detect'] == detect],
-            x='detect',
-            y=ycol,
-            hue='disease_state',
-            palette=palette,
-            ax=ax,
-            edgecolor='#fff',
-            linewidth=1,
-            s=5,
-            order=order,
-            dodge=True
-        )
-        if i == 0:
-            # ax.set_title(detect, loc='left')
-            ax.set(ylabel=ylabel, xlabel='')
-            ax.set_xticks([])
-            if left_lims:
-                ax.set_ylim(*left_lims)
-        else:
-            # ax.set_title(detect, loc='right')
-            ax.set_ylabel(ylabel, rotation=270, labelpad=15)
-            ax.set_xlabel('')
-            ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
-            ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
-            
-            ax.annotate('AT8', xy=(0.25, group_label_y), xycoords='axes fraction', ha='center')
-            ax.annotate('HT7', xy=(0.75, group_label_y), xycoords='axes fraction', ha='center')
-            trans = ax.get_xaxis_transform()
-            ax.plot([-0.25,0.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
-            ax.plot([0.75,1.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
-            if left_lims:
-                ax.set_ylim(*right_lims)
-
-        pairs = [
-            ((detect, 'AD'), (detect, 'CRL')),
-        ]
-        annotator = Annotator(
-            ax=ax, pairs=pairs, data=data, x='detect', y='mean_intensity', order=order, hue='disease_state', hue_order=['AD', 'CRL', 'BSA'])
-        annotator.configure(test='t-test_ind', text_format='star',
-                            loc='inside', comparisons_correction='bonferroni')
-        annotator.apply_and_annotate()
-        ax.legend('', frameon=False)
-
 
 # =========Organise data========
 spots_summary = pd.read_csv(f'{input_path}spots_count_summary.csv')
@@ -313,20 +93,44 @@ microim1 = microshow(images=[example_CRL],
 axB.set_title('CRL', fontsize=8)
     
 # --------Panel C--------
-scatbarplot_hue('spots_count', 'Number of spots',
-                palette_DL, axC, spots_summary, group_line_y=-0.15, group_label_y=-0.22)
+scatbar(
+    dataframe=spots_summary, xcol='detect', ycol='spots_count', ax=axC, xorder=['AT8', 'HT7'], 
+    dotpalette=palette, barpalette=palette,
+    hue_col='disease_state', hue_order=['AD', 'CRL', 'BSA'], comparisons_correction=None, pairs=[(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))],
+    groups=['AT8', 'HT7'], group_label_y=-0.22, group_line_y=-0.15)
+
+axC.set_ylabel('Number of spots')
 
 # --------Panel D--------
 axD.axis('off')
 
 # --------Panel E--------
-scatbarplot(ycol='norm_mean_intensity', ylabel='Mean intensity (AU)', palette=palette_DL, ax=axE1, data=mean_intensity_plotting[mean_intensity_plotting['detect'] == 'AT8'])
+scatbar(
+    dataframe=mean_intensity_plotting[mean_intensity_plotting['detect'] == 'AT8'], xcol='disease_state', ycol='norm_mean_intensity', ax=axE1, xorder=['AD', 'CRL'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('AD', 'CRL')]
+    )
 axE1.set_title('AT8', fontsize=8)
-scatbarplot(ycol='norm_mean_intensity', ylabel='', palette=palette_DL, ax=axE2, data=mean_intensity_plotting[mean_intensity_plotting['detect'] == 'HT7'])
+axE1.set_ylabel('Number of spots')
+axE1.set_xlabel('')
+
+scatbar(
+    dataframe=mean_intensity_plotting[mean_intensity_plotting['detect'] == 'HT7'], xcol='disease_state', ycol='norm_mean_intensity', ax=axE2, xorder=['AD', 'CRL'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('AD', 'CRL')]
+    )
 axE2.set_title('HT7', fontsize=8)
+axE2.set_ylabel('')
+axE2.set_xlabel('')
 
 # --------Panel F--------
-scatbarplot_hue2(ycol='bright', ylabel='Bright spots (%)', palette=palette_DL, ax=axF, data=proportion_intensity_plotting, group_line_y=-0.15, group_label_y=-0.22)
+scatbar(
+    dataframe=proportion_intensity_plotting, xcol='detect', ycol='bright', ax=axF, xorder=['AT8', 'HT7'],
+    dotpalette=palette, barpalette=palette,
+    hue_col='disease_state', hue_order=['AD', 'CRL'], comparisons_correction=None, pairs=[(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))],
+    groups=['AT8', 'HT7'], group_label_y=-0.22, group_line_y=-0.15
+    )
+axF.set_ylabel('Bright spots (%)')
 
 # --------Panel G--------
 plot_interpolated_ecdf(
