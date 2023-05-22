@@ -361,6 +361,14 @@ brightness_ratio_stats['significance'] = ['****' if val < 0.0001 else ('***' if 
     '**' if val < 0.01 else ('*' if val < 0.05 else 'ns')))for val in brightness_ratio_stats['pval']]
 
 
+AT8_mean_for_plotting_proportion.to_csv(
+    f'{output_folder}AT8_mean_for_plotting_proportion.csv')
+T181_mean_for_plotting_proportion.to_csv(
+    f'{output_folder}T181_mean_for_plotting_proportion.csv')
+filtered_disease.to_csv(
+    f'{output_folder}filtered_disease.csv')
+AD_brightness_plotting.to_csv(
+    f'{output_folder}AD_brightness_plotting.csv')
 
 ## Read image
 example_coloc = imread(image_path)

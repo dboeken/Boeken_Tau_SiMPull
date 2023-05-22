@@ -21,7 +21,7 @@ else:
 
 input_path_DL = f'{root_path}data/serum_DL_data/'
 input_path_SR = f'{root_path}data/serum_SR_data/'
-output_folder = f'results/serum/'
+output_folder = f'results/5_serum/'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
@@ -345,6 +345,13 @@ value_cols = ['area', 'eccentricity', 'perimeter',
               'minor_axis_length', 'major_axis_length', 'smoothed_length', '#locs', 'spots_count']
 lda, model = perform_lda(summary, value_cols, category_col='category')
 
+
+DL_spots_summary.to_csv(
+    f'{output_folder}DL_spots_summary.csv')
+SR_spots_mean.to_csv(
+    f'{output_folder}SR_spots_mean.csv')
+lda.to_csv(
+    f'{output_folder}SR_spots_mean.csv')
 
 ######## Plot figure 
 

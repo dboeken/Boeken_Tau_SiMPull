@@ -314,8 +314,12 @@ def LOD_calculation(data, capture, detect, ax):
 # plt.ylabel('Number of aggregates per FOV')
 # LOD_values
 
-
-
+mean_number_peptide_data.to_csv(
+    f'{output_folder}mean_number_peptide_data.csv')
+mean_spots_Xreactivity.to_csv(
+    f'{output_folder}mean_spots_Xreactivity.csv')
+mean_spots_dilution.to_csv(
+    f'{output_folder}mean_spots_dilution.csv')
 
 
 
