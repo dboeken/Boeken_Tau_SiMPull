@@ -21,7 +21,7 @@ else:
     root_path = ''
 
 input_path = f'{root_path}data/homogenate_SR_data/properties_compiled.csv'
-output_folder = 'results/super-res/summary/'
+output_folder = 'results/3_homogenate_SR/'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
@@ -175,11 +175,6 @@ def scatbarplot2(ycol, ylabel, palette, ax, data):
 
 def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orientation=None):
 
-    # sample_palette = fitted_ecdfs[['sample', huecol]].drop_duplicates()
-    # sample_palette['color'] = sample_palette[huecol].map(palette)
-    # sample_palette = dict(sample_palette[['sample', 'color']].values)
-    # fitted_ecdfs['color'] = fitted_ecdfs['sample'].map(sample_palette)
-
     if not ax:
         fig, ax = plt.subplots()
 
@@ -254,11 +249,6 @@ def scatbarplot_hue_ecc(ycol, ylabel, palette, ax, data, group_label_y=-0.18, gr
         dodge=True,
     )
 
-    # add by chance lines by disease state
-    # for disease, df2 in data.groupby('disease_state'):
-    #     ax.axhline(df2['chance_proportion_coloc'].mean(),
-    #                linestyle=linestyles[disease], linewidth=1.2, color='#4c4c52')
-
     pairs = [(('fibril', 'AD'), ('round', 'AD')),
              (('fibril', 'CRL'), ('round', 'CRL')), (('fibril', 'AD'), ('fibril', 'CRL')), (('round', 'AD'), ('round', 'CRL'))]
     annotator = Annotator(
@@ -303,10 +293,6 @@ def scatbarplot_hue_two_param(ycol, ylabel, palette, ax, data, xcol, high, low, 
         dodge=True,
     )
 
-    # add by chance lines by disease state
-    # for disease, df2 in data.groupby('disease_state'):
-    #     ax.axhline(df2['chance_proportion_coloc'].mean(),
-    #                linestyle=linestyles[disease], linewidth=1.2, color='#4c4c52')
 
     pairs = [(('high', 'AD'), ('low', 'AD')),
              (('high', 'CRL'), ('low', 'CRL')), (('high', 'AD'), ('high', 'CRL')), (('low', 'AD'), ('low', 'CRL'))]
@@ -323,17 +309,6 @@ def scatbarplot_hue_two_param(ycol, ylabel, palette, ax, data, xcol, high, low, 
     ax.set_xlabel('')
     ax.set_xticks([0, 1])
     ax.set_xticklabels([high, low])
-    # ax.set_yticks([0, 25, 50, 75, 100])
-    # ax.set_yticklabels(['0', '25', '50', '75', '100'])
-    # ax.annotate('AT8', xy=(0.25, group_label_y),
-    #             xycoords='axes fraction', ha='center')
-    # ax.annotate('T181', xy=(0.75, group_label_y),
-    #             xycoords='axes fraction', ha='center')
-    # trans = ax.get_xaxis_transform()
-    # ax.plot([-0.25, 0.25], [group_line_y, group_line_y],
-    #         color="black", transform=trans, clip_on=False)
-    # ax.plot([0.75, 1.25], [group_line_y, group_line_y],
-    #         color="black", transform=trans, clip_on=False)
 
     ax.legend('', frameon=False)
 
@@ -446,7 +421,7 @@ for_plotting = properties[
     (~properties['sample'].isin(['BSA', 'IgG'])) &
     (properties['prop_type'] == 'smooth') &
     (properties['detect'] == 'AT8') &
-    (properties['#locs'] > 2)  #5&
+    (properties['#locs'] > 2)  #&
     #(properties['smoothed_length'] > 53)
     #(properties['area'] > 2)
 ].copy()
@@ -456,11 +431,15 @@ for_plotting = properties[
 for_plotting['scaled_area'] = (for_plotting['area'] * (107/8)**2)/1000
 for_plotting['scaled_perimeter'] = for_plotting['perimeter'] * (107/8)
 
+
+
 for_plotting_per_replicate = for_plotting.groupby(
     ['disease_state', 'sample', 'capture', 'well_info', 'detect']).mean().reset_index()
 
 for_plotting_mean = for_plotting_per_replicate.groupby(
     ['disease_state', 'sample', 'capture', 'detect']).mean().reset_index()
+
+
 
 ## calculating the coefficients of variation (pre filtering)
 # do additional filtering to get coefficients post filtering 
@@ -556,6 +535,7 @@ for_plotting_fil_mean = for_plotting_fil_per_replicate.groupby(
     ['disease_state', 'sample', 'capture', 'detect']).mean().reset_index()
 
 
+
 for parameter in parameters:
     #for_plotting = thresholding(for_plotting, parameter)
     parameter_cat = parameter + '_cat'
@@ -614,8 +594,43 @@ for parameter in parameters:
 
 
 
+# Compile single df from dictionary
+proportions = []
+for key, df in proportion.items():
+    df['category'] = key
+    proportions.append(df)
+proportions = pd.concat(proportions)
+
+fil_proportions = []
+for key, df in fil_proportion.items():
+    df['category'] = key
+    fil_proportions.append(df)
+fil_proportions = pd.concat(fil_proportions)
+
+fitted_ecdfs = []
+for key, df in fitted_ecdf.items():
+    df['category'] = key
+    fitted_ecdfs.append(df)
+fitted_ecdfs = pd.concat(fitted_ecdfs)
+
+parameter_by_parameter2_for_plotting
+
+parameter_by_parameter2_for_plotting_all = []
+for key, df in parameter_by_parameter2_for_plotting.items():
+    df['category'] = key
+    parameter_by_parameter2_for_plotting_all.append(df)
+parameter_by_parameter2_for_plotting_all = pd.concat(
+    parameter_by_parameter2_for_plotting_all)
 
 
+for_plotting.to_csv(f'{output_folder}for_plotting.csv')
+proportions.to_csv(f'{output_folder}proportions.csv')
+fil_proportions.to_csv(f'{output_folder}fil_proportions.csv')
+for_plotting_mean.to_csv(f'{output_folder}for_plotting_mean.csv')
+fitted_ecdfs.to_csv(f'{output_folder}fitted_ecdfs.csv')
+for_plotting_fil_mean.to_csv(f'{output_folder}for_plotting_fil_mean.csv')
+parameter_by_parameter2_for_plotting_all.to_csv(
+    f'{output_folder}parameter_by_parameter2_for_plotting_all.csv')
 
 
 
