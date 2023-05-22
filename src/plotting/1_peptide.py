@@ -61,28 +61,23 @@ mean_number_spots[['sample', 'concentration']
                   ] = mean_number_spots['sample'].str.split('-', expand=True)
 mean_number_spots.to_csv(f'{output_folder}mean_number_spots.csv')
 
+
+spot_count = mean_number_spots[(mean_number_spots['concentration'].isin(
+    ['02', '', 'low'])) & (mean_number_spots['capture'] == 'HT7')]
+
 # =================Read in example images=================
-
-
 example_BSA = imread('/Users/dorotheaboeken/Documents/GitHub/Boeken_Tau_SiMPull/data/peptide_data/example_BSA.tif')
 example_BSA = np.mean(example_BSA[10:, :, :], axis=0)
-plt.imshow(example_BSA)
 
 example_monomer = imread(
     '/Users/dorotheaboeken/Documents/GitHub/Boeken_Tau_SiMPull/data/peptide_data/example_monomer.tif')
 example_monomer = np.mean(example_monomer[10:, :, :], axis=0)
-plt.imshow(example_monomer)
-
 
 example_dimer = imread(
     '/Users/dorotheaboeken/Documents/GitHub/Boeken_Tau_SiMPull/data/peptide_data/example_dimer.tif')
 example_dimer = np.mean(example_dimer[10:, :, :], axis=0)
-plt.imshow(example_dimer)
-
 
 # # ==================Generate main figure==================
-
-
 def scatbarplot(ycol, ylabel, ax, data):
     order = ['Dimer', 'Monomer', 'BSA']
     sns.barplot(
@@ -130,8 +125,6 @@ axB = fig.add_subplot(gs1[1:2, 0:1])
 axC = fig.add_subplot(gs1[1:2, 1:2])
 axD = fig.add_subplot(gs1[1:2, 2:3])
 
-
-
 for ax, label in zip([axA, axB, axC, axD], ['A', 'B', 'C', 'D']):
     # label physical distance to the left and up:
     trans = mtransforms.ScaledTranslation(-40/72, -11/72, fig.dpi_scale_trans)
@@ -140,34 +133,28 @@ for ax, label in zip([axA, axB, axC, axD], ['A', 'B', 'C', 'D']):
 
 # --------Panel A--------
 axA.axis('off')
+
 # --------Panel B--------
-
-
-microim1 = microshow(images=[example_monomer],
-                     cmaps=['Greys'], flip_map=[True],
-                     label_color='black', ax=axC,
-                     unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[400, 800])
 microim1 = microshow(images=[example_dimer],
                      cmaps=['Greys'], flip_map=[True],
                      label_color='black', ax=axB,
                      unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[400, 800])
+axB.set_title('Dimer', fontsize=8)
 
+# --------Panel C--------
+microim1 = microshow(images=[example_monomer],
+                     cmaps=['Greys'], flip_map=[True],
+                     label_color='black', ax=axC,
+                     unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[400, 800])
+axC.set_title('Monomer', fontsize=8)
 
-df = mean_number_spots[(mean_number_spots['concentration'].isin(
-    ['02', '', 'low'])) & (mean_number_spots['capture'] == 'HT7')]
-
-
-scatbarplot('spots_count', 'Mean spots', axD, df)
-
+# --------Panel D--------
+scatbarplot('spots_count', 'Mean spots', axD, spot_count)
 axD.set_ylim(0, 400)
 axD.set_ylabel("Mean spots per FOV")
 axD.set_xlabel("")
 
-
-axB.set_title('Dimer', fontsize=8)
-axC.set_title('Monomer', fontsize=8)
-
-
+# --------Fig. elements--------
 plt.tight_layout()
 plt.savefig(f'{output_folder}Figure1_peptide.svg')
 plt.show()
