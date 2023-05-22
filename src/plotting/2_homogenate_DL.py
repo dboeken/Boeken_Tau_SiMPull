@@ -59,14 +59,14 @@ def read_in(input_path, detect):
 
 
 def scatbarplot(ycol, ylabel, palette, ax, data):
-    order = ['AD', 'CRL', 'BSA']
+    order = ['AD', 'CRL']
     sns.barplot(
         data=data,
         x='disease_state',
         y=ycol,
         hue='disease_state',
         palette=palette,
-        capsize=0.2,
+        capsize=0.4,
         errwidth=2,
         ax=ax,
         dodge=False,
@@ -81,13 +81,13 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=10,
+        s=5,
         order=order
     )
 
     ax.set(ylabel=ylabel, xlabel='')
     ax.tick_params(axis='x', labelrotation=0)
-    ax.set_xticklabels(['AD  ', 'CRL', '    BSA'])
+    ax.set_xticklabels(['AD', 'CRL'])
     pairs = [('AD', 'CRL')]
     annotator = Annotator(
         ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
@@ -106,7 +106,7 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
         y=ycol,
         hue='disease_state',
         palette=palette,
-        capsize=0.2,
+        capsize=0.1,
         errwidth=2,
         ax=ax,
         dodge=True,
@@ -123,7 +123,7 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
         ax=ax,
         edgecolor='#fff',
         linewidth=1,
-        s=10,
+        s=5,
         order=order,
         hue_order=hue_order,
         dodge=True,
@@ -150,6 +150,66 @@ def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_
     ax.plot([0.75,1.25],[group_line_y, group_line_y], color="black", transform=trans, clip_on=False)
 
     ax.legend('', frameon=False)
+
+
+def scatbarplot_hue2(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
+    order = ['AT8', 'HT7']
+    hue_order = ['AD', 'CRL']
+    sns.barplot(
+        data=data,
+        x='detect',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        capsize=0.1,
+        errwidth=2,
+        ax=ax,
+        dodge=True,
+        order=order,
+        hue_order=hue_order,
+        edgecolor='white'
+    )
+    sns.stripplot(
+        data=data,
+        x='detect',
+        y=ycol,
+        hue='disease_state',
+        palette=palette,
+        ax=ax,
+        edgecolor='#fff',
+        linewidth=1,
+        s=5,
+        order=order,
+        hue_order=hue_order,
+        dodge=True,
+    )
+
+    pairs = [(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))]
+    annotator = Annotator(
+        ax=ax, pairs=pairs, data=data, x='detect', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
+    annotator.configure(test='t-test_ind', text_format='star',
+                        loc='inside')
+    annotator.apply_and_annotate()
+
+    ax.set(ylabel=ylabel)
+
+    ax.set_xlabel('')
+    ax.set_xticks([-0.2, 0.2, 0.8, 1.2])
+    ax.set_xticklabels(['AD', 'CRL', 'AD', 'CRL'])
+    ax.tick_params(axis='x', labelrotation=0)
+
+    ax.annotate('AT8', xy=(0.25, group_label_y),
+                xycoords='axes fraction', ha='center')
+    ax.annotate('HT7', xy=(0.75, group_label_y),
+                xycoords='axes fraction', ha='center')
+    trans = ax.get_xaxis_transform()
+    ax.plot([-0.25, 0.25], [group_line_y, group_line_y],
+            color="black", transform=trans, clip_on=False)
+    ax.plot([0.75, 1.25], [group_line_y, group_line_y],
+            color="black", transform=trans, clip_on=False)
+
+    ax.legend('', frameon=False)
+
 
 
 def intensity_processing(slide_params, spots_intensity, detect):
@@ -242,6 +302,58 @@ def ecfd_plot(ycol, ylabel, palette, ax, df):
     ax.legend(frameon=False)
 
 
+def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orientation=None):
+
+    # sample_palette = fitted_ecdfs[['sample', huecol]].drop_duplicates()
+    # sample_palette['color'] = sample_palette[huecol].map(palette)
+    # sample_palette = dict(sample_palette[['sample', 'color']].values)
+    # fitted_ecdfs['color'] = fitted_ecdfs['sample'].map(sample_palette)
+
+    if not ax:
+        fig, ax = plt.subplots()
+
+    if orientation == 'h':
+        means = fitted_ecdfs[fitted_ecdfs['type'] == 'interpolated'].groupby(
+            [huecol, 'ecdf']).agg(['mean', 'std']).reset_index()
+        means.columns = [huecol, 'ecdf', 'mean', 'std']
+        means['pos_err'] = means['mean'] + means['std']
+        means['neg_err'] = means['mean'] - means['std']
+
+        for hue, data in means.groupby([huecol]):
+
+            ax.plot(
+                data['mean'],
+                data['ecdf'],
+                color=palette[hue],
+                label=hue
+            )
+            ax.fill_betweenx(
+                y=data['ecdf'].tolist(),
+                x1=(data['neg_err']).tolist(),
+                x2=(data['pos_err']).tolist(),
+                color=palette[hue],
+                alpha=0.3
+            )
+
+    else:
+        sns.lineplot(
+            data=fitted_ecdfs,
+            y=ycol,
+            x='ecdf',
+            hue=huecol,
+            palette=palette,
+            ci='sd',
+            ax=ax
+        )
+
+    return fitted_ecdfs, ax
+
+
+
+
+
+
+
 def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, left_lims=False, right_lims=False, group_label_y=-0.18, group_line_y=-0.05):
     order = ['AT8', 'HT7']
     for i, detect in enumerate(order):
@@ -255,7 +367,7 @@ def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, left_lims=False, r
             y=ycol,
             hue='disease_state',
             palette=palette,
-            capsize=0.2,
+            capsize=0.1,
             errwidth=2,
             ax=ax,
             dodge=True,
@@ -271,7 +383,7 @@ def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, left_lims=False, r
             ax=ax,
             edgecolor='#fff',
             linewidth=1,
-            s=1,
+            s=5,
             order=order,
             dodge=True
         )
@@ -350,6 +462,8 @@ mean_intensity_per_replicate.to_csv(
 mean_intensity_plotting = mean_intensity_per_replicate.groupby(
     ['capture', 'sample', 'detect', 'disease_state']).mean().reset_index()
 
+mean_intensity_plotting = mean_intensity_plotting[mean_intensity_plotting['sample']!= 'BSA'].copy()
+
 mean_intensity_plotting.to_csv(f'{output_folder}mean_intensity.csv')
 
 # Calculate proportion of spots > threshold intensity
@@ -385,18 +499,18 @@ palette = {
     '9': '#345995',
     '159': '#345995',
     '28': '#345995',
-    '13': '#FB4D3D',
-    '55': '#FB4D3D',
-    '246': '#FB4D3D',
-    'BSA': 'lightgrey',
-    'AD Mix': 'darkgrey',
+    '13': '#F03A47',
+    '55': '#F03A47',
+    '246': '#F03A47',
+    'BSA': '#A9A9A9',
+    'AD Mix': '#A9A9A9',
 
 }
 
 palette_DL = {
     'CRL': '#345995',
-    'AD': '#FB4D3D',
-    'BSA': 'darkgrey',
+    'AD': '#F03A47',
+    'BSA': '#A9A9A9',
 }
 
 fig = plt.figure(figsize=(18.4 * cm, 3 * 6.1 * cm))
@@ -447,26 +561,32 @@ axE2.set_title('HT7', fontsize=8)
 
 
 # --------Panel F--------
-scatbarplot_hue(ycol='bright', ylabel='Bright spots (%)', palette=palette_DL, ax=axF, data=proportion_intensity_plotting, group_line_y=-0.15, group_label_y=-0.22)
+scatbarplot_hue2(ycol='bright', ylabel='Bright spots (%)', palette=palette_DL, ax=axF, data=proportion_intensity_plotting, group_line_y=-0.15, group_label_y=-0.22)
 
 # --------Panel G--------
-ecfd_plot('norm_mean_intensity', 'Intensity (AU)',
-          palette, axG, fitted_ecdf_HT7)
+# ecfd_plot('norm_mean_intensity', 'Intensity (AU)',
+#           palette, axG, fitted_ecdf_HT7)
+
+plot_interpolated_ecdf(fitted_ecdf_HT7[fitted_ecdf_HT7['sample']!= 'BSA'], ycol='norm_mean_intensity',
+                       huecol='sample', palette=palette, ax=axG, orientation='h')
 
 # --------Panel H--------
-ecfd_plot('norm_mean_intensity', 'Intensity (AU)',
-          palette, axH, fitted_ecdf_AT8)
+# plot_interpolated_ecdf('norm_mean_intensity', 'Intensity (AU)',
+#           palette, axH, fitted_ecdf_AT8, 'h')
+
+plot_interpolated_ecdf(fitted_ecdf_AT8[fitted_ecdf_AT8['sample']!= 'BSA'], ycol='norm_mean_intensity',
+                       huecol='sample', palette=palette, ax=axH, orientation='h')
 
 # Legend for G,H
 handles, labels = axH.get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
 simple_legend = {'AD': by_label['13'],
-                 'CRL': by_label['9'], 'BSA': by_label['BSA']}
+                 'CRL': by_label['9']}
 
 axG.legend(simple_legend.values(), simple_legend.keys(),
-               loc='upper left', frameon=False)
+               loc='lower right', frameon=False)
 axH.legend(simple_legend.values(), simple_legend.keys(),
-               loc='upper left', frameon=False)
+               loc='lower right', frameon=False)
 
 
 plt.tight_layout()

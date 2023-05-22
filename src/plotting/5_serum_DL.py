@@ -86,8 +86,8 @@ def read_in(input_path, detect,):
 
 palette = {
     'CRL': '#345995',
-    'AD': '#FB4D3D',
-    'BSA': 'lightgrey',
+    'AD': '#F03A47',
+    'BSA': '#A9A9A9',
     'F': '#FB4D3D',
     'M': '#345995', 
     'O': 'lightgrey'

@@ -96,59 +96,59 @@ example_dimer = np.mean(example_dimer[10:, :, :], axis=0)
 plt.imshow(example_dimer)
 
 
-# ==================Generate main figure==================
+# # ==================Generate main figure==================
 
-fig, axes = plt.subplots(1, 4, figsize=(12, 5), gridspec_kw={'width_ratios': [6, 6, 6, 5]})
+# fig, axes = plt.subplots(1, 4, figsize=(12, 5), gridspec_kw={'width_ratios': [6, 6, 6, 5]})
 
-#Panel D: Example BSA image
-microim1 = microshow(images=[example_BSA],
-                               cmaps=['Greys'], flip_map=[True],
-                               label_color='black', ax=axes[0],
-                               unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,)
-microim1 = microshow(images=[example_monomer],
-                               cmaps=['Greys'], flip_map=[True],
-                               label_color='black', ax=axes[2],
-                               unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,)
-microim1 = microshow(images=[example_dimer],
-                     cmaps=['Greys'], flip_map=[True],
-                     label_color='black', ax=axes[1],
-                     unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,)
+# #Panel D: Example BSA image
+# microim1 = microshow(images=[example_BSA],
+#                                cmaps=['Greys'], flip_map=[True],
+#                                label_color='black', ax=axes[0],
+#                                unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,)
+# microim1 = microshow(images=[example_monomer],
+#                                cmaps=['Greys'], flip_map=[True],
+#                                label_color='black', ax=axes[2],
+#                                unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,)
+# microim1 = microshow(images=[example_dimer],
+#                      cmaps=['Greys'], flip_map=[True],
+#                      label_color='black', ax=axes[1],
+#                      unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,)
 
-# Panel E: Spot count
-df = mean_number_spots[(mean_number_spots['concentration'].isin(['02', '', 'low'])) & (mean_number_spots['capture'] == 'HT7')]
-sns.stripplot(
-    data=df, 
-    x='sample', 
-    y='spots_count', 
-    color='#36454F',
-    s=10
-)
-sns.barplot(
-    data=df,
-    x='sample',
-    y='spots_count',
-    capsize=0.2,
-    errwidth=2,
-    color='darkgrey'
-)
-axes[2].set_ylim(0, 400)
-axes[2].set_ylabel("Mean spots per FOV")
-axes[2].set_xlabel("")
-
-
-axes[0].annotate('B', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='bold')
-axes[1].annotate('C', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='bold')
-axes[2].annotate('D', xy=(-0.4, 0.925), xycoords='axes fraction', size=24, weight='bold')
-
-plt.tight_layout()
-#plt.savefig(f'{output_folder}1_peptide.svg')
-plt.show()
+# # Panel E: Spot count
+# df = mean_number_spots[(mean_number_spots['concentration'].isin(['02', '', 'low'])) & (mean_number_spots['capture'] == 'HT7')]
+# sns.stripplot(
+#     data=df, 
+#     x='sample', 
+#     y='spots_count', 
+#     color='#36454F',
+#     s=10
+# )
+# sns.barplot(
+#     data=df,
+#     x='sample',
+#     y='spots_count',
+#     capsize=0.2,
+#     errwidth=2,
+#     color='darkgrey'
+# )
+# axes[2].set_ylim(0, 400)
+# axes[2].set_ylabel("Mean spots per FOV")
+# axes[2].set_xlabel("")
 
 
-########plot AT8 peptide data for supplementals #########
+# axes[0].annotate('B', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='bold')
+# axes[1].annotate('C', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='bold')
+# axes[2].annotate('D', xy=(-0.4, 0.925), xycoords='axes fraction', size=24, weight='bold')
 
-# sns.set(rc={'figure.figsize': (3, 4)})
-# sns.set_theme(style="ticks", font_scale=1.4)
+# plt.tight_layout()
+# #plt.savefig(f'{output_folder}1_peptide.svg')
+# plt.show()
+
+
+# ########plot AT8 peptide data for supplementals #########
+
+# # sns.set(rc={'figure.figsize': (3, 4)})
+# # sns.set_theme(style="ticks", font_scale=1.4)
 for (capture), df in mean_number_spots[mean_number_spots['capture'].isin(['AT8'])].groupby(['capture']):
     sns.stripplot(data=df, x='sample', y='spots_count', color='#36454F',
                   s=10)
@@ -201,7 +201,7 @@ def scatbarplot(ycol, ylabel, ax, data):
         edgecolor='#fff',
         linewidth=1,
         color='#36454F',
-        s=10,
+        s=5,
         order=order
     )
 

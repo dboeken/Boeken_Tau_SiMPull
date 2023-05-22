@@ -177,14 +177,14 @@ filtered_disease = for_plotting[for_plotting['disease_state'] == 'AD'].copy()
 ##########
 palette_DL = {
     'CRL': '#345995',
-    'AD': '#FB4D3D',
-    'BSA': 'darkgrey',
+    'AD': '#F03A47',
+    'BSA': '#A9A9A9',
 }
 
 palette_coloc = {
-    641: '#FB4D3D',
-    488: '#FB4D3D',
-    'BSA': 'darkgrey',
+    641: '#F03A47',
+    488: '#F03A47',
+    'BSA': '#A9A9A9',
 }
 
 

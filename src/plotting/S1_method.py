@@ -9,6 +9,7 @@ import matplotlib
 from statannotations.Annotator import Annotator
 import matplotlib.transforms as mtransforms
 from scipy.optimize import leastsq
+import pingouin as pg
 
 from microfilm.microplot import microshow
 from skimage.io import imread
@@ -375,3 +376,29 @@ scatbarplot(ycol='spots_count', ylabel='Aggregates per FOV',
 axC.set(ylabel='Aggregates per FOV',
         xlabel='Concentration of tau [pg/mL]')
 plt.tight_layout()
+
+plt.savefig(f'{output_folder}S1_methods.svg')
+plt.show()
+
+
+pg.anova(
+    data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'], dv='spots_count', between=['sample']).round(5)
+pg.pairwise_tukey(
+    data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'], dv='spots_count', between=['sample']).round(5)
+
+
+pg.anova(
+    data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'HT7'], dv='spots_count', between=['sample']).round(5)
+pg.pairwise_tukey(
+    data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'HT7'], dv='spots_count', between=['sample']).round(5)
+
+
+pg.anova(
+    data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'SC211'], dv='spots_count', between=['sample']).round(5)
+pg.pairwise_tukey(
+    data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'SC211'], dv='spots_count', between=['sample']).round(5)
+
+pg.anova(
+    data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == '6E10'], dv='spots_count', between=['sample']).round(5)
+pg.pairwise_tukey(
+    data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == '6E10'], dv='spots_count', between=['sample']).round(5)
