@@ -62,13 +62,6 @@ mean_number_spots[['sample', 'concentration']
 
 # =================Read in example images=================
 
-# example_BSA = imread(f'{root_path}data/peptide_images/X6Y1R3W3_641.tif')
-# example_BSA = np.mean(example_BSA[10:, :, :], axis=0)
-# example_monomer = imread(f'{root_path}data/peptide_images/X4Y1R3W2_641.tif')
-# example_monomer = np.mean(example_monomer[10:, :, :], axis=0)
-# example_dimer = imread(f'{root_path}data/peptide_images/X1Y1R2W2_641.tif')
-# example_dimer = np.mean(example_dimer[10:, :, :], axis=0)
-
 
 example_BSA = imread('/Users/dorotheaboeken/Documents/GitHub/Boeken_Tau_SiMPull/data/peptide_data/example_BSA.tif')
 example_BSA = np.mean(example_BSA[10:, :, :], axis=0)
@@ -86,59 +79,9 @@ example_dimer = np.mean(example_dimer[10:, :, :], axis=0)
 plt.imshow(example_dimer)
 
 
-# # ==================Generate main figure==================
-
-# fig, axes = plt.subplots(1, 4, figsize=(12, 5), gridspec_kw={'width_ratios': [6, 6, 6, 5]})
-
-# #Panel D: Example BSA image
-# microim1 = microshow(images=[example_BSA],
-#                                cmaps=['Greys'], flip_map=[True],
-#                                label_color='black', ax=axes[0],
-#                                unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,)
-# microim1 = microshow(images=[example_monomer],
-#                                cmaps=['Greys'], flip_map=[True],
-#                                label_color='black', ax=axes[2],
-#                                unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,)
-# microim1 = microshow(images=[example_dimer],
-#                      cmaps=['Greys'], flip_map=[True],
-#                      label_color='black', ax=axes[1],
-#                      unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,)
-
-# # Panel E: Spot count
-# df = mean_number_spots[(mean_number_spots['concentration'].isin(['02', '', 'low'])) & (mean_number_spots['capture'] == 'HT7')]
-# sns.stripplot(
-#     data=df, 
-#     x='sample', 
-#     y='spots_count', 
-#     color='#36454F',
-#     s=10
-# )
-# sns.barplot(
-#     data=df,
-#     x='sample',
-#     y='spots_count',
-#     capsize=0.2,
-#     errwidth=2,
-#     color='darkgrey'
-# )
-# axes[2].set_ylim(0, 400)
-# axes[2].set_ylabel("Mean spots per FOV")
-# axes[2].set_xlabel("")
-
-
-# axes[0].annotate('B', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='bold')
-# axes[1].annotate('C', xy=(0, 1.05), xycoords='axes fraction', size=24, weight='bold')
-# axes[2].annotate('D', xy=(-0.4, 0.925), xycoords='axes fraction', size=24, weight='bold')
-
-# plt.tight_layout()
-# #plt.savefig(f'{output_folder}1_peptide.svg')
-# plt.show()
-
 
 # ########plot AT8 peptide data for supplementals #########
 
-# # sns.set(rc={'figure.figsize': (3, 4)})
-# # sns.set_theme(style="ticks", font_scale=1.4)
 for (capture), df in mean_number_spots[mean_number_spots['capture'].isin(['AT8'])].groupby(['capture']):
     sns.stripplot(data=df, x='sample', y='spots_count', color='#36454F',
                   s=10)
@@ -157,13 +100,11 @@ for (capture), df in mean_number_spots[mean_number_spots['capture'].isin(['AT8']
     #plt.ylabel("mean spots")
 
     plt.title(f'{capture}')
-    #plt.show()
+
     plt.savefig(f'{output_folder}mean_number_spots_AT8.svg')
 
 
-
-
-
+# # ==================Generate main figure==================
 
 
 def scatbarplot(ycol, ylabel, ax, data):
@@ -214,10 +155,6 @@ axC = fig.add_subplot(gs1[1:2, 1:2])
 axD = fig.add_subplot(gs1[1:2, 2:3])
 
 
-# axE = fig.add_subplot(gs1[4:6, 0:2])
-# axF = fig.add_subplot(gs1[4:6, 2:4])
-# axG = fig.add_subplot(gs1[4:6, 4:6])
-
 
 for ax, label in zip([axA, axB, axC, axD], ['A', 'B', 'C', 'D']):
     # label physical distance to the left and up:
@@ -242,21 +179,7 @@ microim1 = microshow(images=[example_dimer],
 
 df = mean_number_spots[(mean_number_spots['concentration'].isin(
     ['02', '', 'low'])) & (mean_number_spots['capture'] == 'HT7')]
-# sns.stripplot(
-#     data=df,
-#     x='sample',
-#     y='spots_count',
-#     color='#36454F',
-#     s=10
-# )
-# sns.barplot(
-#     data=df,
-#     x='sample',
-#     y='spots_count',
-#     capsize=0.2,
-#     errwidth=2,
-#     color='darkgrey'
-# )
+
 
 scatbarplot('spots_count', 'Mean spots', axD, df)
 
@@ -265,14 +188,8 @@ axD.set_ylabel("Mean spots per FOV")
 axD.set_xlabel("")
 
 
-# scatbarplot('smoothed_length', 'Mean length [nm]',
-#             palette, axB1, for_plotting_mean)
 axB.set_title('Dimer', fontsize=8)
 axC.set_title('Monomer', fontsize=8)
-
-# scatbarplot('scaled_perimeter', 'Mean perimeter [nm]',
-#             palette, axB2, for_plotting_mean)
-# axB2.set_title('Perimeter')
 
 
 plt.tight_layout()
