@@ -59,6 +59,7 @@ mean_number_spots = spots.groupby(
 
 mean_number_spots[['sample', 'concentration']
                   ] = mean_number_spots['sample'].str.split('-', expand=True)
+mean_number_spots.to_csv(f'{output_folder}mean_number_spots.csv')
 
 # =================Read in example images=================
 
