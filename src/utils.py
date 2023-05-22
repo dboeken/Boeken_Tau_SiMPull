@@ -14,7 +14,7 @@ from statannotations.Annotator import Annotator
 logger.info('Import OK')
 
 # =======Plotting functionality=======
-def scatbar(dataframe, xcol, ycol, ax, xorder, dotpalette=None, barpalette=None, dotcolor=None, barcolor=None, hue_col=None, hue_order=None, capsize=0.2, errwidth=2, dotsize=5, pairs=None, comparisons_correction=None, groups=None, group_label_y=-0.18, group_line_y=-0.05):
+def scatbar(dataframe, xcol, ycol, ax, xorder, dotpalette=None, barpalette=None, dotcolor=None, barcolor=None, hue_col=None, hue_order=None, capsize=0.2, errwidth=2, dotsize=5, pairs=None, comparisons_correction=None, groups=None, group_label_y=-0.18, group_line_y=-0.05, edgecolor=None):
 
     if groups:
         dodge = True
@@ -34,6 +34,7 @@ def scatbar(dataframe, xcol, ycol, ax, xorder, dotpalette=None, barpalette=None,
         errwidth=errwidth,
         ax=ax,
         dodge=dodge,
+        edgecolor=edgecolor
     )
     sns.stripplot(
         data=dataframe,
