@@ -1,17 +1,9 @@
 import os
 
-import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.transforms as mtransforms
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from loguru import logger
-from microfilm.microplot import microshow
 from skimage.io import imread
-from statannotations.Annotator import Annotator
-
-from utils import scatbar
 
 logger.info('Import OK')
 
