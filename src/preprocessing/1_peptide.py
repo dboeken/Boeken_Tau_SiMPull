@@ -1,3 +1,7 @@
+"""
+Preprocessing of the raw data for plotting Figure 1
+"""
+
 import os
 
 import numpy as np

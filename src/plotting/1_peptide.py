@@ -1,3 +1,7 @@
+"""
+Generating Figure 1
+"""
+
 import os
 
 import matplotlib

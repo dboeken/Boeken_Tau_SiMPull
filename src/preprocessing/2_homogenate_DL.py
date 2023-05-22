@@ -1,3 +1,7 @@
+"""
+Preprocessing of the raw data for plotting Figure 2
+"""
+
 import os
 
 import matplotlib

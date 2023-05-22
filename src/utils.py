@@ -1,3 +1,7 @@
+"""
+Containing utility functions for preprocessing and plotting data
+"""
+
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -50,6 +54,19 @@ def scatbar(dataframe, xcol, ycol, ax, xorder, dotpalette=None, barpalette=None,
 
 
 def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orientation=None):
+    """Generate fitted cumulative distribution
+
+    Args:
+        fitted_ecdfs (dataframe): Dataframe containing interpolated cumulative distributions
+        ycol (str): Value of the cumulative distribution
+        huecol (str): Column on which the hue is based
+        palette (dictionary): Dictionary containing the palette
+        ax (str, optional): Subpanel number in multipanel figures. Defaults to None.
+        orientation (str, optional): Orientation of the plot, typically h. Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
 
     if not ax:
         fig, ax = plt.subplots()

@@ -1,15 +1,18 @@
-import matplotlib
+"""
+Generating Figure 2
+"""
+
 import os
-import pandas as pd
-import numpy as np
+
+import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
+import numpy as np
+import pandas as pd
 import seaborn as sns
 from loguru import logger
-import matplotlib
-from statannotations.Annotator import Annotator
-import matplotlib.transforms as mtransforms
-
 from microfilm.microplot import microshow
+from statannotations.Annotator import Annotator
 
 logger.info('Import OK')
 
