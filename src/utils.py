@@ -6,6 +6,8 @@ Containing utility functions for preprocessing and plotting data
 import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
+import pandas as pd
 from loguru import logger
 from statannotations.Annotator import Annotator
 
@@ -135,3 +137,49 @@ def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orienta
         )
 
     return fitted_ecdfs, ax
+
+# =======Analysis functionality=======
+def fit_ecdf(x):
+    x = np.sort(x)
+
+    def result(v):
+        return np.searchsorted(x, v, side='right') / x.size
+    return result
+
+
+def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
+
+    test_vals = pd.DataFrame(
+        np.arange(0, 1.01, (1/num_points)), columns=['ecdf'])
+    test_vals['type'] = 'interpolated'
+    interpolated = test_vals.copy()
+    for col in value_cols:
+        test_df = df.dropna(subset=[col])
+        ecdf = fit_ecdf(test_df[col])
+        test_df['ecdf'] = ecdf(
+            test_df.dropna(subset=[col])[col])
+        combined = pd.concat([test_df.sort_values(
+            'ecdf').dropna(subset=[col]), test_vals])
+        combined = combined.set_index('ecdf').interpolate(
+            method=method, order=order).reset_index()
+        interpolated[col] = combined[combined['type'] == 'interpolated'].copy()[
+            col].tolist()
+
+    return interpolated
+
+
+def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col):
+    fitted_ecdfs = []
+    for (sample, position), df in df_intensity.groupby(['sample', 'slide_position']):
+        filtered_df = df[df[col] < maxval].copy()
+        fitted_ecdf = sample_ecdf(filtered_df, value_cols=[
+            col], method='nearest', order=False)
+        fitted_ecdf['sample'] = sample
+        #fitted_ecdf['disease_state'] = disease_state
+        # fitted_ecdf['capture'] = capture
+        fitted_ecdf['slide_position'] = position
+        fitted_ecdf['detect'] = detect
+        fitted_ecdfs.append(fitted_ecdf)
+
+    fitted_ecdfs = pd.concat(fitted_ecdfs)
+    return fitted_ecdfs
