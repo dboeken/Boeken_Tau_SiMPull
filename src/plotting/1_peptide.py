@@ -17,7 +17,7 @@ logger.info('Import OK')
 
 # =================Set paths=================
 input_path = f'results/1_peptide/'
-output_folder = 'results/1_peptide/'
+output_folder = 'results/figures/'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
