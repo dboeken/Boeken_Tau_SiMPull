@@ -47,3 +47,45 @@ def scatbar(dataframe, xcol, ycol, ax, xorder, dotpalette=None, barpalette=None,
         annotator.apply_and_annotate()
 
     ax.legend('', frameon=False)
+
+
+def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orientation=None):
+
+    if not ax:
+        fig, ax = plt.subplots()
+
+    if orientation == 'h':
+        means = fitted_ecdfs[fitted_ecdfs['type'] == 'interpolated'].groupby(
+            [huecol, 'ecdf']).agg(['mean', 'std']).reset_index()
+        means.columns = [huecol, 'ecdf', 'mean', 'std']
+        means['pos_err'] = means['mean'] + means['std']
+        means['neg_err'] = means['mean'] - means['std']
+
+        for hue, data in means.groupby([huecol]):
+
+            ax.plot(
+                data['mean'],
+                data['ecdf'],
+                color=palette[hue],
+                label=hue
+            )
+            ax.fill_betweenx(
+                y=data['ecdf'].tolist(),
+                x1=(data['neg_err']).tolist(),
+                x2=(data['pos_err']).tolist(),
+                color=palette[hue],
+                alpha=0.3
+            )
+
+    else:
+        sns.lineplot(
+            data=fitted_ecdfs,
+            y=ycol,
+            x='ecdf',
+            hue=huecol,
+            palette=palette,
+            ci='sd',
+            ax=ax
+        )
+
+    return fitted_ecdfs, ax

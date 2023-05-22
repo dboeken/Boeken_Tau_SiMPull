@@ -264,62 +264,6 @@ def multipanel_scatbarplot(ycol, ylabel, palette, axes, data, left_lims=False, r
         ax.legend('', frameon=False)
 
 
-def ecfd_plot(ycol, ylabel, palette, ax, df):
-    sns.lineplot(
-        data=df.reset_index(),
-        y=ycol,
-        x='ecdf',
-        hue='sample',
-        palette=palette,
-        ci='sd',
-        ax=ax)
-
-    ax.set(ylabel=ylabel, xlabel='Proportion of spots')
-    ax.legend(frameon=False)
-
-
-def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orientation=None):
-
-    if not ax:
-        fig, ax = plt.subplots()
-
-    if orientation == 'h':
-        means = fitted_ecdfs[fitted_ecdfs['type'] == 'interpolated'].groupby(
-            [huecol, 'ecdf']).agg(['mean', 'std']).reset_index()
-        means.columns = [huecol, 'ecdf', 'mean', 'std']
-        means['pos_err'] = means['mean'] + means['std']
-        means['neg_err'] = means['mean'] - means['std']
-
-        for hue, data in means.groupby([huecol]):
-
-            ax.plot(
-                data['mean'],
-                data['ecdf'],
-                color=palette[hue],
-                label=hue
-            )
-            ax.fill_betweenx(
-                y=data['ecdf'].tolist(),
-                x1=(data['neg_err']).tolist(),
-                x2=(data['pos_err']).tolist(),
-                color=palette[hue],
-                alpha=0.3
-            )
-
-    else:
-        sns.lineplot(
-            data=fitted_ecdfs,
-            y=ycol,
-            x='ecdf',
-            hue=huecol,
-            palette=palette,
-            ci='sd',
-            ax=ax
-        )
-
-    return fitted_ecdfs, ax
-
-
 # =========Organise data========
 spots_summary = pd.read_csv(f'{input_path}spots_count_summary.csv')
 mean_intensity_plotting = pd.read_csv(f'{input_path}mean_intensity.csv')
