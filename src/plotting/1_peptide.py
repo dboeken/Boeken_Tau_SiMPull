@@ -80,31 +80,6 @@ example_dimer = np.mean(example_dimer[10:, :, :], axis=0)
 plt.imshow(example_dimer)
 
 
-
-# ########plot AT8 peptide data for supplementals #########
-
-for (capture), df in mean_number_spots[mean_number_spots['capture'].isin(['AT8'])].groupby(['capture']):
-    sns.stripplot(data=df, x='sample', y='spots_count', color='#36454F',
-                  s=10)
-    # plt.xlim(0, 6000)
-
-    sns.barplot(
-        data=df,
-        x='sample',
-        y='spots_count',
-        capsize=0.2,
-        errwidth=2,
-        color='darkgrey'
-    )
-
-    plt.ylim(0, 500)
-    #plt.ylabel("mean spots")
-
-    plt.title(f'{capture}')
-
-    plt.savefig(f'{output_folder}mean_number_spots_AT8.svg')
-
-
 # # ==================Generate main figure==================
 
 
