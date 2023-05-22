@@ -1,25 +1,15 @@
 import os
-import re
-from logging import captureWarnings
-from random import sample
-from statistics import mean
 
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from loguru import logger
 from microfilm.microplot import microshow
-from microfilm import colorify
-
-from statannotations.Annotator import Annotator
-import matplotlib.transforms as mtransforms
-
-
-
-
 from skimage.io import imread
+from statannotations.Annotator import Annotator
 
 logger.info('Import OK')
 
