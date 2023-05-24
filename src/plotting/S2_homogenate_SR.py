@@ -1,17 +1,20 @@
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
-from scipy.stats import f_oneway
-from matplotlib.colors import ListedColormap
-import matplotlib
-from statannotations.Annotator import Annotator
+"""
+Generating Figure S2
+"""
 import os
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib.transforms as mtransforms
-from src.utils import plot_interpolated_ecdf, scatbar, plot_hexbin
 
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
+import numpy as np
+import pandas as pd
+import seaborn as sns
 from loguru import logger
+from matplotlib.colors import ListedColormap
+from statannotations.Annotator import Annotator
+
+from src.utils import plot_hexbin, plot_interpolated_ecdf, scatbar
+
 logger.info('Import OK')
 
 

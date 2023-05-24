@@ -1,21 +1,23 @@
-import matplotlib
+"""
+Generating Figure S5
+"""
+
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import matplotlib.pyplot as plt
+
 import matplotlib
-from matplotlib.colors import ListedColormap
+import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
-
-from scipy import sparse
-from skimage import morphology, measure, transform
-from skimage.io import imread
-from skan.csr import skeleton_to_csgraph
-from skan import Skeleton, summarize, draw
 import networkx as nx
-
+import numpy as np
+import pandas as pd
 from loguru import logger
+from matplotlib.colors import ListedColormap
+from scipy import sparse
+from skan import Skeleton, draw, summarize
+from skan.csr import skeleton_to_csgraph
+from skimage import measure, morphology, transform
+from skimage.io import imread
+
 logger.info('Import OK')
 
 from loguru import logger
@@ -61,9 +63,10 @@ def rand_cmap(nlabels, type='bright', first_color_black=True, last_color_black=F
     :param verbose: Prints the number of labels and shows the colormap. True or False
     :return: colormap for matplotlib
     """
-    from matplotlib.colors import LinearSegmentedColormap
     import colorsys
+
     import numpy as np
+    from matplotlib.colors import LinearSegmentedColormap
 
     if type not in ('bright', 'soft'):
         print('Please choose "bright" or "soft" for type')
@@ -111,7 +114,7 @@ def rand_cmap(nlabels, type='bright', first_color_black=True, last_color_black=F
 
     # Display colorbar
     if verbose:
-        from matplotlib import colors, colorbar
+        from matplotlib import colorbar, colors
         from matplotlib import pyplot as plt
         fig, ax = plt.subplots(1, 1, figsize=(15, 0.5))
 

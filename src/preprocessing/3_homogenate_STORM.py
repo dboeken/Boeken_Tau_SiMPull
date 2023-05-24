@@ -1,14 +1,9 @@
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
-from scipy.stats import f_oneway
-from matplotlib.colors import ListedColormap
-import matplotlib
-from statannotations.Annotator import Annotator
+"""
+Preprocessing of the raw data for plotting Figure 3
+"""
+
 import os
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import matplotlib.transforms as mtransforms
 
 from src.utils import fitting_ecfd_for_plotting
 

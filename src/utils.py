@@ -242,6 +242,23 @@ def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col):
 
 
 def plot_hexbin(data, ax, xcol, ycol, vmin, vmax, colour, filter_col=None, filter_val=None, kdeplot=None):
+    """Generate hex bin plots
+
+    Args:
+        data (dataframe): Dataframe with two features to plot against another
+        ax (str): Position in subfigure
+        xcol (str): Name of column for x values
+        ycol (str): Name of column for y values
+        vmin (int): Minimum value for counts
+        vmax (int): Maximum value for counts
+        colour (str): Colour palette, e.g. cmap
+        filter_col (str, optional): Column to perform additional filtering of data. Defaults to None.
+        filter_val (str, optional): Value to perform additional filtering of data. Defaults to None.
+        kdeplot (str, optional): Option for kde plot. Defaults to None.
+
+    Returns:
+        axes: Plot
+    """
     if filter_col and filter_val:
         data = data[data[filter_col] == filter_val].copy()
     hexs = ax.hexbin(data=data, x=xcol,

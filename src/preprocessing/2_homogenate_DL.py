@@ -4,7 +4,6 @@ Preprocessing of the raw data for plotting Figure 2
 
 import os
 
-import matplotlib
 import numpy as np
 import pandas as pd
 from loguru import logger

@@ -1,17 +1,19 @@
-import matplotlib
+"""
+Generating Figure S1
+"""
+
 import os
-import pandas as pd
-import numpy as np
+
+import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
+import numpy as np
+import pandas as pd
+import pingouin as pg
 import seaborn as sns
 from loguru import logger
-import matplotlib
-from statannotations.Annotator import Annotator
-import matplotlib.transforms as mtransforms
-from scipy.optimize import leastsq
-import pingouin as pg
-
 from microfilm.microplot import microshow
+from scipy.optimize import leastsq
 from skimage.io import imread
 
 logger.info('Import OK')

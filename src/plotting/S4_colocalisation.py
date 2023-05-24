@@ -1,14 +1,18 @@
-import os, re
-import pandas as pd
-import numpy as np
+"""
+Generating Figure S4
+"""
+
+import os
+
 import matplotlib.pyplot as plt
-import seaborn as sns
 import matplotlib.transforms as mtransforms
-from skimage.io import imread
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from loguru import logger
 from microfilm.microplot import microshow
 from scipy.spatial import distance
-
-from loguru import logger
+from skimage.io import imread
 
 logger.info('Import OK')
 
@@ -26,6 +30,7 @@ if not os.path.exists(output_folder):
     os.makedirs(output_folder)
     
 import matplotlib
+
 font = {'family' : 'arial',
 'weight' : 'normal',
 'size'   : 8 }

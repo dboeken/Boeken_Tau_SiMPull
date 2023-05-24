@@ -9,13 +9,11 @@ import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from loguru import logger
 from microfilm.microplot import microshow
 from statannotations.Annotator import Annotator
-import pingouin as pg
 
-from src.utils import scatbar, plot_interpolated_ecdf
+from src.utils import plot_interpolated_ecdf, scatbar
 
 logger.info('Import OK')
 
