@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.transforms as mtransforms
-from src.utils import plot_interpolated_ecdf, scatbar
+from src.utils import plot_interpolated_ecdf, scatbar, plot_hexbin
 
 from loguru import logger
 logger.info('Import OK')
@@ -222,36 +222,6 @@ def scatbarplot_hue_two_param(ycol, ylabel, palette, ax, data, xcol, high, low, 
     ax.legend('', frameon=False)
 
 
-def hexbinplotting(colour, ax, data, disease_state):
-
-    df = data[data['disease_state'] == disease_state].copy()
-    hexs = ax.hexbin(data=df, x='eccentricity',
-                     y='smoothed_length', cmap=colour, vmin=0, vmax=1200)
-    ax.set(ylabel='Length [nm]')
-    ax.set(xlabel='Eccentricity')
-    # sns.kdeplot(data=df, x='smoothed_length', y='eccentricity',
-    #             color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
-
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 550)
-
-    return hexs
-
-
-def plot_hexbins(dataframe, colour, ax, xcol='eccentricity', ycol='smoothed_length', vmin=0, vmax=1200):
-
-    hexs = ax.hexbin(data=dataframe, x=xcol,
-                     y=ycol, cmap=colour, vmin=vmin, vmax=vmax)
-    ax.set(ylabel='Length [nm]')
-    ax.set(xlabel='Eccentricity')
-    # sns.kdeplot(data=df, x='smoothed_length', y='eccentricity',
-    #             color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
-
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0, 550)
-
-    return hexs
-
 
 # =================Organise data=================
 for_plotting = pd.read_csv(f'{input_folder}for_plotting.csv')
@@ -326,18 +296,25 @@ for ax, label in zip([axA, axB, axC1, axC2, axC3, axC4, axD1, axE1], ['B', 'C', 
             fontsize=12, va='bottom', fontweight='bold')
 
 # --------Panel A--------
+hexs0 = plot_hexbin(data=for_plotting, ax=axA, xcol='eccentricity', ycol='smoothed_length', vmin=0, vmax=1200, colour=cmap, filter_col='disease_state', filter_val='AD', kdeplot=None)
 
-hexs0 = hexbinplotting(
-    colour=cmap, ax=axA, data=for_plotting, disease_state='AD')
 cb = plt.colorbar(hexs0, ax=axA)
-#cb.set_label('Count', rotation=270, labelpad=15)
-axA.set_title('AD', fontsize=8)
 
-hexs1 = hexbinplotting(
-    colour=cmap, ax=axB, data=for_plotting, disease_state='CRL')
+axA.set_title('AD', fontsize=8)
+axA.set_xlim(0, 1)
+axA.set_ylim(0, 550)
+axA.set(ylabel='Length [nm]')
+axA.set(xlabel='Eccentricity')
+
+hexs1 = plot_hexbin(data=for_plotting, ax=axB, xcol='eccentricity', ycol='smoothed_length',
+                    vmin=0, vmax=1200, colour=cmap, filter_col='disease_state', filter_val='CRL', kdeplot=None)
 cb = plt.colorbar(hexs1, ax=axB)
 cb.set_label('Count', rotation=270, labelpad=15)
 axB.set_title('CRL', fontsize=8)
+axB.set_xlim(0, 1)
+axB.set_ylim(0, 550)
+axB.set(ylabel='Length [nm]')
+axB.set(xlabel='Eccentricity')
 
 
 # --------Panel C--------

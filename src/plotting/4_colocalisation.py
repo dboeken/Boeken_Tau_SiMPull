@@ -11,7 +11,8 @@ from statannotations.Annotator import Annotator
 import matplotlib.transforms as mtransforms
 from microfilm.microplot import microshow
 
-from src.utils import scatbar
+from src.utils import scatbar, plot_hexbin
+
 
 logger.info('Import OK')
 
@@ -53,141 +54,6 @@ new_colors = ['#ffffff'] + \
 # Turn this into a new colour map, and visualise it
 cmap = ListedColormap(new_colors)
 
-# =========Define functions========
-def hexbinplotting(ylabel, colour, ax, data, capture):
-
-    df = data[data['capture'] == capture].copy()
-    hexs = ax.hexbin(data=df, x='norm_mean_intensity_641',
-              y='norm_mean_intensity_488', cmap=colour, vmin=0, vmax=900)
-    ax.set(ylabel=ylabel)
-    ax.set(xlabel ='mean intensity 638')
-    sns.kdeplot(data=df, x='norm_mean_intensity_641', y='norm_mean_intensity_488', color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
-
-    ax.set_xlim(0, 9)
-    ax.set_ylim(0, 3)
-
-    return hexs
-
-
-def scatbarplot_hue(ycol, ylabel, palette, ax, data, group_label_y=-0.18, group_line_y=-0.05):
-    order = [641, 488]
-    hue_order = ['AD', 'CRL', 'BSA']
-    sns.barplot(
-        data=data,
-        x='channel',
-        y=ycol,
-        hue='disease_state',
-        palette=palette,
-        capsize=0.2,
-        errwidth=2,
-        ax=ax,
-        dodge=True,
-        order=order,
-        hue_order=hue_order,
-        edgecolor='white'
-    )
-    sns.stripplot(
-        data=data,
-        x='channel',
-        y=ycol,
-        hue='disease_state',
-        palette=palette,
-        ax=ax,
-        edgecolor='#fff',
-        linewidth=1,
-        s=10,
-        order=order,
-        hue_order=hue_order,
-        dodge=True,
-    )
-
-
-
-    pairs = [((641, 'AD'), (641, 'CRL')), ((488, 'AD'), (488, 'CRL'))]
-    annotator = Annotator(
-        ax=ax, pairs=pairs, data=data, x='channel', y=ycol, order=order, hue='disease_state', hue_order=hue_order)
-    annotator.configure(test='t-test_ind', text_format='star',
-                        loc='inside')
-    annotator.apply_and_annotate()
-
-    ax.set(ylabel=ylabel)
-
-    ax.set_xlabel('')
-    ax.set_xticks([-0.25, 0, 0.25, 0.75, 1, 1.25])
-    ax.set_xticklabels(['AD', 'CRL', 'BSA', 'AD', 'CRL', 'BSA'])
-    ax.set_yticks([0, 25, 50, 75, 100])
-    ax.set_yticklabels(['0', '25', '50', '75', '100'])
-    ax.annotate('AT8', xy=(0.25, group_label_y),
-                xycoords='axes fraction', ha='center')
-    ax.annotate('T181', xy=(0.75, group_label_y),
-                xycoords='axes fraction', ha='center')
-    trans = ax.get_xaxis_transform()
-    ax.plot([-0.25, 0.25], [group_line_y, group_line_y],
-            color="black", transform=trans, clip_on=False)
-    ax.plot([0.75, 1.25], [group_line_y, group_line_y],
-            color="black", transform=trans, clip_on=False)
-
-    ax.legend('', frameon=False)
-
-
-def scatbarplot_hue_intensity(ycol, ylabel, palette, ax, data, stats_df, group_label_y=-0.18, group_line_y=-0.05,):
-    order = ['AT8', 'T181']
-    hue_order = [641, 488]
-    sns.barplot(
-        data=data,
-        x='capture',
-        y=ycol,
-        hue='channel',
-        palette=palette,
-        capsize=0.2,
-        errwidth=2,
-        ax=ax,
-        dodge=True,
-        order=order,
-        hue_order=hue_order,
-        edgecolor='white'
-    )
-    sns.stripplot(
-        data=data,
-        x='capture',
-        y=ycol,
-        hue='channel',
-        palette=palette,
-        ax=ax,
-        edgecolor='#fff',
-        linewidth=1,
-        s=10,
-        order=order,
-        hue_order=hue_order,
-        dodge=True,
-    )
-
-    for i, capture in enumerate(order):
-        for detect in hue_order:
-            star = stats_df[(stats_df['capture'] == capture) & (
-                stats_df['channel'] == detect)]['significance'].tolist()[0]
-            j = -0.2 if detect == 641 else 0.2
-            ax.annotate(star, xy=(i+j, 2.2),
-                        xycoords='data', ha='center')
-
-    ax.set(ylabel=ylabel)
-    ax.set_yticks([0, 0.5, 1, 1.5, 2, 2.5])
-    ax.set_yticklabels(['0', '0.5', '1', '1.5', '2', '2.5'])
-    ax.set_xlabel('')
-    ax.set_xticks([-0.2, 0.2, 0.8, 1.2])
-    ax.set_xticklabels(['AT8', 'T181', 'AT8', 'T181'])
-
-    ax.annotate('AT8 capture', xy=(0.25, group_label_y),
-                xycoords='axes fraction', ha='center')
-    ax.annotate('T181 capture', xy=(0.75, group_label_y),
-                xycoords='axes fraction', ha='center')
-    trans = ax.get_xaxis_transform()
-    ax.plot([-0.25, 0.25], [group_line_y, group_line_y],
-            color="black", transform=trans, clip_on=False)
-    ax.plot([0.75, 1.25], [group_line_y, group_line_y],
-            color="black", transform=trans, clip_on=False)
-
-    ax.legend('', frameon=False)
 
 # =========Organise data========
 # Read image
@@ -205,7 +71,7 @@ brightness_ratio_stats = pd.read_csv(
 
 # =========Generate figure========
 fig = plt.figure(figsize=(18.4 * cm, 2 * 6.1 * cm))
-gs1 = fig.add_gridspec(nrows=2, ncols=3, wspace=0.5, hspace=0.5)
+gs1 = fig.add_gridspec(nrows=2, ncols=3, wspace=0.45, hspace=0.4)
 axA = fig.add_subplot(gs1[0, 0])
 axB = fig.add_subplot(gs1[0, 1])
 axC = fig.add_subplot(gs1[0, 2])
@@ -234,9 +100,9 @@ for i, (capture, df) in enumerate(mean_for_plotting_proportion.groupby('capture'
         dataframe=df, 
         xcol='channel', ycol='proportion_coloc', ax=axes[i], xorder=[641, 488],
         dotpalette=palette, barpalette=palette,
-        hue_col='disease_state', hue_order=['AD', 'CRL', 'BSA'], 
+        hue_col='disease_state', hue_order=['AD', 'CRL'], 
         pairs=[((641, 'AD'), (641, 'CRL')), ((488, 'AD'), (488, 'CRL'))],
-        groups=['AT8', 'T181'], group_label_y=-0.22, group_line_y=-0.15
+        groups=['AT8', 'T181'], group_label_y=-0.22, group_line_y=-0.15, edgecolor='white'
         )
 
     # add chance lines by disease state
@@ -266,24 +132,29 @@ for i, capture in enumerate(['AT8', 'T181']):
         axD.annotate(star, xy=(i+j, 2.2),
                     xycoords='data', ha='center')
 
-axD.set_ylabel('Intensity Ration')
+axD.set_ylabel('Intensity Ratio')
 axD.set_ylim(0, 2.6)
 axD.axhline(1, linestyle='--', linewidth=1.2, color='#4c4c52')
         
 # --------Panel E--------
-hexs4 = hexbinplotting('mean intensity 488', cmap,
-               axE, filtered_disease, 'AT8')
-               
+hexs4 = plot_hexbin(data=filtered_disease, ax=axE, xcol='norm_mean_intensity_641', ycol='norm_mean_intensity_488', vmin=0, vmax=900, colour=cmap, filter_col='capture', filter_val='AT8', kdeplot=True)
+              
 cb=plt.colorbar(hexs4, ax=axE)
 axE.set_title('AT8 capture', fontsize=8)
+axE.set(ylabel='Mean intensity 488', xlabel='Mean intensity 641')
+axE.set_xlim(0, 9)
+axE.set_ylim(0, 3)
 
 # --------Panel F--------
-hexs5 = hexbinplotting('mean intensity 488', cmap,
-               axF, filtered_disease, 'T181')
-
+hexs5 = plot_hexbin(data=filtered_disease, ax=axF, xcol='norm_mean_intensity_641', ycol='norm_mean_intensity_488', vmin=0, vmax=900, colour=cmap, filter_col='capture', filter_val='T181', kdeplot=True)
+              
+axF.set_title('T181 capture', fontsize=8)
+axF.set(ylabel='Mean intensity 488', xlabel='Mean intensity 641')
+axF.set_xlim(0, 9)
+axF.set_ylim(0, 3)
 cb=plt.colorbar(hexs5, ax=axF)
 cb.set_label('Count', rotation=270, labelpad=15)
-axF.set_title('T181 capture', fontsize=8)
+
 
 # --------Fig admin--------
 plt.tight_layout()

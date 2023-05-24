@@ -15,6 +15,30 @@ logger.info('Import OK')
 
 # =======Plotting functionality=======
 def scatbar(dataframe, xcol, ycol, ax, xorder, dotpalette=None, barpalette=None, dotcolor=None, barcolor=None, hue_col=None, hue_order=None, capsize=0.2, errwidth=2, dotsize=5, pairs=None, comparisons_correction=None, groups=None, group_label_y=-0.18, group_line_y=-0.05, edgecolor=None):
+    """Generate barplot overlayed with individual biological replicates
+
+    Args:
+        dataframe (dataframe): _description_
+        xcol (str): Values to be plotted on the x axis
+        ycol (str): Values to be plotted on the y axis
+        ax (str): ubpanel number in multipanel figures.
+        xorder (list): Order of samples on the x axis
+        dotpalette (dictionary, optional): Palette to change colour of the dots. Defaults to None.
+        barpalette (dictionary, optional): Palette to change colour of the bars. Defaults to None.
+        dotcolor (str, optional): Single colour of dots. Defaults to None.
+        barcolor (str, optional): Single colour of bars. Defaults to None.
+        hue_col (str, optional): Column on which the hue is based. Defaults to None.
+        hue_order (list, optional): Hue order. Defaults to None.
+        capsize (float, optional): Size of the error bar caps. Defaults to 0.2.
+        errwidth (int, optional): Width of the error bars. Defaults to 2.
+        dotsize (int, optional): Size of the dots. Defaults to 5.
+        pairs (list, optional): (list of) pairs to perform statistical analysis. Defaults to None.
+        comparisons_correction (str, optional): Statistical multiple comparison correction. Defaults to None.
+        groups (str, optional): Sample groups, e.g. antibody. Defaults to None.
+        group_label_y (float, optional): Label of group. Defaults to -0.18.
+        group_line_y (float, optional): Line to indicate group. Defaults to -0.05.
+        edgecolor (str, optional): Colour of the edge of bars. Defaults to None.
+    """
 
     if groups:
         dodge = True
@@ -141,6 +165,14 @@ def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orienta
 
 # =======Analysis functionality=======
 def fit_ecdf(x):
+    """Function to fit ecdfs for cumulative distributions
+
+    Args:
+        x (array): Array to be sorted for fitting the ecdf
+
+    Returns:
+        _type_: Sorted array
+    """
     x = np.sort(x)
 
     def result(v):
@@ -149,6 +181,18 @@ def fit_ecdf(x):
 
 
 def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
+    """Function to interpolate sample ecdf
+
+    Args:
+        df (dataframe): dataframe to compute cumulative distribution
+        value_cols (_type_): Column names to fit ecdf on
+        num_points (int, optional): Percentage. Defaults to 100.
+        method (str, optional): Fitting method. Defaults to 'nearest'.
+        order (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """
 
     test_vals = pd.DataFrame(
         np.arange(0, 1.01, (1/num_points)), columns=['ecdf'])
@@ -170,6 +214,17 @@ def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
 
 
 def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col):
+    """Fitting ecdf for cumulative distrubutions with multiple replicates
+
+    Args:
+        df_intensity (dataframe): Dataframe to compute the cumulative distribution
+        detect (str): Detection antibody used in experiment
+        maxval (_type_): Maximum signal level
+        col (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     fitted_ecdfs = []
     for (sample, position), df in df_intensity.groupby(['sample', 'slide_position']):
         filtered_df = df[df[col] < maxval].copy()
@@ -184,3 +239,15 @@ def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col):
 
     fitted_ecdfs = pd.concat(fitted_ecdfs)
     return fitted_ecdfs
+
+
+def plot_hexbin(data, ax, xcol, ycol, vmin, vmax, colour, filter_col=None, filter_val=None, kdeplot=None):
+    if filter_col and filter_val:
+        data = data[data[filter_col] == filter_val].copy()
+    hexs = ax.hexbin(data=data, x=xcol,
+                     y=ycol, cmap=colour, vmin=vmin, vmax=vmax)
+    if kdeplot:
+        sns.kdeplot(data=data, x=xcol, y=ycol,
+                    color='darkgrey', linestyles='--', levels=np.arange(0, 1, 0.2), ax=ax)
+    return hexs
+
