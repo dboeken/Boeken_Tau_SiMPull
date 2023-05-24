@@ -252,14 +252,14 @@ fitted_ecdfs = {category: df.dropna(how='all', axis=1)
                 for category, df in fitted_ecdfs.groupby('category')}
 
 for_plotting_fil_mean = pd.read_csv(f'{input_folder}for_plotting_fil_mean.csv')
-parameter_by_parameter2_for_plotting = pd.read_csv(
-    f'{input_folder}parameter_by_parameter2_for_plotting_all.csv')
-parameter_by_parameter2_for_plotting.drop(
-    [col for col in parameter_by_parameter2_for_plotting.columns if 'Unnamed' in col], axis=1, inplace=True)
-parameter_by_parameter2_for_plotting['sample'] = parameter_by_parameter2_for_plotting['sample'].astype(
+p1byp2_for_plotting = pd.read_csv(
+    f'{input_folder}p1byp2_for_plotting_all.csv')
+p1byp2_for_plotting.drop(
+    [col for col in p1byp2_for_plotting.columns if 'Unnamed' in col], axis=1, inplace=True)
+p1byp2_for_plotting['sample'] = p1byp2_for_plotting['sample'].astype(
     str)
-parameter_by_parameter2_for_plotting = {category: df.dropna(
-    how='all', axis=1) for category, df in parameter_by_parameter2_for_plotting.groupby('category')}
+p1byp2_for_plotting = {category: df.dropna(
+    how='all', axis=1) for category, df in p1byp2_for_plotting.groupby('category')}
 
 # =================Plot figure=================
 
@@ -321,7 +321,7 @@ axB.set(xlabel='Eccentricity')
 
 # --------Panel C--------
 scatbar(
-    dataframe=parameter_by_parameter2_for_plotting['smoothed_length_eccentricity'][parameter_by_parameter2_for_plotting['smoothed_length_eccentricity']['eccentricity_cat'] == 'low'], xcol='disease_state', ycol='label', ax=axC1, xorder=['AD', 'CRL'],
+    dataframe=p1byp2_for_plotting['smoothed_length_eccentricity'][p1byp2_for_plotting['smoothed_length_eccentricity']['eccentricity_cat'] == 'low'], xcol='disease_state', ycol='label', ax=axC1, xorder=['AD', 'CRL'],
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
@@ -329,7 +329,7 @@ axC1.set(title='Round aggs.', ylabel='Long [%]', xlabel='')
 
 
 scatbar(
-    dataframe=parameter_by_parameter2_for_plotting['eccentricity_smoothed_length'][parameter_by_parameter2_for_plotting['eccentricity_smoothed_length']['disease_state'] == 'AD'], xcol='smoothed_length_cat', ycol='label', ax=axC2, xorder=['high', 'low'],
+    dataframe=p1byp2_for_plotting['eccentricity_smoothed_length'][p1byp2_for_plotting['eccentricity_smoothed_length']['disease_state'] == 'AD'], xcol='smoothed_length_cat', ycol='label', ax=axC2, xorder=['high', 'low'],
     dotpalette=palette, barpalette=palette,
     pairs=[('high', 'low')],
 )
