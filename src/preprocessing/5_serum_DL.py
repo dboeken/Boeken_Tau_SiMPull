@@ -1,18 +1,11 @@
 import os
-import re
 import matplotlib
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-from statannotations.Annotator import Annotator
-from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-import matplotlib.transforms as mtransforms
 from loguru import logger
-import pingouin as pg
 from scipy.spatial import distance
-from src.utils import scatbar
 
 logger.info('Import OK')
 
@@ -29,8 +22,6 @@ if not os.path.exists(output_folder):
     os.makedirs(output_folder)
     
 
-# input_AT8 = '/Users/dorotheaboeken/Documents/GitHub/230112_serum_AT8/results/spot_detection/count_spots/spots_per_fov.csv'
-
 cm = 1 / 2.54
 font = {'family': 'arial',
 
@@ -44,9 +35,6 @@ plt.rcParams['figure.dpi']= 300
 
 sample_dict = {'1': 'CRL', '2': 'CRL', 'BSA': 'BSA',
                '3': 'AD', '4': 'AD', '5': 'AD', '6': 'discard', '7': 'AD', '8': 'CRL', '9': 'AD', '10': 'AD', '11': 'AD', '12': 'CRL', '13': 'CRL', '15': 'AD', '16': 'CRL', '17': 'CRL', '18': 'CRL', '19': 'CRL', '20': 'AD'}
-
-# sex_dict = {'1': 'M', '2': 'F', 'BSA': 'BSA',
-#             '3': 'F', '4': 'F', '5': 'F', '6': 'F', '7': 'M', '8': 'F', '9': 'F', '10': 'F', '11': 'M', '12': 'F', '13': 'F', '15': 'M', '16': 'M', '17': 'M', '18': 'M', '19': 'M', '20': 'F', 'IgG': 'BSA'}
 
 sex_dict = {'1': 'O', '2': 'F', 'BSA': 'BSA',
             '3': 'F', '4': 'F', '5': 'F', '6': 'F', '7': 'M', '8': 'F', '9': 'F', '10': 'O', '11': 'M', '12': 'F', '13': 'F', '15': 'M', '16': 'O', '17': 'O', '18': 'M', '19': 'O', '20': 'F', 'IgG': 'BSA'}
@@ -98,85 +86,6 @@ palette = {
 
 pvalues = [0.443, 0.00063, 0.00013]
 
-# def plot_scatbar_DL(ycol, ylabel, palette, ax, data):
-#     order = ['AD', 'CRL', 'BSA']
-#     sns.barplot(
-#         data=data,
-#         x='disease_state',
-#         y=ycol,
-#         hue='disease_state',
-#         palette=palette,
-#         capsize=0.2,
-#         errwidth=2,
-#         ax=ax,
-#         dodge=False,
-#         order=order,
-#     )
-#     sns.stripplot(
-#         data=data,
-#         x='disease_state',
-#         y=ycol,
-#         hue='disease_state',
-#         palette=palette,
-#         ax=ax,
-#         edgecolor='#fff',
-#         linewidth=1,
-#         s=5,
-#         order=order
-#     )
-
-#     ax.set(ylabel=ylabel, xlabel='')
-#     pairs = [('AD', 'CRL'), ('CRL', 'BSA'), ('AD', 'BSA')]
-#     annotator = Annotator(
-#         ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
-#     # annotator.configure(test='t-test_ind', text_format='star',
-#     #                     loc='inside')
-#     # annotator.apply_and_annotate()
-#     #annotator = Annotator(ax, pairs)
-#     annotator.set_pvalues(pvalues)
-#     annotator.annotate()
-#     ax.legend('', frameon=False)
-
-
-# def plot_scatbar(data, ycol, ylabel, palette, order, pairs, hue_order=None, ax=None, s=5):
-#     if not ax:
-#         fig, ax = plt.subplots()
-#     sns.barplot(
-#         data=data,
-#         x='disease_state',
-#         y=ycol,
-#         hue='disease_state',
-#         palette=palette,
-#         capsize=0.2,
-#         errwidth=2,
-#         ax=ax,
-#         dodge=False,
-#         order=order,
-#         hue_order=hue_order
-#     )
-#     sns.stripplot(
-#         data=data,
-#         x='disease_state',
-#         y=ycol,
-#         hue='disease_state',
-#         palette=palette,
-#         ax=ax,
-#         edgecolor='#fff',
-#         linewidth=1,
-#         s=5,
-#         order=order,
-#         hue_order=hue_order
-#     )
-
-#     ax.set(ylabel=ylabel, xlabel='')
-#     annotator = Annotator(
-#         ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
-#     annotator.configure(test='t-test_ind', text_format='star',
-#                         loc='inside', comparisons_correction='bonferroni')
-#     annotator.apply_and_annotate()
-
-#     ax.legend('', frameon=False)
-
 
 def perform_lda(for_LDA, value_cols, category_col='key'):
     # Select data columns (X) and category columns (Y)
@@ -191,49 +100,6 @@ def perform_lda(for_LDA, value_cols, category_col='key'):
     for_LDA[['dim1', 'dim2']] = lda_model.transform(X)
 
     return for_LDA, lda_model
-
-
-# def plot_lda(data, palette, hue='disease_state', style='tissue', ax=None, s=300):
-#     if not ax:
-#         fig, ax = plt.subplots(figsize=(6, 5.5))
-#     sns.scatterplot(
-#         data=data,
-#         x='dim1',
-#         y='dim2',
-#         hue=hue,
-#         style=style,
-#         palette=palette,
-#         s=s,
-#         ax=ax
-#     )
-
-#     ax.set_xlabel('Dimension 1')
-#     ax.set_ylabel('Dimension 2')
-#     # plt.legend(loc='upper left', ncol=2, columnspacing=0.1, title='')
-
-#     return ax
-
-
-# def plot_eigens(model, X, labels=None, num_labels=5):
-
-#     fitted = model.transform(X)
-#     eigens = model.scalings_
-#     xs = fitted[:, 0]
-#     ys = fitted[:, 1]
-#     n = eigens.shape[0]
-
-#     dists = distance_eigens(model, labels=labels)
-
-#     fig, ax = plt.subplots()
-#     for i in range(n):
-#         plt.arrow(0, 0, eigens[i, 0], eigens[i, 1],
-#                   color='firebrick', linewidth=2)
-#     if labels is not None:
-#         for x, y, label in dists.sort_values('ori_dst', ascending=False).iloc[:num_labels][['xpos', 'ypos', 'label']].values:
-#             plt.text((x) * 1.15, y * 1.15, label,
-#                      color='firebrick', ha='center', va='center')
-
-#     return fig, ax, dists
 
 
 def calculate_eigens(model, labels):
@@ -357,7 +223,7 @@ DL_spots_summary.to_csv(
 SR_spots_mean.to_csv(
     f'{output_folder}SR_spots_mean.csv')
 lda.to_csv(
-    f'{output_folder}SR_spots_mean.csv')
+    f'{output_folder}lda_summary.csv')
 eigens_df.to_csv(
     f'{output_folder}eigens_df.csv')
 

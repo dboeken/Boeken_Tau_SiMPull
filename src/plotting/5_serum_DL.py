@@ -1,29 +1,18 @@
 import os
-import re
 import matplotlib
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from statannotations.Annotator import Annotator
-from sklearn.decomposition import PCA
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 import matplotlib.transforms as mtransforms
 from loguru import logger
 import pingouin as pg
-from scipy.spatial import distance
 from src.utils import scatbar
 
 logger.info('Import OK')
 
-if os.path.exists('data/data_path.txt'):
-    root_path = open('data/data_path.txt', 'r').readlines()[0]
-else:
-    root_path = ''
-
 # =================Set paths=================
-# input_path_DL = f'{root_path}data/serum_DL_data/'
-# input_path_SR = f'{root_path}data/serum_SR_data/'
 output_folder = f'results/5_serum/'
 input_path = f'results/5_serum/'
 
@@ -107,7 +96,7 @@ DL_spots_summary=pd.read_csv(
 SR_spots_mean = pd.read_csv(
     f'{input_path}SR_spots_mean.csv')
 lda=pd.read_csv(
-    f'{input_path}SR_spots_mean.csv')
+    f'{input_path}lda_summary.csv')
 eigens_df=pd.read_csv(
     f'{input_path}eigens_df.csv')
 
