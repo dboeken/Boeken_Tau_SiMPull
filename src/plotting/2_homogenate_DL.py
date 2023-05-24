@@ -13,6 +13,7 @@ import seaborn as sns
 from loguru import logger
 from microfilm.microplot import microshow
 from statannotations.Annotator import Annotator
+import pingouin as pg
 
 from src.utils import scatbar, plot_interpolated_ecdf
 
@@ -51,6 +52,7 @@ palette = {
 
 # =========Organise data========
 spots_summary = pd.read_csv(f'{input_path}spots_count_summary.csv')
+spots_summary = spots_summary[spots_summary['disease_state'] != 'BSA'].copy()
 mean_intensity_plotting = pd.read_csv(f'{input_path}mean_intensity.csv')
 proportion_intensity_plotting = pd.read_csv(f'{input_path}proportion_intensity.csv')
 fitted_ecdf_HT7 = pd.read_csv(f'{input_path}fitted_ecdf_HT7.csv')
@@ -86,7 +88,7 @@ microim1 = microshow(images=[example_AD],
                                cmaps=['Greys'], flip_map=[True],
                                label_color='black', ax=axA,
                                unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,
-                               rescale_type='limits', limits=[400, 1000])
+                               rescale_type='limits', limits=[400, 700])
 axA.set_title('AD', fontsize=8)
 
 # --------Panel B--------
@@ -94,17 +96,19 @@ microim1 = microshow(images=[example_CRL],
                                cmaps=['Greys'], flip_map=[True],
                                label_color='black', ax=axB,
                                unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0,
-                               rescale_type='limits', limits=[400, 1000])
+                               rescale_type='limits', limits=[400, 700])
 axB.set_title('CRL', fontsize=8)
     
 # --------Panel C--------
 scatbar(
     dataframe=spots_summary, xcol='detect', ycol='spots_count', ax=axC, xorder=['AT8', 'HT7'], 
     dotpalette=palette, barpalette=palette,
-    hue_col='disease_state', hue_order=['AD', 'CRL', 'BSA'], comparisons_correction=None, pairs=[(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))],
-    groups=['AT8', 'HT7'], group_label_y=-0.22, group_line_y=-0.15)
+    hue_col='disease_state', hue_order=['AD', 'CRL'], comparisons_correction=None, pairs=[(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))],
+    groups=['AT8', 'HT7'], group_label_y=-0.22, group_line_y=-0.15, edgecolor='white')
 
 axC.set_ylabel('Number of spots')
+# axC.set_xticks([-0.27, 0, 0.29, 0.73, 1, 1.29])
+# axC.set_xticklabels(['AD', 'CRL', 'BSA']*2)
 
 # --------Panel D--------
 axD.axis('off')
@@ -133,7 +137,7 @@ scatbar(
     dataframe=proportion_intensity_plotting, xcol='detect', ycol='bright', ax=axF, xorder=['AT8', 'HT7'],
     dotpalette=palette, barpalette=palette,
     hue_col='disease_state', hue_order=['AD', 'CRL'], comparisons_correction=None, pairs=[(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))],
-    groups=['AT8', 'HT7'], group_label_y=-0.22, group_line_y=-0.15
+    groups=['AT8', 'HT7'], group_label_y=-0.22, group_line_y=-0.15,edgecolor='white'
     )
 axF.set_ylabel('Bright spots (%)')
 
@@ -162,3 +166,4 @@ axH.legend(simple_legend.values(), simple_legend.keys(),
 plt.tight_layout()
 plt.savefig(f'{output_folder}Figure2_homogenate_DL.svg')
 plt.show()
+
