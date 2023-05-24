@@ -18,6 +18,7 @@ from skimage.io import imread
 
 logger.info('Import OK')
 
+# =================Set paths=================
 if os.path.exists('data/data_path.txt'):
     root_path = open('data/data_path.txt', 'r').readlines()[0]
 else:
@@ -29,6 +30,7 @@ output_folder = f'{root_path}results/S1_method/'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
+# =======Set default plotting parameters=======
 font = {'family': 'arial',
         'weight': 'normal',
         'size': 7}
@@ -86,7 +88,7 @@ def scatbarplot(ycol, ylabel, ax, data, capture, ):
     ax.set(ylabel=ylabel, xlabel='')
 
 
-
+# =========Organise data========
 mean_spots_Xreactivity = read_in('data/homogenate_DL_data/Xreactivity_spots_per_fov.csv')
 mean_spots_dilution = read_in(
     'data/homogenate_DL_data/dilution_spots_per_fov.csv')
@@ -251,10 +253,9 @@ def LOD_calculation(data, capture, detect, ax):
             'spots_count'].tolist(),
         df.groupby('concentration').std().reset_index()[
             'spots_count'].tolist(),
-        linestyle='', color=palette[detect], capsize=4, #axis=ax
+        linestyle='', color=palette[detect], capsize=4,
     )
-    # sns.plot(
-    #     x=x, y=y_meas, marker='o', color='orange', ci="sd")
+
     sns.lineplot(
         x=np.arange(np.min(x), np.max(x), 10), y=peval(np.arange(np.min(x), np.max(x), 10), plsq[0]), color=palette[detect], label=detect, ax=ax
         ),
@@ -292,11 +293,6 @@ mean_spots_Xreactivity.to_csv(
     f'{output_folder}mean_spots_Xreactivity.csv')
 mean_spots_dilution.to_csv(
     f'{output_folder}mean_spots_dilution.csv')
-
-
-
-
-
 
 
 
