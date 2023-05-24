@@ -126,7 +126,7 @@ df_by = {}
 df_by_per_replicate = {}
 fitted_ecdf= {}
 parameter_by_parameter2 = {}
-parameter_by_parameter2_for_plotting = {}
+p1byp2_for_plotting = {}
 for parameter in parameters:
     parameter_cat = parameter + '_cat'
 
@@ -157,14 +157,14 @@ for parameter in parameters:
             parameter_by_parameter2[parameter + '_' + \
                                                           parameter2]['label'] = parameter_by_parameter2[parameter + '_' + parameter2]['label'] * 100
             
-            parameter_by_parameter2_for_plotting[parameter + '_' +
+            p1byp2_for_plotting[parameter + '_' +
                                                  parameter2] = parameter_by_parameter2[parameter + '_' +
                                                 parameter2].groupby(
                 ['capture', 'sample', 'detect', 'disease_state', parameter_cat, parameter2_cat]).mean().reset_index()
             
-            parameter_by_parameter2_for_plotting[parameter + '_' +
-                                                 parameter2] = parameter_by_parameter2_for_plotting[parameter + '_' +
-                                                                                                    parameter2][parameter_by_parameter2_for_plotting[parameter +    '_' +parameter2][parameter_cat]=='high'].copy()
+            p1byp2_for_plotting[parameter + '_' +
+                                                 parameter2] = p1byp2_for_plotting[parameter + '_' +
+                                                                                                    parameter2][p1byp2_for_plotting[parameter +    '_' +parameter2][parameter_cat]=='high'].copy()
 
 # =================Modified set of filters (length)=================
 # additional filtering by length 
@@ -196,7 +196,7 @@ fil_df_by = {}
 fil_df_by_per_replicate = {}
 fil_fitted_ecdf = {}
 fil_parameter_by_parameter2 = {}
-fil_parameter_by_parameter2_for_plotting = {}
+fil_p1byp2_for_plotting = {}
 for parameter in parameters:
     parameter_cat = parameter + '_cat'
 
@@ -227,14 +227,14 @@ for parameter in parameters:
             fil_parameter_by_parameter2[parameter + '_' +
                                     parameter2]['label'] = fil_parameter_by_parameter2[parameter + '_' + parameter2]['label'] * 100
 
-            fil_parameter_by_parameter2_for_plotting[parameter + '_' +
+            fil_p1byp2_for_plotting[parameter + '_' +
                                                  parameter2] = fil_parameter_by_parameter2[parameter + '_' +
                                                                                        parameter2].groupby(
                 ['capture', 'sample', 'detect', 'disease_state', parameter_cat, parameter2_cat]).mean().reset_index()
 
-            fil_parameter_by_parameter2_for_plotting[parameter + '_' +
-                                                 parameter2] = fil_parameter_by_parameter2_for_plotting[parameter + '_' +
-                                                                                                    parameter2][fil_parameter_by_parameter2_for_plotting[parameter + '_' + parameter2][parameter_cat] == 'high'].copy()
+            fil_p1byp2_for_plotting[parameter + '_' +
+                                                 parameter2] = fil_p1byp2_for_plotting[parameter + '_' +
+                                                                                                    parameter2][fil_p1byp2_for_plotting[parameter + '_' + parameter2][parameter_cat] == 'high'].copy()
 
 # =================Saving dfs=================
 proportions = []
@@ -255,14 +255,14 @@ for key, df in fitted_ecdf.items():
     fitted_ecdfs.append(df)
 fitted_ecdfs = pd.concat(fitted_ecdfs)
 
-parameter_by_parameter2_for_plotting
+p1byp2_for_plotting
 
-parameter_by_parameter2_for_plotting_all = []
-for key, df in parameter_by_parameter2_for_plotting.items():
+p1byp2_for_plotting_all = []
+for key, df in p1byp2_for_plotting.items():
     df['category'] = key
-    parameter_by_parameter2_for_plotting_all.append(df)
-parameter_by_parameter2_for_plotting_all = pd.concat(
-    parameter_by_parameter2_for_plotting_all)
+    p1byp2_for_plotting_all.append(df)
+p1byp2_for_plotting_all = pd.concat(
+    p1byp2_for_plotting_all)
 
 for_plotting.to_csv(f'{output_folder}for_plotting.csv')
 proportions.to_csv(f'{output_folder}proportions.csv')
@@ -270,5 +270,5 @@ fil_proportions.to_csv(f'{output_folder}fil_proportions.csv')
 for_plotting_mean.to_csv(f'{output_folder}for_plotting_mean.csv')
 fitted_ecdfs.to_csv(f'{output_folder}fitted_ecdfs.csv')
 for_plotting_fil_mean.to_csv(f'{output_folder}for_plotting_fil_mean.csv')
-parameter_by_parameter2_for_plotting_all.to_csv(
-    f'{output_folder}parameter_by_parameter2_for_plotting_all.csv')
+p1byp2_for_plotting_all.to_csv(
+    f'{output_folder}p1byp2_for_plotting_all.csv')
