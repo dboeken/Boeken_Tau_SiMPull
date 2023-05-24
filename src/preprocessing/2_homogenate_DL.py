@@ -27,7 +27,7 @@ if not os.path.exists(output_folder):
 sample_dict = {'13': 'AD', '9': 'CRL', 'BSA': 'BSA',
                '28': 'CRL', '159': 'CRL', '55': 'AD', '246': 'AD'}
 
-# =================Processing funcs=================
+# =================Processing functions=================
 def read_in(input_path, detect):
     spots = pd.read_csv(f'{input_path}')
     spots.drop([col for col in spots.columns.tolist()
