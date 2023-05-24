@@ -1,9 +1,7 @@
 """
-Containing utility functions for preprocessing and plotting data
+Utility functions for preprocessing and plotting data
 """
 
-
-import matplotlib
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -18,7 +16,7 @@ def scatbar(dataframe, xcol, ycol, ax, xorder, dotpalette=None, barpalette=None,
     """Generate barplot overlayed with individual biological replicates
 
     Args:
-        dataframe (dataframe): _description_
+        dataframe (dataframe): contains values to be plotted
         xcol (str): Values to be plotted on the x axis
         ycol (str): Values to be plotted on the y axis
         ax (str): ubpanel number in multipanel figures.
@@ -32,11 +30,13 @@ def scatbar(dataframe, xcol, ycol, ax, xorder, dotpalette=None, barpalette=None,
         capsize (float, optional): Size of the error bar caps. Defaults to 0.2.
         errwidth (int, optional): Width of the error bars. Defaults to 2.
         dotsize (int, optional): Size of the dots. Defaults to 5.
-        pairs (list, optional): (list of) pairs to perform statistical analysis. Defaults to None.
+        pairs (list, optional): list of pairs specified as [('A', 'B'), ('B', 'C')] for comparison. 
+            When using the hue variable both the hue and x params should be included [(('hue', 'A'), ('hue', 'B'))]. 
+            Defaults to None.
         comparisons_correction (str, optional): Statistical multiple comparison correction. Defaults to None.
         groups (str, optional): Sample groups, e.g. antibody. Defaults to None.
-        group_label_y (float, optional): Label of group. Defaults to -0.18.
-        group_line_y (float, optional): Line to indicate group. Defaults to -0.05.
+        group_label_y (float, optional): Position of group label. Defaults to -0.18.
+        group_line_y (float, optional): Position of line to indicate group. Defaults to -0.05.
         edgecolor (str, optional): Colour of the edge of bars. Defaults to None.
     """
 
@@ -108,7 +108,6 @@ def scatbar(dataframe, xcol, ycol, ax, xorder, dotpalette=None, barpalette=None,
     ax.legend('', frameon=False)
 
 
-
 def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orientation=None):
     """Generate fitted cumulative distribution
 
@@ -163,6 +162,7 @@ def plot_interpolated_ecdf(fitted_ecdfs, ycol, huecol, palette, ax=None, orienta
 
     return fitted_ecdfs, ax
 
+
 # =======Analysis functionality=======
 def fit_ecdf(x):
     """Function to fit ecdfs for cumulative distributions
@@ -171,7 +171,7 @@ def fit_ecdf(x):
         x (array): Array to be sorted for fitting the ecdf
 
     Returns:
-        _type_: Sorted array
+        Sorted array
     """
     x = np.sort(x)
 
@@ -181,17 +181,17 @@ def fit_ecdf(x):
 
 
 def sample_ecdf(df, value_cols, num_points=100, method='nearest', order=False):
-    """Function to interpolate sample ecdf
+    """Function to interpolate cumulative distributions
 
     Args:
         df (dataframe): dataframe to compute cumulative distribution
-        value_cols (_type_): Column names to fit ecdf on
+        value_cols (list): Column names to fit ecdf on
         num_points (int, optional): Percentage. Defaults to 100.
         method (str, optional): Fitting method. Defaults to 'nearest'.
-        order (bool, optional): _description_. Defaults to False.
+        order (bool, optional): Defaults to False.
 
     Returns:
-        _type_: _description_
+        dataframe
     """
 
     test_vals = pd.DataFrame(
@@ -219,11 +219,11 @@ def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col):
     Args:
         df_intensity (dataframe): Dataframe to compute the cumulative distribution
         detect (str): Detection antibody used in experiment
-        maxval (_type_): Maximum signal level
-        col (_type_): _description_
+        maxval (int): Maximum signal level
+        col (str): column of values to be fitted
 
     Returns:
-        _type_: _description_
+        dataframe: containing fitted values in the column col
     """
     fitted_ecdfs = []
     for (sample, position), df in df_intensity.groupby(['sample', 'slide_position']):
@@ -231,8 +231,6 @@ def fitting_ecfd_for_plotting(df_intensity, detect, maxval, col):
         fitted_ecdf = sample_ecdf(filtered_df, value_cols=[
             col], method='nearest', order=False)
         fitted_ecdf['sample'] = sample
-        #fitted_ecdf['disease_state'] = disease_state
-        # fitted_ecdf['capture'] = capture
         fitted_ecdf['slide_position'] = position
         fitted_ecdf['detect'] = detect
         fitted_ecdfs.append(fitted_ecdf)
@@ -257,7 +255,7 @@ def plot_hexbin(data, ax, xcol, ycol, vmin, vmax, colour, filter_col=None, filte
         kdeplot (str, optional): Option for kde plot. Defaults to None.
 
     Returns:
-        axes: Plot
+        ax
     """
     if filter_col and filter_val:
         data = data[data[filter_col] == filter_val].copy()
