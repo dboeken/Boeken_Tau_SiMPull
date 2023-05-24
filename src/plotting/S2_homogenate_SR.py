@@ -422,6 +422,9 @@ scatbar(
 axE4.set(title='Eccentricity', ylabel='Fibrils [%]', xlabel='')
 
 
+for ax in fig.axes:
+    ax.spines[['right', 'top']].set_visible(False)
+
 plt.tight_layout()
 plt.savefig(f'{output_folder}S2_homogenate_SR.svg')
 plt.show()

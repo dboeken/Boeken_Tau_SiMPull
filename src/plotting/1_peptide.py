@@ -88,6 +88,8 @@ axD.set_ylim(0, 400)
 axD.set_ylabel("Mean spots per FOV")
 axD.set_xlabel("")
 
+for ax in fig.axes:
+    ax.spines[['right', 'top']].set_visible(False)
 # --------Fig. elements--------
 plt.tight_layout()
 plt.savefig(f'{output_folder}Figure1_peptide.svg')

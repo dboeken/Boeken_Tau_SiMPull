@@ -342,6 +342,10 @@ scatbarplot(ycol='spots_count', ylabel='Aggregates per FOV',
 
 axC.set(ylabel='Aggregates per FOV',
         xlabel='Concentration of tau [pg/mL]')
+
+for ax in fig.axes:
+    ax.spines[['right', 'top']].set_visible(False)
+    
 plt.tight_layout()
 
 plt.savefig(f'{output_folder}S1_methods.svg')

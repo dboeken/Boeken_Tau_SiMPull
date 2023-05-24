@@ -158,6 +158,8 @@ cb=plt.colorbar(hexs5, ax=axF)
 cb.set_label('Count', rotation=270, labelpad=15)
 
 
+for ax in fig.axes:
+    ax.spines[['right', 'top']].set_visible(False)
 # --------Fig admin--------
 plt.tight_layout()
 plt.savefig(f'{output_folder}Figure4_coloc.svg')

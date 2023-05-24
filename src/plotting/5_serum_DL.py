@@ -165,6 +165,9 @@ new_labels = ['', 'AD', 'CRL', '', 'Homog.', 'Serum']
 for t, l in zip(leg.texts, new_labels):
     t.set_text(l)
 
+for ax in fig.axes:
+    ax.spines[['right', 'top']].set_visible(False)
+
 plt.savefig(f'{output_folder}Figure5_serum.svg')
 plt.show()
 

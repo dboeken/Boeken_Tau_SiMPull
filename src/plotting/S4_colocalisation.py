@@ -271,6 +271,9 @@ axes[3].set_title('AT8')
 axes[4].set_title('T181')
 axes[5].set_title('Overlay')
 
+for ax in fig.axes:
+    ax.spines[['right', 'top']].set_visible(False)
+
 # Save final figure
 plt.tight_layout()
 plt.savefig(f'{output_folder}S6_colocalisation.svg')

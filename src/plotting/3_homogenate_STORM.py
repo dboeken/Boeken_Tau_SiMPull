@@ -413,6 +413,9 @@ for label, ax in zip(['Length (nm)', 'Eccentricity'], [axC1, axC2]):
     ax.set_xlabel(label)
     ax.set_ylabel('Proportion')
 
+for ax in fig.axes:
+    ax.spines[['right', 'top']].set_visible(False)
+    
 
 plt.tight_layout()
 plt.savefig(f'{output_folder}Figure3_homogenate_SR.svg')

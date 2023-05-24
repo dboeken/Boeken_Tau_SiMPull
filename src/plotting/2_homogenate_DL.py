@@ -158,7 +158,9 @@ axG.legend(simple_legend.values(), simple_legend.keys(),
                loc='lower right', frameon=False)
 axH.legend(simple_legend.values(), simple_legend.keys(),
                loc='lower right', frameon=False)
-
+for ax in fig.axes:
+    ax.spines[['right', 'top']].set_visible(False)
+    
 # --------Fig. admin--------
 plt.tight_layout()
 plt.savefig(f'{output_folder}Figure2_homogenate_DL.svg')
