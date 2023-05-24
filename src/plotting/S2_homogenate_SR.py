@@ -26,7 +26,7 @@ if not os.path.exists(output_folder):
 cm = 1/2.54
 font = {'family': 'arial',
         'weight': 'normal',
-        'size': 8, 
+        'size': 8,
         }
 matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
@@ -51,6 +51,7 @@ palette = {
 
 # =================Defining functions=================
 
+
 def scatbarplot(ycol, ylabel, palette, ax, data):
     order = ['AD', 'CRL']
     sns.barplot(
@@ -64,7 +65,7 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
         ax=ax,
         dodge=False,
         order=order,
-        ci = 'sd'
+        ci='sd'
     )
     sns.stripplot(
         data=data,
@@ -76,8 +77,8 @@ def scatbarplot(ycol, ylabel, palette, ax, data):
         edgecolor='#fff',
         linewidth=1,
         s=5,
-        order=order, 
-        
+        order=order,
+
     )
 
     ax.set(ylabel=ylabel, xlabel='')
@@ -204,7 +205,6 @@ def scatbarplot_hue_two_param(ycol, ylabel, palette, ax, data, xcol, high, low, 
         dodge=True,
     )
 
-
     pairs = [(('high', 'AD'), ('low', 'AD')),
              (('high', 'CRL'), ('low', 'CRL')), (('high', 'AD'), ('high', 'CRL')), (('low', 'AD'), ('low', 'CRL'))]
     annotator = Annotator(
@@ -214,8 +214,6 @@ def scatbarplot_hue_two_param(ycol, ylabel, palette, ax, data, xcol, high, low, 
     annotator.apply_and_annotate()
 
     ax.set(ylabel=ylabel)
-
-    
 
     ax.set_xlabel('')
     ax.set_xticks([0, 1])
@@ -236,7 +234,6 @@ def hexbinplotting(colour, ax, data, disease_state):
 
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 550)
-    
 
     return hexs
 
@@ -260,22 +257,24 @@ def plot_hexbins(dataframe, colour, ax, xcol='eccentricity', ycol='smoothed_leng
 for_plotting = pd.read_csv(f'{input_folder}for_plotting.csv')
 
 proportions = pd.read_csv(f'{input_folder}proportions.csv')
-proportions.drop([col for col in proportions.columns if 'Unnamed' in col], axis=1, inplace=True)
+proportions.drop(
+    [col for col in proportions.columns if 'Unnamed' in col], axis=1, inplace=True)
 proportions['sample'] = proportions['sample'].astype(str)
 proportion = {category: df.dropna(how='all', axis=1)
-               for category, df in proportions.groupby('category')}
+              for category, df in proportions.groupby('category')}
 
 fil_proportion = pd.read_csv(f'{input_folder}fil_proportions.csv')
 fil_proportion.drop(
     [col for col in fil_proportion.columns if 'Unnamed' in col], axis=1, inplace=True)
 fil_proportion['sample'] = fil_proportion['sample'].astype(str)
 fil_proportion = {category: df.dropna(how='all', axis=1)
-                for category, df in fil_proportion.groupby('category')}
+                  for category, df in fil_proportion.groupby('category')}
 
 for_plotting_mean = pd.read_csv(f'{input_folder}for_plotting_mean.csv')
 
 fitted_ecdfs = pd.read_csv(f'{input_folder}fitted_ecdfs.csv')
-fitted_ecdfs.drop([col for col in fitted_ecdfs.columns if 'Unnamed' in col], axis=1, inplace=True)
+fitted_ecdfs.drop(
+    [col for col in fitted_ecdfs.columns if 'Unnamed' in col], axis=1, inplace=True)
 fitted_ecdfs['sample'] = fitted_ecdfs['sample'].astype(str)
 fitted_ecdfs = {category: df.dropna(how='all', axis=1)
                 for category, df in fitted_ecdfs.groupby('category')}
@@ -285,136 +284,170 @@ parameter_by_parameter2_for_plotting = pd.read_csv(
     f'{input_folder}parameter_by_parameter2_for_plotting_all.csv')
 parameter_by_parameter2_for_plotting.drop(
     [col for col in parameter_by_parameter2_for_plotting.columns if 'Unnamed' in col], axis=1, inplace=True)
-parameter_by_parameter2_for_plotting['sample'] = parameter_by_parameter2_for_plotting['sample'].astype(str)
-parameter_by_parameter2_for_plotting = {category: df.dropna(how='all', axis=1) for category, df in parameter_by_parameter2_for_plotting.groupby('category')}
+parameter_by_parameter2_for_plotting['sample'] = parameter_by_parameter2_for_plotting['sample'].astype(
+    str)
+parameter_by_parameter2_for_plotting = {category: df.dropna(
+    how='all', axis=1) for category, df in parameter_by_parameter2_for_plotting.groupby('category')}
 
 # =================Plot figure=================
 
-fig = plt.figure(figsize=(12.1 * cm, 4 * 6.1 * cm))
-gs1 = fig.add_gridspec(nrows=8, ncols=4, wspace=0.95, hspace=1.25)
-axA1 = fig.add_subplot(gs1[0:1, 0:1])
-axA2 = fig.add_subplot(gs1[0:1, 1:2])
-axA3 = fig.add_subplot(gs1[1:2, 0:1])
-axA4 = fig.add_subplot(gs1[1:2, 1:2])
-axA5 = fig.add_subplot(gs1[0:1, 2:3])
-axA6 = fig.add_subplot(gs1[1:2, 2:3])
-axA7 = fig.add_subplot(gs1[0:1, 3:4])
-axA8 = fig.add_subplot(gs1[1:2, 3:4])
 
-axB1 = fig.add_subplot(gs1[2:4, 0:1])
-axB2 = fig.add_subplot(gs1[2:4, 1:2])
-axB3 = fig.add_subplot(gs1[2:4, 2:3])
-axB4 = fig.add_subplot(gs1[2:4, 3:4])
 
-axC1 = fig.add_subplot(gs1[4:6, 0:2])
-axC2 = fig.add_subplot(gs1[4:6, 2:4])
+new_colors = ['#ffffff'] + \
+    list(sns.color_palette('magma', n_colors=200).as_hex())[66:]
+# Turn this into a new colour map, and visualise it
+cmap = ListedColormap(new_colors)
 
-axD1 = fig.add_subplot(gs1[6:8, 0:1])
-axD2 = fig.add_subplot(gs1[6:8, 1:2])
-axD3 = fig.add_subplot(gs1[6:8, 2:3])
-axD4 = fig.add_subplot(gs1[6:8, 3:4])
 
-for ax, label in zip([axA1, axB1, axC1, axD1], ['A', 'B', 'C', 'D']):
+fig = plt.figure(figsize=(18.4 * cm, 4 * 6.1 * cm))
+gs1 = fig.add_gridspec(nrows=4, ncols=4, wspace=0.9, hspace=0.4)
+axA = fig.add_subplot(gs1[0:1, 0:2])
+axB = fig.add_subplot(gs1[0:1, 2:4])
+axC1 = fig.add_subplot(gs1[1:2, 0:1])
+axC2 = fig.add_subplot(gs1[1:2, 1:2])
+axC3 = fig.add_subplot(gs1[1:2, 2:3])
+axC4 = fig.add_subplot(gs1[1:2, 3:4])
+
+axD1 = fig.add_subplot(gs1[2:3, 0:1])
+axD2 = fig.add_subplot(gs1[2:3, 1:2])
+axD3 = fig.add_subplot(gs1[2:3, 2:3])
+axD4 = fig.add_subplot(gs1[2:3, 3:4])
+
+axE1 = fig.add_subplot(gs1[3:4, 0:1])
+axE2 = fig.add_subplot(gs1[3:4, 1:2])
+axE3 = fig.add_subplot(gs1[3:4, 2:3])
+axE4 = fig.add_subplot(gs1[3:4, 3:4])
+
+
+for ax, label in zip([axA, axB, axC1, axC2, axC3, axC4, axD1, axE1], ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']):
     # label physical distance to the left and up:
     trans = mtransforms.ScaledTranslation(-30/72, -3/72, fig.dpi_scale_trans)
     ax.text(0.0, 1.0, label, transform=ax.transAxes + trans,
             fontsize=12, va='bottom', fontweight='bold')
 
 # --------Panel A--------
-axA1.axis('off')
-axA2.axis('off')
-axA3.axis('off')
-axA4.axis('off')
-axA5.axis('off')
-axA6.axis('off')
-axA7.axis('off')
-axA8.axis('off')
 
-# --------Panel B--------
-scatbar(
-    dataframe=for_plotting_mean, xcol='disease_state', ycol='smoothed_length', ax=axB1, xorder=['AD', 'CRL'],
-    dotpalette=palette, barpalette=palette,
-    pairs=[('AD', 'CRL')], 
-    )
-axB1.set(title='Length', ylabel='Mean length [nm]', xlabel='')
+hexs0 = hexbinplotting(
+    colour=cmap, ax=axA, data=for_plotting, disease_state='AD')
+cb = plt.colorbar(hexs0, ax=axA)
+#cb.set_label('Count', rotation=270, labelpad=15)
+axA.set_title('AD', fontsize=8)
 
-
-scatbar(
-    dataframe=for_plotting_mean, xcol='disease_state', ycol='scaled_perimeter', ax=axB2, xorder=['AD', 'CRL'],
-    dotpalette=palette, barpalette=palette,
-    pairs=[('AD', 'CRL')],
-)
-axB2.set(title='Perimeter', ylabel='Mean perimeter [nm]', xlabel='')
-
-
-scatbar(
-    dataframe=for_plotting_mean, xcol='disease_state', ycol='scaled_area', ax=axB3, xorder=['AD', 'CRL'],
-    dotpalette=palette, barpalette=palette,
-    pairs=[('AD', 'CRL')],
-)
-axB3.set(title='Area', ylabel='Mean area [x 10$^3$ nm$^2$]', xlabel='')
-
-scatbar(
-    dataframe=for_plotting_mean, xcol='disease_state', ycol='eccentricity', ax=axB4, xorder=['AD', 'CRL'],
-    dotpalette=palette, barpalette=palette,
-    pairs=[('AD', 'CRL')],
-)
-axB4.set(title='Eccentricity', ylabel='Mean eccentricity', xlabel='')
+hexs1 = hexbinplotting(
+    colour=cmap, ax=axB, data=for_plotting, disease_state='CRL')
+cb = plt.colorbar(hexs1, ax=axB)
+cb.set_label('Count', rotation=270, labelpad=15)
+axB.set_title('CRL', fontsize=8)
 
 
 # --------Panel C--------
+scatbar(
+    dataframe=parameter_by_parameter2_for_plotting['smoothed_length_eccentricity'][parameter_by_parameter2_for_plotting['smoothed_length_eccentricity']['eccentricity_cat'] == 'low'], xcol='disease_state', ycol='label', ax=axC1, xorder=['AD', 'CRL'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('AD', 'CRL')],
+)
+axC1.set(title='Round aggs.', ylabel='Long [%]', xlabel='')
 
-plot_interpolated_ecdf(
-    fitted_ecdfs['smoothed_length'], ycol='smoothed_length', huecol='sample', palette=palette, ax=axC1, orientation='h')
 
-plot_interpolated_ecdf(fitted_ecdfs['eccentricity'], ycol='eccentricity', huecol='sample', palette=palette, ax=axC2, orientation='h')
+scatbar(
+    dataframe=parameter_by_parameter2_for_plotting['eccentricity_smoothed_length'][parameter_by_parameter2_for_plotting['eccentricity_smoothed_length']['disease_state'] == 'AD'], xcol='smoothed_length_cat', ycol='label', ax=axC2, xorder=['high', 'low'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('high', 'low')],
+)
+axC2.set_xticks([0, 1])
+axC2.set_xticklabels(['Long', 'Short'])
+axC2.set(title='All AD aggs.', ylabel='Fibrils [%]', xlabel='')
+
+
+# scatbarplot2('label', 'Fibril [%]',
+#             palette, axC2, parameter_by_parameter2_for_plotting['eccentricity_smoothed_length'][parameter_by_parameter2_for_plotting['eccentricity_smoothed_length']['disease_state']=='AD'].copy())
+
+
+scatbar(
+    dataframe=for_plotting_mean, xcol='disease_state', ycol='#locs', ax=axC3, xorder=['AD', 'CRL'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('AD', 'CRL')],
+)
+axC3.set(title='# locs',
+         ylabel='Mean number of \n localisations per cluster', xlabel='')
+
+
+scatbar(
+    dataframe=for_plotting_mean, xcol='disease_state', ycol='#locs_density', ax=axC4, xorder=['AD', 'CRL'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('AD', 'CRL')],
+)
+axC4.set(title='Locs density',
+         ylabel='Localisation density \n localisations per 10$^3$ nm$^2$', xlabel='')
+
 
 # --------Panel D--------
 
+
 scatbar(
-    dataframe=proportion['smoothed_length'], xcol='disease_state', ycol='high', ax=axD1, xorder=['AD', 'CRL'],
+    dataframe=for_plotting_fil_mean, xcol='disease_state', ycol='smoothed_length', ax=axD1, xorder=['AD', 'CRL'],
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axD1.set(title='Length', ylabel='Long [%]', xlabel='')
+axD1.set(title='Length', ylabel='Mean length [nm]', xlabel='')
 
 
 scatbar(
-    dataframe=proportion['scaled_perimeter'], xcol='disease_state', ycol='high', ax=axD2, xorder=['AD', 'CRL'],
+    dataframe=for_plotting_fil_mean, xcol='disease_state', ycol='scaled_perimeter', ax=axD2, xorder=['AD', 'CRL'],
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axD2.set(title='Perimeter', ylabel='Long perimeter [%]', xlabel='')
+axD2.set(title='Perimeter', ylabel='Mean perimeter [nm]', xlabel='')
 
 
 scatbar(
-    dataframe=proportion['scaled_area'], xcol='disease_state', ycol='high', ax=axD3, xorder=['AD', 'CRL'],
+    dataframe=for_plotting_fil_mean, xcol='disease_state', ycol='scaled_area', ax=axD3, xorder=['AD', 'CRL'],
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axD3.set(title='Area', ylabel='Large [%]', xlabel='')
+axD3.set(title='Area', ylabel='Mean area [x 10$^3$ nm$^2$]', xlabel='')
 
 scatbar(
-    dataframe=proportion['eccentricity'], xcol='disease_state', ycol='high', ax=axD4, xorder=['AD', 'CRL'],
+    dataframe=for_plotting_fil_mean, xcol='disease_state', ycol='eccentricity', ax=axD4, xorder=['AD', 'CRL'],
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axD4.set(title='Eccentricity', ylabel='Fibrils [%]', xlabel='')
+axD4.set(title='Eccentricity', ylabel='Mean eccentricity', xlabel='')
 
 
+# --------Panel E--------
 
-handles, labels = axC1.get_legend_handles_labels()
-by_label = dict(zip(labels, handles))
-simple_legend = {'AD': by_label['13'],
-                 'CRL': by_label['9']}
-for label, ax in zip(['Length (nm)', 'Eccentricity'], [axC1, axC2]):
-    ax.legend(simple_legend.values(), simple_legend.keys(), frameon=False)
-    ax.set_xlabel(label)
-    ax.set_ylabel('Proportion')
+scatbar(
+    dataframe=fil_proportion['smoothed_length'], xcol='disease_state', ycol='high', ax=axE1, xorder=['AD', 'CRL'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('AD', 'CRL')],
+)
+axE1.set(title='Length', ylabel='Long [%]', xlabel='')
+
+
+scatbar(
+    dataframe=fil_proportion['scaled_perimeter'], xcol='disease_state', ycol='high', ax=axE2, xorder=['AD', 'CRL'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('AD', 'CRL')],
+)
+axE2.set(title='Perimeter', ylabel='Long perimeter [%]', xlabel='')
+
+
+scatbar(
+    dataframe=fil_proportion['scaled_area'], xcol='disease_state', ycol='high', ax=axE3, xorder=['AD', 'CRL'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('AD', 'CRL')],
+)
+axE3.set(title='Area', ylabel='Large [%]', xlabel='')
+
+scatbar(
+    dataframe=fil_proportion['eccentricity'], xcol='disease_state', ycol='high', ax=axE4, xorder=['AD', 'CRL'],
+    dotpalette=palette, barpalette=palette,
+    pairs=[('AD', 'CRL')],
+)
+axE4.set(title='Eccentricity', ylabel='Fibrils [%]', xlabel='')
 
 
 plt.tight_layout()
-plt.savefig(f'{output_folder}Figure3_homogenate_SR.svg')
+plt.savefig(f'{output_folder}S2_homogenate_SR.svg')
 plt.show()
-
-
