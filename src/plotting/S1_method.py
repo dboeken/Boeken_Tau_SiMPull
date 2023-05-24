@@ -268,6 +268,24 @@ def LOD_calculation(data, capture, detect, ax):
 
     return LOD_conc, LOB_conc
 
+
+#LOD val
+# LOD_values = []
+# for (detect, capture), df in mean_spots_dilution.groupby(['detect', 'capture']):
+#     if detect == capture:
+#         LOD_conc, LOB_conc = LOD_calculation(
+#             mean_spots_dilution, detect, capture)
+#         LOD_values.append([detect, capture, LOD_conc, LOB_conc])
+# LOD_values = pd.DataFrame(
+#     LOD_values, columns=['Detect', 'Capture', 'LOD', 'LOB'])
+
+# plt.legend()
+# plt.xlabel('Concentration of tau [pg/mL]')
+# plt.ylabel('Number of aggregates per FOV')
+# LOD_values
+
+
+
 mean_number_peptide_data.to_csv(
     f'{output_folder}mean_number_peptide_data.csv')
 mean_spots_Xreactivity.to_csv(
