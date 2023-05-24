@@ -31,6 +31,7 @@ font = {'family' : 'arial',
 'size'   : 8 }
 matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
+plt.rcParams['axes.titlesize'] = 8
 plt.rcParams['figure.dpi'] = 300
 
 cm = 1/2.54

@@ -30,6 +30,8 @@ font = {'family': 'arial',
         'size': 8}
 matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
+plt.rcParams['axes.titlesize'] = 8
+plt.rcParams['figure.dpi'] = 300
 
 # ===============Organise data===============
 mean_number_spots = pd.read_csv(f'{input_path}mean_number_spots.csv')

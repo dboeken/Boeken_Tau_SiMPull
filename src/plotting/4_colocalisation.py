@@ -23,11 +23,13 @@ if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
 # =======Set default plotting parameters=======
-font = {'family': 'normal',
+font = {'family': 'arial',
         'weight': 'normal',
         'size': 8}
 matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
+plt.rcParams['axes.titlesize'] = 8
+plt.rcParams['figure.dpi'] = 300
 cm = 1/2.54
 
 palette = {
@@ -189,7 +191,7 @@ def scatbarplot_hue_intensity(ycol, ylabel, palette, ax, data, stats_df, group_l
 
 # =========Organise data========
 # Read image
-# example_coloc = np.load(f'{input_folder}example_image.npy')
+example_coloc = np.load(f'{input_folder}example_image.npy')
 
 # Read datasets
 mean_for_plotting_proportion = pd.read_csv(
@@ -218,10 +220,10 @@ for ax, label in zip([axA, axB, axC, axD, axE, axF], ['A', 'B', 'C', 'D', 'E', '
             fontsize=12, va='bottom', fontweight='bold')
 
 # --------Panel A--------
-# microim1 = microshow(
-#     images=[example_coloc[0, :, :], example_coloc[1, :, :]], 
-#     cmaps=['pure_magenta', 'pure_green'],
-#     label_color='black', ax=axA, unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[[0, 7000], [0, 3500]])
+microim1 = microshow(
+    images=[example_coloc[0, :, :], example_coloc[1, :, :]], 
+    cmaps=['pure_magenta', 'pure_green'],
+    label_color='black', ax=axA, unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[[0, 7000], [0, 3500]])
 
 axA.axis('off')
 
