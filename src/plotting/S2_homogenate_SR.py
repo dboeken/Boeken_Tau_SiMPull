@@ -6,14 +6,13 @@ import os
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from loguru import logger
 from matplotlib.colors import ListedColormap
 from statannotations.Annotator import Annotator
 
-from src.utils import plot_hexbin, plot_interpolated_ecdf, scatbar
+from src.utils import plot_hexbin, scatbar
 
 logger.info('Import OK')
 

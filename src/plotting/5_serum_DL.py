@@ -69,7 +69,6 @@ def plot_lda(data, palette, hue='disease_state', style='tissue', ax=None, s=300)
 
     ax.set_xlabel('Dimension 1')
     ax.set_ylabel('Dimension 2')
-    # plt.legend(loc='upper left', ncol=2, columnspacing=0.1, title='')
 
     return ax
 

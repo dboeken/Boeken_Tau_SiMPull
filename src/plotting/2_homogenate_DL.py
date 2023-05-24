@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from microfilm.microplot import microshow
-from statannotations.Annotator import Annotator
 
 from src.utils import plot_interpolated_ecdf, scatbar
 
