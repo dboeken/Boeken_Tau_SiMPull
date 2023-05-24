@@ -61,45 +61,29 @@ def read_in(input_path):
 
 
 def scatbarplot(ycol, ylabel, ax, data, capture, ):
-    #order = ['D10', 'D100', 'D1000', 'D10000', 'Blank', 'BSA']
 
     sns.barplot(
         data=data[data['capture'] == capture],
         x='sample',
         y=ycol,
-        #hue='disease_state',
-        #palette=palette,
         capsize=0.2,
         errwidth=2,
         color='darkgrey',
         ax=ax,
         dodge=False,
-        #order=order,
     )
     sns.stripplot(
         data=data[data['capture'] == capture],
         x='sample',
         y=ycol,
-        #hue='disease_state',
-        #palette=palette,
         ax=ax,
         color='#36454F',
         edgecolor='#fff',
         linewidth=1,
         s=5,
-        #order=order
     )
 
     ax.set(ylabel=ylabel, xlabel='')
-    # ax.tick_params(axis='x', labelrotation=0)
-    # ax.set_xticklabels(['AD  ', 'CRL', '    BSA'])
-    # pairs = [('AD', 'CRL')]
-    # annotator = Annotator(
-    #     ax=ax, pairs=pairs, data=data, x='disease_state', y=ycol, order=order)
-    # annotator.configure(test='t-test_ind', text_format='star',
-    #                     loc='inside')
-    # annotator.apply_and_annotate()
-    # ax.legend('', frameon=False)
 
 
 
@@ -133,8 +117,6 @@ mean_spots_dilution = mean_spots_dilution[
         mean_spots_dilution['layout'] != '1')
 ].copy()
 
-
-
 dilution_dict = {
     'D10': 680000,
     'D100': 68000,
@@ -155,9 +137,6 @@ data = df_BSA.groupby(['capture',
 
 data['key'] = data['capture'] + '_' + data['detect']
 
-# for (capture, detect), df in df_BSA.groupby(['capture', 'detect']):
-#     data= df.groupby(['slide_position', 'sample', 'capture', 'detect', 'layout']).mean().reset_index()
-
 dict_BSA = dict(data[['key', 'spots_count']].values)
 
 mean_spots_dilution['key'] = mean_spots_dilution['capture'] + \
@@ -168,12 +147,6 @@ mean_spots_dilution['control'] = mean_spots_dilution['key'].map(
 
 mean_spots_dilution['StoN'] = mean_spots_dilution['spots_count'] / \
     mean_spots_dilution['control']
-
-
-
-
-
-
 
 
 example_BSA = imread('data/homogenate_DL_data/example_BSA.tif')
@@ -202,11 +175,6 @@ mean_number_peptide_data = peptide_data.groupby(
 
 mean_number_peptide_data[['sample', 'concentration']
                          ] = mean_number_peptide_data['sample'].str.split('-', expand=True)
-
-
-
-
-############
 
 
 def logistic4(x, A, B, C, D):
@@ -266,8 +234,6 @@ def LOD_calculation(data, capture, detect, ax):
     plsq = leastsq(residuals, p0, args=(y_meas, x))
 
     # Plot results
-    # sns.scatterplot(
-    #     x=x, y=y_meas, marker='o', color='orange', ci="sd")
     ax.plot(
         df.groupby('concentration').mean().reset_index()[
             'concentration'].tolist(),
@@ -301,22 +267,6 @@ def LOD_calculation(data, capture, detect, ax):
     LOB_conc = c * np.power(((LOB_spots-a)/(d-LOB_spots)), 1/b)
 
     return LOD_conc, LOB_conc
-
-
-
-# LOD_values = []
-# for (detect, capture), df in mean_spots_dilution.groupby(['detect', 'capture']):
-#     if detect == capture:
-#         LOD_conc, LOB_conc = LOD_calculation(
-#             mean_spots_dilution, detect, capture)
-#         LOD_values.append([detect, capture, LOD_conc, LOB_conc])
-# LOD_values = pd.DataFrame(
-#     LOD_values, columns=['Detect', 'Capture', 'LOD', 'LOB'])
-
-# plt.legend()
-# plt.xlabel('Concentration of tau [pg/mL]')
-# plt.ylabel('Number of aggregates per FOV')
-# LOD_values
 
 mean_number_peptide_data.to_csv(
     f'{output_folder}mean_number_peptide_data.csv')
@@ -362,11 +312,6 @@ scatbarplot(
 
 LOD_calculation(mean_spots_dilution, 'AT8', 'AT8', ax= axC)
 LOD_calculation(mean_spots_dilution, 'HT7', 'HT7', ax=axC)
-# scatbarplot(ycol='StoN', ylabel='Aggregates per FOV',
-#             ax=axe, data=mean_spots_dilution, capture='HT7')
-
-# scatbarplot(ycol='StoN', ylabel='Aggregates per FOV',
-#             ax=axes[2], data=mean_spots_dilution, capture='AT8')
 
 scatbarplot(ycol='spots_count', ylabel='Aggregates per FOV',
             ax=axD, data=mean_spots_Xreactivity, capture='AT8')

@@ -228,13 +228,9 @@ def plot_branch_overview(original_array, skeleton_array, pixel_graph, coordinate
 
     draw.overlay_skeleton_2d(original_array, skeleton_array.astype(
         bool), dilate=0, axes=axes[0, 1])
-    # branch_positions = branch_data.groupby('skeleton-id').mean()[['image-coord-src-0', 'image-coord-src-1']].reset_index()
-    # for branch_id, x, y in branch_positions.values:
-    #     axes[0, 1].annotate(branch_id, (y, x), color='white')
     axes[0, 1].set_title('Skeleton ID')
 
     # Inbuilt function has an error, so build network graph from scratch
-    # draw.overlay_skeleton_networkx(pixel_graph, np.transpose(coordinates), image=skeleton0, axis=axes[0,
     gnx = nx.from_scipy_sparse_matrix(pixel_graph)
     # Note: we invert the positions because Matplotlib uses x/y for
     # scatterplot, but the coordinates are row/column NumPy indexing
@@ -302,7 +298,6 @@ clustered_df.drop([col for col in clustered_df.columns.tolist() if 'Unnamed: ' i
 # remove single-localisation clusters
 locs = clustered_df.groupby('group').count()
 locs = locs[locs['frame'] > 1].copy().reset_index()['group'].tolist()
-# clustered_df = clustered_df[clustered_df['group'].isin(locs)].copy()
 
 cluster_arr = make_cluster_array(clustered_df[clustered_df['group'].isin(locs)].copy(), cluster_col='group', scale=8)
 clustered_arr, clustered_skeleton, labelled_arr, labelled_skeleton = make_skeleton(
@@ -311,7 +306,6 @@ clustered_arr, clustered_skeleton, labelled_arr, labelled_skeleton = make_skelet
 arrays = {
     'Clustered localisations': make_cluster_array(clustered_df, cluster_col='group', scale=8),
     'Labelled ROIs\nDilate ×4, Erode ×3': clustered_arr,
-    # 'Labelled skeleton': clustered_skeleton,
     'Final ROIs': labelled_arr,
     'Final skeleton': labelled_skeleton,
 }
@@ -351,10 +345,3 @@ for i, (label, arr) in enumerate(arrays.items()):
 # Save final figure
 plt.tight_layout()
 plt.savefig(f'{output_folder}S7_superres.svg')
-
-""" 
-Figure S6: **Super-resolution measurement of individual molecules.** (A) Localisations are first clustered using DBSCAN with permissive parameters to discard isolated localisations (~noise). (B) The resultant localisations are subjected to rounds of morphological dilation, closing and erosion to arive at single connected regions of interest (ROIs). (C) The resultant ROIs are then relabelled such that individual ROIs are given a single unique identifier. (D) Each ROI is skeletonised to allow for length measurements. In all panels, pixel color represents the pixel/object identifier.
-
-
-
-"""

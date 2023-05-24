@@ -121,6 +121,8 @@ for ax, label in zip([axA, axB1, axC ], ['A', 'B', 'C']):
     trans = mtransforms.ScaledTranslation(-35/72, -0/72, fig.dpi_scale_trans)
     ax.text(0.0, 1.0, label, transform=ax.transAxes + trans,
             fontsize=16, va='bottom', fontweight='bold')
+
+# ----------Panel A----------
 # DL spot count
 scatbar(
     dataframe=DL_spots_summary[DL_spots_summary['detect'] == 'HT7'], xcol='disease_state', ycol='spots_count', ax=axA, xorder=['AD', 'CRL', 'BSA'],
@@ -135,9 +137,9 @@ annotator.set_pvalues(pvalues)
 annotator.annotate()
 axA.set_yticks(np.arange(0, 1550, 250))
 axA.set_yticklabels(np.arange(0, 1550, 250))
-# SR params
 axA.set(title='', ylabel='Aggregates per FOV', xlabel='')
 
+# ----------Panel B----------
 # SR params
 scatbar(
     dataframe=SR_spots_mean, xcol='disease_state', ycol='smoothed_length', ax=axB1, xorder=['AD', 'CRL'],
@@ -154,6 +156,7 @@ scatbar(
 axB2.set(title='', ylabel='Mean eccentricity', xlabel='')
 
 
+# ----------Panel C----------
 # Plot LDA
 plot_lda(data=lda, palette=palette, hue='disease_state', style='tissue', ax=axC, s=100)
 axC.set(ylim=(-8, 8), xlim=(-22, 17))

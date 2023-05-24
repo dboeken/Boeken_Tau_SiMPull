@@ -338,11 +338,6 @@ axC2.set_xticks([0, 1])
 axC2.set_xticklabels(['Long', 'Short'])
 axC2.set(title='All AD aggs.', ylabel='Fibrils [%]', xlabel='')
 
-
-# scatbarplot2('label', 'Fibril [%]',
-#             palette, axC2, parameter_by_parameter2_for_plotting['eccentricity_smoothed_length'][parameter_by_parameter2_for_plotting['eccentricity_smoothed_length']['disease_state']=='AD'].copy())
-
-
 scatbar(
     dataframe=for_plotting_mean, xcol='disease_state', ycol='#locs', ax=axC3, xorder=['AD', 'CRL'],
     dotpalette=palette, barpalette=palette,

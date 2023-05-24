@@ -101,9 +101,6 @@ def plot_colocalisation(seed_spots, test_spots, threshold=False, ax=None):
         label='T181'
     )
 
-    # for x1, y1, x2, y2, dist_pair in pairs.dropna(subset=['test_coord_1']).values:
-    #     ax.plot([x1, x2], [y1, y2], color='black', linewidth=0.1)
-
     sns.scatterplot(
         data=pairs.dropna(subset=['test_coord_1']),
         x='seed_coord_0',
@@ -242,14 +239,11 @@ for i, channel in enumerate([641, 488]):
         linewidth=0.1,
         label='Non-colocalised'
     )
-    # axes[i].set_xlim(512, 0)
     axes[i].set_ylim(512, 0)
 
     if i ==0:
         handles, labels = axes[i+3].get_legend_handles_labels()
         legend_labels = dict(zip(labels, handles))
-        # handles[0].set_color('black')
-        # handles[1].set_edgecolor('black')
     axes[i+3].legend('', frameon=False)
 
 fig.legend([legend_labels[lab] for lab in ['Non-colocalised', 'Colocalised']], ['Non-colocalised',
@@ -280,10 +274,3 @@ axes[5].set_title('Overlay')
 # Save final figure
 plt.tight_layout()
 plt.savefig(f'{output_folder}S6_colocalisation.svg')
-
-""" 
-Figure S6: Colocalisation analysis. (A) Shown are individual spots detected using ComDet in each channel (in this case, AF647-labelled AT8 △ and AF488-labelled T181 ∇). Spots for a given chennel are compared with those from the opposing channel, and pairs of spots for which the euclidean distance is less than the threshold value are considered colocalised (O). In the event that more than one spot passes the threshold, the spot with the shortest distance is selected. To estimate the likelihood of these spots being colocalised by chance, the second channel coordinates are inverted and the colocalisation calculation repeated (Randomised). (B) The number of colocalised spots as calculated for the original or randomised spots shown in A at threshold distances ranging from 1 to 10. (C) Detected spots shown in A overlayed onto the source AT8 or T181 images, demonstrating those which were found to be colocalised (O) or non-colocalised (X).
-
-
-
-"""
