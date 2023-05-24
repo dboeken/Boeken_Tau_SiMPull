@@ -1,18 +1,20 @@
+"""
+Generating Figure 4
+"""
+
 import os
 
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.transforms as mtransforms
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from loguru import logger
 from matplotlib.colors import ListedColormap
-from statannotations.Annotator import Annotator
-import matplotlib.transforms as mtransforms
 from microfilm.microplot import microshow
 
-from src.utils import scatbar, plot_hexbin
-
+from src.utils import plot_hexbin, scatbar
 
 logger.info('Import OK')
 

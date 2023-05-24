@@ -1,3 +1,7 @@
+"""
+Preprocessing of the raw data for plotting Figure 4
+"""
+
 import os
 
 from scipy import stats
@@ -29,8 +33,8 @@ sample_dict = {'13': 'AD', '9': 'CRL', 'BSA': 'BSA',
 antibody_dict = {488: 'T181', 641: 'AT8', 'colocalised': 'colocalised'}
 
 # =================Prepare image=================
-# example_image = imread(image_path)
-# np.save(f'{output_folder}example_image.npy', example_image)
+example_image = imread(image_path)
+np.save(f'{output_folder}example_image.npy', example_image)
 
 # =================Proportion calculations=================
 # Read in summary FOV data

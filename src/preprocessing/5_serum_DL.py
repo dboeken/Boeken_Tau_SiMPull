@@ -1,11 +1,16 @@
+"""
+Preprocessing of the raw data for plotting Figure 5
+"""
+
 import os
+
 import matplotlib
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+import numpy as np
+import pandas as pd
 from loguru import logger
 from scipy.spatial import distance
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 logger.info('Import OK')
 
