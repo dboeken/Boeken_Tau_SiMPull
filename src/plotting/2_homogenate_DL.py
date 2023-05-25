@@ -63,7 +63,7 @@ example_CRL = np.load(f'{input_path}example_CRL.npy')
 # =========Generate figure========
 fig = plt.figure(figsize=(18.4 * cm, 3 * 6.1 * cm))
 
-gs1 = fig.add_gridspec(nrows=3, ncols=6, wspace=0.95, hspace=0.3)
+gs1 = fig.add_gridspec(nrows=3, ncols=6, wspace=1.0, hspace=0.4)
 axA = fig.add_subplot(gs1[0, 0:2])
 axB = fig.add_subplot(gs1[0, 2:4])
 axC = fig.add_subplot(gs1[0, 4:6])
@@ -117,7 +117,7 @@ scatbar(
     pairs=[('AD', 'CRL')]
     )
 axE1.set_title('AT8', fontsize=8)
-axE1.set_ylabel('Number of spots')
+axE1.set_ylabel('Intensity [A.U.]')
 axE1.set_xlabel('')
 
 scatbar(
@@ -142,11 +142,15 @@ axF.set_ylabel('Bright spots (%)')
 plot_interpolated_ecdf(
     fitted_ecdfs = fitted_ecdf_HT7[fitted_ecdf_HT7['sample']!= 'BSA'], ycol='norm_mean_intensity',
     huecol='sample', palette=palette, ax=axG, orientation='h')
+axG.set_title('HT7', fontsize=8)
+axG.set(ylabel='Proportion', xlabel='Intensity [A.U.]')
 
 # --------Panel H--------
 plot_interpolated_ecdf(
     fitted_ecdfs = fitted_ecdf_AT8[fitted_ecdf_AT8['sample']!= 'BSA'], ycol='norm_mean_intensity',
     huecol='sample', palette=palette, ax=axH, orientation='h')
+axH.set_title('AT8', fontsize=8)
+axH.set(ylabel='Proportion', xlabel='Intensity [A.U.]')
 
 # --------Legend for G,H--------
 handles, labels = axH.get_legend_handles_labels()

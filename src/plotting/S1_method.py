@@ -15,6 +15,9 @@ from loguru import logger
 from microfilm.microplot import microshow
 from scipy.optimize import leastsq
 from skimage.io import imread
+from statannotations.Annotator import Annotator
+
+from src.utils import scatbar
 
 logger.info('Import OK')
 
@@ -24,7 +27,7 @@ if os.path.exists('data/data_path.txt'):
 else:
     root_path = ''
 
-input_path = f'{root_path}data/homogenate_DL_data/'
+input_path = f'{root_path}results/S1_method/'
 output_folder = f'{root_path}results/S1_method/'
 
 if not os.path.exists(output_folder):
@@ -33,7 +36,7 @@ if not os.path.exists(output_folder):
 # =======Set default plotting parameters=======
 font = {'family': 'arial',
         'weight': 'normal',
-        'size': 7}
+        'size': 6.5}
 cm = 1/2.54
 
 
@@ -43,141 +46,23 @@ plt.rcParams['axes.titlesize'] = 8
 plt.rcParams['figure.dpi'] = 300
 
 
-def read_in(input_path):
-    spots = pd.read_csv(f'{input_path}')
-    spots.drop([col for col in spots.columns.tolist()
-                if 'Unnamed: ' in col], axis=1, inplace=True)
-    # Drop extra wells collected by default due to grid pattern
-    spots.dropna(subset=['sample'], inplace=True)
-
-    spots['fov'] = spots['well_info'].str.split('_').str[0]
-    spots['slide_position'] = spots['fov'].str[0:4]
-
-    spots[['capture', 'sample', 'detect']
-          ] = spots['sample'].str.split('_', expand=True)
-
-    mean_spots = spots.groupby(['layout', 'channel', 'sample',
-                                         'capture', 'detect', 'slide_position']).mean().reset_index()
-
-    return mean_spots
-
-
-def scatbarplot(ycol, ylabel, ax, data, capture, ):
-
-    sns.barplot(
-        data=data[data['capture'] == capture],
-        x='sample',
-        y=ycol,
-        capsize=0.2,
-        errwidth=2,
-        color='darkgrey',
-        ax=ax,
-        dodge=False,
-    )
-    sns.stripplot(
-        data=data[data['capture'] == capture],
-        x='sample',
-        y=ycol,
-        ax=ax,
-        color='#36454F',
-        edgecolor='#fff',
-        linewidth=1,
-        s=5,
-    )
-
-    ax.set(ylabel=ylabel, xlabel='')
-
-
-# =========Organise data========
-mean_spots_Xreactivity = read_in('data/homogenate_DL_data/Xreactivity_spots_per_fov.csv')
-mean_spots_dilution = read_in(
-    'data/homogenate_DL_data/dilution_spots_per_fov.csv')
-
-
-mean_spots_dilution = pd.read_csv(
-    'data/homogenate_DL_data/dilution_spots_per_fov.csv')
-mean_spots_dilution.drop([col for col in mean_spots_dilution.columns.tolist()
-            if 'Unnamed: ' in col], axis=1, inplace=True)
-# fill slides with no spots
-mean_spots_dilution['spots_count'] = mean_spots_dilution['spots_count'].fillna(
-    0)
-
-
-
-mean_spots_dilution[['capture', 'sample', 'detect']
-      ] = mean_spots_dilution['sample'].str.split('_', expand=True)
-
-mean_spots_dilution = mean_spots_dilution[mean_spots_dilution['detect'] != 'IgG'].copy(
-)
-
-
-mean_spots_dilution = mean_spots_dilution.groupby(
-    ['slide_position', 'capture', 'detect', 'sample', 'layout']).mean().reset_index()
-
-mean_spots_dilution = mean_spots_dilution[
-    (mean_spots_dilution['slide_position'] != 'X5Y0') & (
-        mean_spots_dilution['layout'] != '1')
-].copy()
-
-dilution_dict = {
-    'D10': 680000,
-    'D100': 68000,
-    'D1000': 6800,
-    'D10000': 680,
-    'BSA': 0
+palette = {
+    'AT8': 'lightgrey',
+    'HT7': 'darkgrey',
 }
 
-mean_spots_dilution['concentration'] = mean_spots_dilution['sample'].map(
-    dilution_dict)
-
-
-df_BSA = mean_spots_dilution[mean_spots_dilution['sample'] == 'BSA'].copy(
-)
-
-data = df_BSA.groupby(['capture',
-                       'detect', 'layout']).mean().reset_index()
-
-data['key'] = data['capture'] + '_' + data['detect']
-
-dict_BSA = dict(data[['key', 'spots_count']].values)
-
-mean_spots_dilution['key'] = mean_spots_dilution['capture'] + \
-    '_' + mean_spots_dilution['detect']
-
-mean_spots_dilution['control'] = mean_spots_dilution['key'].map(
-    dict_BSA)
-
-mean_spots_dilution['StoN'] = mean_spots_dilution['spots_count'] / \
-    mean_spots_dilution['control']
-
+# =========Organise data========
+mean_number_peptide_data = pd.read_csv(
+    f'{input_path}mean_number_peptide_data.csv')
+mean_spots_Xreactivity = pd.read_csv(
+    f'{input_path}mean_spots_Xreactivity.csv')
+mean_spots_dilution = pd.read_csv(
+    f'{input_path}mean_spots_dilution.csv')
 
 example_BSA = imread('data/homogenate_DL_data/example_BSA.tif')
 example_BSA = np.mean(example_BSA[10:, :, :], axis=0)
 
-
-mean_spots_Xreactivity = mean_spots_Xreactivity[
-    (mean_spots_Xreactivity['capture'].isin(['HT7', 'AT8', 'SC211', '6E10'])) &
-    (mean_spots_Xreactivity['sample'].isin(['R1E5', 'asyn', 'abeta', 'PBS'])) &
-    (mean_spots_Xreactivity['detect'].isin(['HT7', 'AT8', 'SC211', '6E10']))
-]
-
-peptide_data = pd.read_csv(f'{root_path}data/peptide_data/spots_per_fov.csv')
-peptide_data.drop([col for col in peptide_data.columns.tolist()
-            if 'Unnamed: ' in col], axis=1, inplace=True)
-# Drop extra wells collected by default due to grid pattern
-peptide_data.dropna(subset=['sample'], inplace=True)
-
-# expand sample info
-peptide_data[['capture', 'sample', 'detect']
-      ] = peptide_data['sample'].str.split('_', expand=True)
-peptide_data['peptide_data_count'] = peptide_data['spots_count'].fillna(0)
-
-mean_number_peptide_data = peptide_data.groupby(
-    ['capture', 'sample', 'slide_position', 'detect']).mean().reset_index()
-
-mean_number_peptide_data[['sample', 'concentration']
-                         ] = mean_number_peptide_data['sample'].str.split('-', expand=True)
-
+# =======Functions=======
 
 def logistic4(x, A, B, C, D):
     """4PL lgoistic equation."""
@@ -195,13 +80,6 @@ def peval(x, p):
     """Evaluated value at x with current parameters."""
     A, B, C, D = p
     return logistic4(x, A, B, C, D)
-
-
-palette = {
-    'AT8': 'lightgrey',
-    'HT7': 'darkgrey',
-
-}
 
 
 def LOD_cal(data, capture, detect):
@@ -270,7 +148,7 @@ def LOD_calculation(data, capture, detect, ax):
     return LOD_conc, LOB_conc
 
 
-#LOD val
+
 # LOD_values = []
 # for (detect, capture), df in mean_spots_dilution.groupby(['detect', 'capture']):
 #     if detect == capture:
@@ -287,17 +165,11 @@ def LOD_calculation(data, capture, detect, ax):
 
 
 
-mean_number_peptide_data.to_csv(
-    f'{output_folder}mean_number_peptide_data.csv')
-mean_spots_Xreactivity.to_csv(
-    f'{output_folder}mean_spots_Xreactivity.csv')
-mean_spots_dilution.to_csv(
-    f'{output_folder}mean_spots_dilution.csv')
-
+# =======Plot figure=======
 
 
 fig = plt.figure(figsize=(18.4 * cm,  9.2 * cm))
-gs1 = fig.add_gridspec(nrows=2, ncols=4, wspace=0.6, hspace=0.45)
+gs1 = fig.add_gridspec(nrows=2, ncols=4, wspace=0.6, hspace=0.55)
 axA = fig.add_subplot(gs1[0, 0:1])
 axB = fig.add_subplot(gs1[0, 1:2])
 axC = fig.add_subplot(gs1[0, 2:4])
@@ -313,56 +185,101 @@ for ax, label in zip([axA, axB, axC, axD, axE, axF, axG,], ['A', 'B', 'C', 'D', 
     ax.text(0.0, 1.05, label, transform=ax.transAxes + trans,
             fontsize=12, va='bottom', fontweight='bold')
 
-
+# ----------Panel A----------
 
 microim1 = microshow(images=[example_BSA],
                      cmaps=['Greys'], flip_map=[True],
                      label_color='black', ax=axA,
                      unit='um', scalebar_size_in_units=10, scalebar_unit_per_pix=0.107, scalebar_font_size=0, rescale_type='limits', limits=[400, 800])
 
+# ----------Panel B----------
+scatbar(dataframe=mean_number_peptide_data[mean_number_peptide_data['capture'] == 'AT8'],
+        xcol='sample', ycol='spots_count', ax=axB, xorder=['Dimer', 'R1E5'], dotcolor='#36454F', barcolor='darkgrey', pairs=[('Dimer', 'R1E5')])
+axB.set(title='AT8 assay', ylabel='Aggregates per FOV', xlabel='')
 
-scatbarplot(
-    data=mean_number_peptide_data[mean_number_peptide_data['capture'] == 'AT8'], ycol='spots_count', ylabel='Spots per FOV',  capture='AT8', ax=axB)
+# ----------Panel C----------
 
 LOD_calculation(mean_spots_dilution, 'AT8', 'AT8', ax= axC)
 LOD_calculation(mean_spots_dilution, 'HT7', 'HT7', ax=axC)
 
-scatbarplot(ycol='spots_count', ylabel='Aggregates per FOV',
-            ax=axD, data=mean_spots_Xreactivity, capture='AT8')
-
-scatbarplot(ycol='spots_count', ylabel='Aggregates per FOV',
-            ax=axE, data=mean_spots_Xreactivity, capture='HT7')
-
-scatbarplot(ycol='spots_count', ylabel='Aggregates per FOV',
-            ax=axF, data=mean_spots_Xreactivity, capture='6E10')
-
-scatbarplot(ycol='spots_count', ylabel='Aggregates per FOV',
-            ax=axG, data=mean_spots_Xreactivity, capture='SC211')
-
-
 axC.set(ylabel='Aggregates per FOV',
         xlabel='Concentration of tau [pg/mL]')
 
+# ----------Panel D----------
+scatbar(dataframe=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'],
+        xcol='sample', ycol='spots_count', ax=axD, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
+
+pvalues_AT8 = [0.00022, 0.99986, 0.1]
+pairs = [('PBS', 'R1E5'), ('PBS', 'abeta'), ('PBS', 'asyn')]
+annotator = Annotator(
+    ax=axD, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
+
+annotator.set_pvalues(pvalues_AT8)
+annotator.annotate()
+
+axD.set(title='AT8 assay', ylabel='Aggregates per FOV', xlabel='')
+
+
+# ----------Panel E----------
+scatbar(dataframe=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'HT7'],
+        xcol='sample', ycol='spots_count', ax=axE, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
+axE.set(title='HT7 assay', ylabel='Aggregates per FOV', xlabel='')
+
+pvalues_HT7 = [0.000001, 0.984, 0.99895]
+pairs = [('PBS', 'R1E5'), ('PBS', 'abeta'), ('PBS', 'asyn')]
+annotator = Annotator(
+    ax=axE, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'HT7'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
+
+annotator.set_pvalues(pvalues_HT7)
+annotator.annotate()
+
+# ----------Panel F----------
+
+scatbar(dataframe=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == '6E10'],
+        xcol='sample', ycol='spots_count', ax=axF, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
+axF.set(title='6E10 assay', ylabel='Aggregates per FOV', xlabel='')
+
+
+pvalues_6E10 = [0.127, 0.00000, 0.9995]
+pairs = [('PBS', 'R1E5'), ('PBS', 'abeta'), ('PBS', 'asyn')]
+annotator = Annotator(
+    ax=axF, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == '6E10'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
+
+annotator.set_pvalues(pvalues_6E10)
+annotator.annotate()
+
+# ----------Panel G----------
+scatbar(dataframe=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'SC211'],
+        xcol='sample', ycol='spots_count', ax=axG, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
+axG.set(title='SC211 assay', ylabel='Aggregates per FOV', xlabel='')
+
+pvalues_SC211 = [0.9776, 0.999998, 0.01868]
+pairs = [('PBS', 'R1E5'), ('PBS', 'abeta'), ('PBS', 'asyn')]
+annotator = Annotator(
+    ax=axG, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'SC211'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
+
+annotator.set_pvalues(pvalues_SC211)
+annotator.annotate()
+
+
 for ax in fig.axes:
     ax.spines[['right', 'top']].set_visible(False)
-    
+
 plt.tight_layout()
 
 plt.savefig(f'{output_folder}S1_methods.svg')
 plt.show()
 
-
+#-------2 way Anova + Tukey-------
 pg.anova(
     data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'], dv='spots_count', between=['sample']).round(5)
 pg.pairwise_tukey(
     data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'], dv='spots_count', between=['sample']).round(5)
 
-
 pg.anova(
     data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'HT7'], dv='spots_count', between=['sample']).round(5)
 pg.pairwise_tukey(
     data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'HT7'], dv='spots_count', between=['sample']).round(5)
-
 
 pg.anova(
     data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'SC211'], dv='spots_count', between=['sample']).round(5)

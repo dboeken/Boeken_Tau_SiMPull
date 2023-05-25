@@ -4,6 +4,7 @@ Generating Figure S4
 
 import os
 
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.transforms as mtransforms
 import numpy as np
@@ -16,6 +17,7 @@ from skimage.io import imread
 
 logger.info('Import OK')
 
+# =================Set paths=================
 if os.path.exists('data/data_path.txt'):
     root_path = open('data/data_path.txt', 'r').readlines()[0]
 else:
@@ -29,7 +31,7 @@ output_folder = f'{root_path}results/S6_colocalisation/'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
     
-import matplotlib
+# =======Set default plotting parameters=======
 
 font = {'family' : 'arial',
 'weight' : 'normal',
@@ -41,7 +43,7 @@ plt.rcParams['figure.dpi'] = 300
 
 cm = 1/2.54
 
-
+# =======Functions=======
 def closest_node(node, nodes, threshold=False, verbose=False):
     min_distance = distance.cdist([node], nodes).min()
     if threshold and not min_distance < threshold:
@@ -116,6 +118,7 @@ def plot_colocalisation(seed_spots, test_spots, threshold=False, ax=None):
     return pairs
 
 
+# =======Organise Data=======
 # Read in raw colocalisation data
 spots = pd.read_csv(input_spots)
 spots.drop([col for col in spots.columns.tolist() if 'Unnamed: ' in col], axis=1, inplace=True)
