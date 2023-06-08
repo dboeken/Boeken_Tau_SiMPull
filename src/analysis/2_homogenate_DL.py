@@ -134,14 +134,24 @@ slide_params_AT8_path = f'{input_path}AT8_capture_slide_parameters.csv'
 slide_params_HT7_path = f'{input_path}HT7_capture_slide_parameters.csv'
 spots_intensity_HT7 = f'{input_path}HT7_capture_compiled_spots.csv'
 spots_intensity_AT8 = f'{input_path}AT8_capture_compiled_spots.csv'
+background = f'{input_path}intensity_background.csv'
 
-# Scale brightness values by 1000
+# Scale brightness values by 1000, correct for background
+background = pd.read_csv(background)
+
 AT8_spots_intensity = intensity_processing(
     slide_params_AT8_path, spots_intensity_AT8, 'AT8')
-AT8_spots_intensity['norm_mean_intensity'] = AT8_spots_intensity['mean_intensity'] / 1000
+AT8_spots_intensity = pd.merge(AT8_spots_intensity, background, on=['capture', 'layout', 'well_info'], how='left')
+AT8_spots_intensity['corr_mean_intensity'] = AT8_spots_intensity['mean_intensity'] - AT8_spots_intensity['median_background'] 
+AT8_spots_intensity['norm_mean_intensity'] = AT8_spots_intensity['corr_mean_intensity'] / 1000
+AT8_spots_intensity = AT8_spots_intensity[AT8_spots_intensity['norm_mean_intensity'] > 0].copy()
+
 HT7_spots_intensity = intensity_processing(
     slide_params_HT7_path, spots_intensity_HT7, 'HT7')
-HT7_spots_intensity['norm_mean_intensity'] = HT7_spots_intensity['mean_intensity'] / 1000
+HT7_spots_intensity = pd.merge(HT7_spots_intensity, background, on=['capture', 'layout', 'well_info'], how='left')
+HT7_spots_intensity['corr_mean_intensity'] = HT7_spots_intensity['mean_intensity'] - HT7_spots_intensity['median_background'] 
+HT7_spots_intensity['norm_mean_intensity'] = HT7_spots_intensity['corr_mean_intensity'] / 1000
+HT7_spots_intensity = HT7_spots_intensity[HT7_spots_intensity['norm_mean_intensity'] > 0].copy()
 
 # Fit cumulative distributions to brightness values
 fitted_ecdf_HT7 = fitting_ecfd_for_plotting(HT7_spots_intensity, 'HT7', 15, col='norm_mean_intensity')
@@ -171,8 +181,8 @@ mean_intensity_plotting = mean_intensity_plotting[mean_intensity_plotting['sampl
 mean_intensity_plotting.to_csv(f'{output_folder}mean_intensity.csv')
 
 # Calculate proportion of spots > threshold intensity
-thresholds = {'AT8': 500, 'HT7': 2000}
-compiled_spots['bright_cat'] = ['bright' if val > thresholds[detect] else 'dim' for val, detect in compiled_spots[['mean_intensity', 'detect']].values]
+thresholds = {'AT8': 100, 'HT7': 1500}
+compiled_spots['bright_cat'] = ['bright' if val > thresholds[detect] else 'dim' for val, detect in compiled_spots[['corr_mean_intensity', 'detect']].values]
 
 proportion_intensity = (compiled_spots.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'layout', 'bright_cat']).count()['label'] / compiled_spots.groupby(['capture', 'sample', 'slide_position', 'detect', 'disease_state', 'layout']).count()['label']).reset_index()
 proportion_intensity['label'] = proportion_intensity['label'] * 100
