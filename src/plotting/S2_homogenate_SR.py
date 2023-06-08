@@ -220,7 +220,7 @@ scatbar(
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axE1.set(title='Length', ylabel='Long [%]', xlabel='')
+axE1.set(title='Length\n(>250 nm)', ylabel='Long [%]', xlabel='')
 
 
 scatbar(
@@ -228,7 +228,8 @@ scatbar(
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axE2.set(title='Perimeter', ylabel='Long perimeter [%]', xlabel='')
+axE2.set(title='Perimeter\n(>550 nm)',
+         ylabel='Long perimeter [%]', xlabel='')
 
 
 scatbar(
@@ -236,14 +237,14 @@ scatbar(
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axE3.set(title='Area', ylabel='Large [%]', xlabel='')
+axE3.set(title='Area\n(>15x10$^3$nm$^2$)', ylabel='Large [%]', xlabel='')
 
 scatbar(
     dataframe=fil_proportion['eccentricity'], xcol='disease_state', ycol='high', ax=axE4, xorder=['AD', 'CRL'],
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axE4.set(title='Eccentricity', ylabel='Fibrils [%]', xlabel='')
+axE4.set(title='Eccentricity\n(>0.9)', ylabel='Fibrils [%]', xlabel='')
 
 
 for ax in fig.axes:

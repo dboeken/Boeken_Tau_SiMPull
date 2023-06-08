@@ -85,7 +85,7 @@ p1byp2_for_plotting = {category: df.dropna(how='all', axis=1) for category, df i
 # =================Plot figure=================
 
 fig = plt.figure(figsize=(12.1 * cm, 4 * 6.1 * cm))
-gs1 = fig.add_gridspec(nrows=8, ncols=4, wspace=0.95, hspace=1.25)
+gs1 = fig.add_gridspec(nrows=8, ncols=4, wspace=0.95, hspace=1.5)
 axA1 = fig.add_subplot(gs1[0:1, 0:1])
 axA2 = fig.add_subplot(gs1[0:1, 1:2])
 axA3 = fig.add_subplot(gs1[1:2, 0:1])
@@ -170,7 +170,7 @@ scatbar(
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axD1.set(title='Length', ylabel='Long [%]', xlabel='')
+axD1.set(title='Length\n(>250 nm)', ylabel='Long [%]', xlabel='')
 
 
 scatbar(
@@ -178,7 +178,7 @@ scatbar(
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axD2.set(title='Perimeter', ylabel='Long perimeter [%]', xlabel='')
+axD2.set(title='Perimeter\n(>550 nm)', ylabel='Long perimeter [%]', xlabel='')
 
 
 scatbar(
@@ -186,14 +186,14 @@ scatbar(
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axD3.set(title='Area', ylabel='Large [%]', xlabel='')
+axD3.set(title='Area\n(>15x10$^3$nm$^2$)', ylabel='Large [%]', xlabel='')
 
 scatbar(
     dataframe=proportion['eccentricity'], xcol='disease_state', ycol='high', ax=axD4, xorder=['AD', 'CRL'],
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')],
 )
-axD4.set(title='Eccentricity', ylabel='Fibrils [%]', xlabel='')
+axD4.set(title='Eccentricity\n(>0.9)', ylabel='Fibrils [%]', xlabel='')
 
 
 
@@ -201,7 +201,7 @@ handles, labels = axC1.get_legend_handles_labels()
 by_label = dict(zip(labels, handles))
 simple_legend = {'AD': by_label['13'],
                  'CRL': by_label['9']}
-for label, ax in zip(['Length (nm)', 'Eccentricity'], [axC1, axC2]):
+for label, ax in zip(['Length [nm]', 'Eccentricity'], [axC1, axC2]):
     ax.legend(simple_legend.values(), simple_legend.keys(), frameon=False)
     ax.set_xlabel(label)
     ax.set_ylabel('Proportion')

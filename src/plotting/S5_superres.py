@@ -20,10 +20,7 @@ from skimage.io import imread
 
 logger.info('Import OK')
 
-from loguru import logger
-
-logger.info('Import OK')
-
+# =================Set paths=================
 if os.path.exists('data/data_path.txt'):
     root_path = open('data/data_path.txt', 'r').readlines()[0]
 else:
@@ -36,6 +33,7 @@ output_folder = f'{root_path}results/S7_superres/'
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
+# =======Set default plotting parameters=======
 font = {'family': 'arial',
         'weight': 'normal',
         'size': 8}
@@ -52,7 +50,7 @@ SQUARE = np.array([[1, 1, 1],
                    [1, 1, 1],
                    [1, 1, 1]])
 
-
+# =======Functions=======
 def rand_cmap(nlabels, type='bright', first_color_black=True, last_color_black=False, verbose=False):
     """
     Creates a random colormap to be used together with matplotlib. Useful for segmentation tasks
