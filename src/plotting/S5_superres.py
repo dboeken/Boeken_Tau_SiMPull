@@ -332,7 +332,7 @@ viewport = [(700,800), (400,500)]
 (xmin, xmax), (ymin, ymax) = viewport
 
 # A random colormap for matplotlib
-new_cmap = rand_cmap(len(np.unique(arr)+1), type='bright',
+new_cmap = rand_cmap(len(np.unique(labelled_arr)+1), type='bright',
                         first_color_black=True, last_color_black=False)
 for i, (label, arr) in enumerate(arrays.items()):
 
@@ -344,4 +344,4 @@ for i, (label, arr) in enumerate(arrays.items()):
 
 # Save final figure
 plt.tight_layout()
-plt.savefig(f'{output_folder}S7_superres.svg')
+plt.savefig(f'{output_folder}FigureS5_superres.svg')
