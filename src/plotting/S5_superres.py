@@ -340,4 +340,4 @@ for i, (label, arr) in enumerate(arrays.items()):
 
 # Save final figure
 plt.tight_layout()
-plt.savefig(f'{output_folder}S7_superres.svg')
+plt.savefig(f'{output_folder}FigureS5_superres.svg')

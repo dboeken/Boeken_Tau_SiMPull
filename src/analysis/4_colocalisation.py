@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from skimage.io import imread
+from scipy.stats import pearsonr
 
 logger.info('Import OK')
 
@@ -100,12 +101,28 @@ colocalised['disease_state'] = colocalised['sample'].astype(
     str).map(sample_dict)
 
 # merge table on mean intenisty of colocalised spots in both channels and update labels
-for_plotting = pd.pivot(colocalised, index=['fov', 'layout', 'sample', 'capture', 'pair_id', 'disease_state'], columns=['channel'], values=['mean_intensity']).reset_index()
+colocalised['sample'] = colocalised['sample'].astype(str)
+for_plotting = pd.pivot(
+    colocalised, 
+    index=['fov', 'layout', 'sample', 'capture', 'pair_id', 'disease_state'], 
+    columns=['channel'], 
+    values=['mean_intensity']).reset_index()
 for_plotting.columns = [f'{x}' if y == '' else f'{x}_{y}' for x, y in for_plotting.columns]
 for_plotting['norm_mean_intensity_488'] = for_plotting['mean_intensity_488'] / 1000
 for_plotting['norm_mean_intensity_641'] = for_plotting['mean_intensity_641'] / 1000
 
 filtered_disease = for_plotting[for_plotting['disease_state'] == 'AD'].copy()
+
+# Calculate correlation between brightness in each channel
+pearson_stats = []
+for channel, df in filtered_disease.groupby('capture'):
+    result = pearsonr(
+                df['norm_mean_intensity_488'].tolist(),
+                df['norm_mean_intensity_641'].tolist(),
+            )
+    pearson_stats.append([channel, *result])
+pearson_stats = pd.DataFrame(pearson_stats, columns=['capture', 'pearson_r', 'pearson_pvalue'])
+pearson_stats.to_csv(f'{output_folder}brightness_correlation.csv')
 
 AD_brightness_plotting = for_plotting_intensity[for_plotting_intensity['sample'].isin(['13', '55', '246'])].groupby(
     ['capture', 'sample', 'channel', 'disease_state']).mean().reset_index()
