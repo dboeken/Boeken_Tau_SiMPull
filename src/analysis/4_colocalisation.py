@@ -21,6 +21,7 @@ else:
 
 input_path = f'{root_path}data/colocalisation_data/colocalisation_summary.csv'
 input_path_spots = f'{root_path}data/colocalisation_data/colocalisation_spots.csv'
+input_background = f'{root_path}data/colocalisation_data/coloc_background.csv'
 image_path = f'{root_path}data/colocalisation_images/Composite.tif'
 output_folder = 'results/4_colocalisation/'
 
@@ -95,23 +96,32 @@ for_plotting_intensity['log2_intensity_ratio'] = np.log2(
 # =====================stochiometry=====================
 input_path_spots = f'{root_path}data/colocalisation_data/colocalisation_spots.csv'
 
+# read in background
+background = pd.read_csv(input_background)
+background.drop([col for col in background.columns.tolist() if 'Unnamed: ' in col], axis=1, inplace=True)
+
 colocalised_summary = pd.read_csv(f'{input_path_spots}')
+colocalised_summary.drop([col for col in colocalised_summary.columns.tolist() if 'Unnamed: ' in col], axis=1, inplace=True)
 colocalised = colocalised_summary[colocalised_summary['coloc?'] == 1].copy()
-colocalised['disease_state'] = colocalised['sample'].astype(
-    str).map(sample_dict)
+colocalised['sample'] = colocalised['sample'].astype(str)
+colocalised['disease_state'] = colocalised['sample'].map(sample_dict)
+
+# Correct background for each channel
+colocalised = pd.merge(colocalised, background, on=['layout', 'well_info'], how='left')
+colocalised['corr_mean_intensity']  = colocalised['mean_intensity'] - colocalised['median_background']
+colocalised = colocalised[colocalised['corr_mean_intensity'] > 0].copy()
 
 # merge table on mean intenisty of colocalised spots in both channels and update labels
-colocalised['sample'] = colocalised['sample'].astype(str)
 for_plotting = pd.pivot(
     colocalised, 
     index=['fov', 'layout', 'sample', 'capture', 'pair_id', 'disease_state'], 
     columns=['channel'], 
-    values=['mean_intensity']).reset_index()
+    values=['corr_mean_intensity']).reset_index()
 for_plotting.columns = [f'{x}' if y == '' else f'{x}_{y}' for x, y in for_plotting.columns]
-for_plotting['norm_mean_intensity_488'] = for_plotting['mean_intensity_488'] / 1000
-for_plotting['norm_mean_intensity_641'] = for_plotting['mean_intensity_641'] / 1000
+for_plotting['norm_mean_intensity_488'] = for_plotting['corr_mean_intensity_488'] / 1000
+for_plotting['norm_mean_intensity_641'] = for_plotting['corr_mean_intensity_641'] / 1000
 
-filtered_disease = for_plotting[for_plotting['disease_state'] == 'AD'].copy()
+filtered_disease = for_plotting[for_plotting['disease_state'] == 'AD'].dropna().copy()
 
 # Calculate correlation between brightness in each channel
 pearson_stats = []
