@@ -143,7 +143,7 @@ hexs4 = plot_hexbin(data=filtered_disease, ax=axE, xcol='norm_mean_intensity_641
               
 cb=plt.colorbar(hexs4, ax=axE)
 axE.set_title('AT8 capture', fontsize=8)
-axE.set(ylabel='Mean intensity 488', xlabel='Mean intensity 641')
+axE.set(ylabel='Mean intensity T181', xlabel='Mean intensity AT8')
 axE.set_xlim(0, 9)
 axE.set_ylim(0, 3)
 
@@ -151,7 +151,7 @@ axE.set_ylim(0, 3)
 hexs5 = plot_hexbin(data=filtered_disease, ax=axF, xcol='norm_mean_intensity_641', ycol='norm_mean_intensity_488', vmin=0, vmax=900, colour=cmap, filter_col='capture', filter_val='T181', kdeplot=True)
               
 axF.set_title('T181 capture', fontsize=8)
-axF.set(ylabel='Mean intensity 488', xlabel='Mean intensity 641')
+axF.set(ylabel='Mean intensity T181', xlabel='Mean intensity AT8')
 axF.set_xlim(0, 9)
 axF.set_ylim(0, 3)
 cb=plt.colorbar(hexs5, ax=axF)

@@ -108,7 +108,7 @@ axD2 = fig.add_subplot(gs1[6:8, 1:2])
 axD3 = fig.add_subplot(gs1[6:8, 2:3])
 axD4 = fig.add_subplot(gs1[6:8, 3:4])
 
-for ax, label in zip([axA1, axB1, axC1, axD1], ['A', 'B', 'C', 'D']):
+for ax, label in zip([axA1, axA5, axB1, axC1, axD1], ['A', 'B', 'C', 'D', 'E']):
     # label physical distance to the left and up:
     trans = mtransforms.ScaledTranslation(-30/72, -3/72, fig.dpi_scale_trans)
     ax.text(0.0, 1.0, label, transform=ax.transAxes + trans,

@@ -44,8 +44,6 @@ plt.rcParams['figure.dpi'] = 300
 
 cm = 1/2.54
 
-
-# TODO: Move to the src/visualise or src/superres modules
 SQUARE = np.array([[1, 1, 1],
                    [1, 1, 1],
                    [1, 1, 1]])
@@ -309,9 +307,9 @@ arrays = {
 }
 
 # Read in raw image
-original = imread(input_srimage, key=np.arange(0, 5000))
-original_image = transform.rescale(
-    np.max(original, axis=0), 8, preserve_range=True)
+# original = imread(input_srimage, key=np.arange(0, 5000))
+# original_image = transform.rescale(
+#     np.max(original, axis=0), 8, preserve_range=True)
 
 
 # =======================Supplementary figure=======================
@@ -330,7 +328,7 @@ viewport = [(700,800), (400,500)]
 (xmin, xmax), (ymin, ymax) = viewport
 
 # A random colormap for matplotlib
-new_cmap = rand_cmap(len(np.unique(arr)+1), type='bright',
+new_cmap = rand_cmap(len(np.unique(labelled_arr)+1), type='bright',
                         first_color_black=True, last_color_black=False)
 for i, (label, arr) in enumerate(arrays.items()):
 
