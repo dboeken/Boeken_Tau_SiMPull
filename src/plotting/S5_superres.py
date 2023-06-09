@@ -44,8 +44,6 @@ plt.rcParams['figure.dpi'] = 300
 
 cm = 1/2.54
 
-
-# TODO: Move to the src/visualise or src/superres modules
 SQUARE = np.array([[1, 1, 1],
                    [1, 1, 1],
                    [1, 1, 1]])
@@ -309,9 +307,9 @@ arrays = {
 }
 
 # Read in raw image
-original = imread(input_srimage, key=np.arange(0, 5000))
-original_image = transform.rescale(
-    np.max(original, axis=0), 8, preserve_range=True)
+# original = imread(input_srimage, key=np.arange(0, 5000))
+# original_image = transform.rescale(
+#     np.max(original, axis=0), 8, preserve_range=True)
 
 
 # =======================Supplementary figure=======================

@@ -20,7 +20,7 @@ from src.utils import scatbar
 logger.info('Import OK')
 
 # =================Set paths=================
-output_folder = f'results/5_serum/'
+output_folder = f'results/figures/'
 input_path = f'results/5_serum/'
 
 if not os.path.exists(output_folder):
@@ -36,8 +36,6 @@ matplotlib.rc('font', **font)
 plt.rcParams['svg.fonttype'] = 'none'
 plt.rcParams['axes.titlesize'] = 8
 plt.rcParams['figure.dpi']= 300
-
-
 
 palette = {
     'CRL': '#345995',

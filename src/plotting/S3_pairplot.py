@@ -62,4 +62,4 @@ for ax in pp.axes.flatten():
     ax.set_yticks([])
     ax.set_xticklabels('')
     ax.set_xticks([])
-plt.savefig(f'{output_folder}FigureS3_pairplot.svg')
+plt.savefig(f'{output_folder}S3_pairplot.svg')

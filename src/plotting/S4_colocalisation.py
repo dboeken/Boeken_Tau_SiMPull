@@ -26,7 +26,7 @@ else:
 input_spots = f'{root_path}data/colocalisation_data/colocalisation_spots.csv'
 input_image_r = f'{root_path}data/colocalisation_images/X5Y1R3W1_641.tif'
 input_image_g = f'{root_path}data/colocalisation_images/X5Y1R3W1_488.tif'
-output_folder = f'{root_path}results/S6_colocalisation/'
+output_folder = f'{root_path}results/figures/'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
@@ -279,4 +279,4 @@ for ax in fig.axes:
 
 # Save final figure
 plt.tight_layout()
-plt.savefig(f'{output_folder}S6_colocalisation.svg')
+plt.savefig(f'{output_folder}S4_colocalisation.svg')
