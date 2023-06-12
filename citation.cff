@@ -1,10 +1,12 @@
-cff-version: 1.0.0
-message: "If you use this respository, please cite the manuscript alongside the following:"
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
 authors:
-  - family-names: 
-    given-names: 
-    orcid: https://orcid.org/
-title: ""
-version: 1.0
-doi: 
-date-released: 
+  - family-names: Böken
+    given-names: Dorothea
+    orcid: https://orcid.org/0009-0008-8443-4469
+  - family-names: Cox
+    given-names: Dezerae
+    orcid: https://orcid.org/0000-0002-5345-8360
+title: dboeken/Boeken_Tau_SiMPull: First submission
+version: 1.0.0
+date-released: 2023-06-12
