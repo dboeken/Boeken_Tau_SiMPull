@@ -85,7 +85,7 @@ p1byp2_for_plotting = {category: df.dropna(how='all', axis=1) for category, df i
 # =================Plot figure=================
 
 fig = plt.figure(figsize=(12.1 * cm, 4 * 6.1 * cm))
-gs1 = fig.add_gridspec(nrows=8, ncols=4, wspace=0.95, hspace=1.5)
+gs1 = fig.add_gridspec( nrows=8, ncols=4, wspace=0.95, hspace=1.5)
 axA1 = fig.add_subplot(gs1[0:1, 0:1])
 axA2 = fig.add_subplot(gs1[0:1, 1:2])
 axA3 = fig.add_subplot(gs1[1:2, 0:1])
@@ -210,7 +210,7 @@ for ax in fig.axes:
     ax.spines[['right', 'top']].set_visible(False)
     
 
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig(f'{output_folder}Figure3_homogenate_SR.svg')
 plt.show()
 

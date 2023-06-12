@@ -166,7 +166,7 @@ for ax in fig.axes:
     ax.spines[['right', 'top']].set_visible(False)
     
 # --------Fig. admin--------
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig(f'{output_folder}Figure2_homogenate_DL.svg')
 plt.show()
 

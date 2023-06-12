@@ -73,7 +73,7 @@ brightness_ratio_stats = pd.read_csv(
 
 # =========Generate figure========
 fig = plt.figure(figsize=(18.4 * cm, 2 * 6.1 * cm))
-gs1 = fig.add_gridspec(nrows=2, ncols=3, wspace=0.45, hspace=0.4)
+gs1 = fig.add_gridspec( nrows=2, ncols=3, wspace=0.45, hspace=0.4)
 axA = fig.add_subplot(gs1[0, 0])
 axB = fig.add_subplot(gs1[0, 1])
 axC = fig.add_subplot(gs1[0, 2])
@@ -113,7 +113,7 @@ for i, (capture, df) in enumerate(mean_for_plotting_proportion.groupby('capture'
                 linestyle=linestyles[disease], linewidth=1.2, color='#4c4c52')
 
     axes[i].set_ylim(0, 110)
-    axes[i].set_ylabel('Colocalised [%]')
+    axes[i].set_ylabel('Colocalized [%]')
     axes[i].set_title(f'{capture} capture', fontsize=8)
 
 # --------Panel D--------
@@ -142,7 +142,7 @@ axD.axhline(1, linestyle='--', linewidth=1.2, color='#4c4c52')
 hexs4 = plot_hexbin(data=filtered_disease, ax=axE, xcol='norm_mean_intensity_641', ycol='norm_mean_intensity_488', vmin=0, vmax=900, colour=cmap, filter_col='capture', filter_val='AT8', kdeplot=True)
               
 cb=plt.colorbar(hexs4, ax=axE)
-axE.set_title('AT8 capture', fontsize=8)
+axE.set_title('AT8 capture, AD', fontsize=8)
 axE.set(ylabel='Mean intensity T181', xlabel='Mean intensity AT8')
 axE.set_xlim(0, 9)
 axE.set_ylim(0, 3)
@@ -150,7 +150,7 @@ axE.set_ylim(0, 3)
 # --------Panel F--------
 hexs5 = plot_hexbin(data=filtered_disease, ax=axF, xcol='norm_mean_intensity_641', ycol='norm_mean_intensity_488', vmin=0, vmax=900, colour=cmap, filter_col='capture', filter_val='T181', kdeplot=True)
               
-axF.set_title('T181 capture', fontsize=8)
+axF.set_title('T181 capture, AD', fontsize=8)
 axF.set(ylabel='Mean intensity T181', xlabel='Mean intensity AT8')
 axF.set_xlim(0, 9)
 axF.set_ylim(0, 3)
@@ -161,7 +161,7 @@ cb.set_label('Count', rotation=270, labelpad=15)
 for ax in fig.axes:
     ax.spines[['right', 'top']].set_visible(False)
 # --------Fig admin--------
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig(f'{output_folder}Figure4_coloc.svg')
 
 

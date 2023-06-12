@@ -28,7 +28,7 @@ else:
 
 input_localisations = f'{root_path}data/homogenate_SR_data/X0Y0R1W1_641_dbscan.csv'
 input_srimage = f'{root_path}data/homogenate_SR_images/X0Y0R1W1_641.tif'
-output_folder = f'{root_path}results/S7_superres/'
+output_folder = f'{root_path}results/figures/'
 
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)

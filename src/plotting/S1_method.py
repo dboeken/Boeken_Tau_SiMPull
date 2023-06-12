@@ -173,7 +173,7 @@ def LOD_calculation(data, capture, detect, ax):
 
 
 fig = plt.figure(figsize=(18.4 * cm,  9.2 * cm))
-gs1 = fig.add_gridspec(nrows=2, ncols=4, wspace=0.6, hspace=0.55)
+gs1 = fig.add_gridspec( nrows=2, ncols=4, wspace=0.6, hspace=0.55)
 axA = fig.add_subplot(gs1[0, 0:1])
 axB = fig.add_subplot(gs1[0, 1:2])
 axC = fig.add_subplot(gs1[0, 2:3])
@@ -203,81 +203,83 @@ scatbar(dataframe=mean_number_peptide_data[mean_number_peptide_data['capture'] =
 axB.set(title='AT8 assay', ylabel='Aggregates per FOV', xlabel='')
 
 # ----------Panel C----------
-scatbar(dataframe=tau_elisa.groupby(['sample','disease_state']).mean().reset_index(),
-        xcol='disease_state', ycol='concentration', ax=axC, xorder=['AD', 'CRL'], dotpalette=palette, barpalette=palette, pairs= [('AD', 'CRL')])
-
-axC.set(title='Tau ELISA', 
-        ylabel='Total tau [pg/mL]', 
-        xlabel='')
-
-# ----------Panel D----------
-LOD_calculation(mean_spots_dilution, 'AT8', 'AT8', ax= axD)
-LOD_calculation(mean_spots_dilution, 'HT7', 'HT7', ax=axD)
-
-axD.set(ylabel='Aggregates per FOV',
-        xlabel='Concentration of tau [pg/mL]')
-
-# ----------Panel E----------
 scatbar(dataframe=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'],
-        xcol='sample', ycol='spots_count', ax=axE, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
+        xcol='sample', ycol='spots_count', ax=axC, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
 
 pvalues_AT8 = [0.00022, 0.99986, 0.1]
 pairs = [('PBS', 'R1E5'), ('PBS', 'abeta'), ('PBS', 'asyn')]
 annotator = Annotator(
-    ax=axE, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
+    ax=axC, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
 
 annotator.set_pvalues(pvalues_AT8)
 annotator.annotate()
 
-axE.set(title='AT8 assay', ylabel='Aggregates per FOV', xlabel='')
+axC.set(title='AT8 assay', ylabel='Aggregates per FOV', xlabel='')
 
 
-# ----------Panel F----------
+# ----------Panel D----------
 scatbar(dataframe=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'HT7'],
-        xcol='sample', ycol='spots_count', ax=axF, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
-axE.set(title='HT7 assay', ylabel='Aggregates per FOV', xlabel='')
+        xcol='sample', ycol='spots_count', ax=axD, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
+axD.set(title='HT7 assay', ylabel='Aggregates per FOV', xlabel='')
 
 pvalues_HT7 = [0.000001, 0.984, 0.99895]
 pairs = [('PBS', 'R1E5'), ('PBS', 'abeta'), ('PBS', 'asyn')]
 annotator = Annotator(
-    ax=axF, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'HT7'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
+    ax=axD, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'HT7'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
 
 annotator.set_pvalues(pvalues_HT7)
 annotator.annotate()
 
-# ----------Panel G----------
+# ----------Panel E----------
 
 scatbar(dataframe=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == '6E10'],
-        xcol='sample', ycol='spots_count', ax=axG, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
-axF.set(title='6E10 assay', ylabel='Aggregates per FOV', xlabel='')
+        xcol='sample', ycol='spots_count', ax=axE, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
+axE.set(title='6E10 assay', ylabel='Aggregates per FOV', xlabel='')
 
 
 pvalues_6E10 = [0.127, 0.00000, 0.9995]
 pairs = [('PBS', 'R1E5'), ('PBS', 'abeta'), ('PBS', 'asyn')]
 annotator = Annotator(
-    ax=axG, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == '6E10'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
+    ax=axE, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == '6E10'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
 
 annotator.set_pvalues(pvalues_6E10)
 annotator.annotate()
 
-# ----------Panel H----------
+# ----------Panel F----------
 scatbar(dataframe=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'SC211'],
-        xcol='sample', ycol='spots_count', ax=axH, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
-axH.set(title='SC211 assay', ylabel='Aggregates per FOV', xlabel='')
+        xcol='sample', ycol='spots_count', ax=axF, xorder=['PBS', 'R1E5', 'abeta', 'asyn'], dotcolor='#36454F', barcolor='darkgrey')
+axF.set(title='SC211 assay', ylabel='Aggregates per FOV', xlabel='')
 
 pvalues_SC211 = [0.9776, 0.999998, 0.01868]
 pairs = [('PBS', 'R1E5'), ('PBS', 'abeta'), ('PBS', 'asyn')]
 annotator = Annotator(
-    ax=axH, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'SC211'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
+    ax=axF, pairs=pairs, data=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'SC211'], x='sample', y='spots_count', order=['PBS', 'R1E5', 'abeta', 'asyn'])
 
 annotator.set_pvalues(pvalues_SC211)
 annotator.annotate()
+
+# ----------Panel G----------
+scatbar(dataframe=tau_elisa.groupby(['sample', 'disease_state']).mean().reset_index(),
+        xcol='disease_state', ycol='concentration', ax=axG, xorder=['AD', 'CRL'], dotpalette=palette, barpalette=palette, pairs=[('AD', 'CRL')])
+
+axG.set(title='Tau ELISA',
+        ylabel='Total tau [pg/mL]',
+        xlabel='')
+
+# ----------Panel H----------
+LOD_calculation(mean_spots_dilution, 'AT8', 'AT8', ax=axH)
+LOD_calculation(mean_spots_dilution, 'HT7', 'HT7', ax=axH)
+
+axH.set(ylabel='Aggregates per FOV',
+        xlabel='Concentration of tau [pg/mL]')
+
+
 
 
 for ax in fig.axes:
     ax.spines[['right', 'top']].set_visible(False)
 
-plt.tight_layout()
+#plt.tight_layout()
 
 plt.savefig(f'{output_folder}S1_methods.svg')
 plt.show()

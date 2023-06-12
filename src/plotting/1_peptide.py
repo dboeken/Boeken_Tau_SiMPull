@@ -46,7 +46,7 @@ example_dimer = np.load(f'{input_path}example_dimer.npy')
 
 # # =========Generate figure========
 fig = plt.figure(figsize=(18.4 * cm, 2* 6.1 * cm))
-gs1 = fig.add_gridspec(nrows=2, ncols=3, wspace=0.35, hspace=0.35)
+gs1 = fig.add_gridspec( nrows=2, ncols=3, wspace=0.35, hspace=0.35)
 axA = fig.add_subplot(gs1[0:1, 0:3])
 axB = fig.add_subplot(gs1[1:2, 0:1])
 axC = fig.add_subplot(gs1[1:2, 1:2])
@@ -91,6 +91,6 @@ axD.set_xlabel("")
 for ax in fig.axes:
     ax.spines[['right', 'top']].set_visible(False)
 # --------Fig. elements--------
-plt.tight_layout()
+#plt.tight_layout()
 plt.savefig(f'{output_folder}Figure1_peptide.svg')
 plt.show()

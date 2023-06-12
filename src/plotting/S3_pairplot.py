@@ -55,6 +55,7 @@ pp = sns.pairplot(
     plot_kws=dict(alpha=0.55) 
 )
 pp.fig.set_size_inches(18.4*cm, 18.4*cm)
+
 pp._legend.set_title('Category')
 pp._legend.set_bbox_to_anchor((1.1, 0.5))
 for ax in pp.axes.flatten():
