@@ -1,12 +1,13 @@
 [![DOI](https://zenodo.org/badge/612212565.svg)](https://zenodo.org/badge/latestdoi/612212565)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8020036.svg)](https://doi.org/10.5281/zenodo.8020036)
 
 
 # BOEKEN Tau SiMPull 2023
 
 This repository contains the analysis code associated with the Tau SiMPull project, led by Dorothea Böken. This manuscript has been submitted for publication under the title **"Characterisation of tau aggregates in human samples at super-resolution"**.
 
-This manuscript has been submitted as a preprint via BioRxiv [here](biorxiv/link). A link to the final version will be provided upon publication.
+This manuscript has been submitted as a preprint via BioRxiv [here](https://doi.org/10.1101/2023.06.12.544575). A link to the final version will be provided upon publication.
 
 ## Prerequisites
 
