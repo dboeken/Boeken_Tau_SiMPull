@@ -62,6 +62,8 @@ mean_spots_dilution = pd.read_csv(
     f'{input_path}mean_spots_dilution.csv')
 tau_elisa = pd.read_csv(
     f'{input_path}total_tau_ELISA.csv', sep=';')
+spots_hom_DL= pd.read_csv(
+    f'{input_path}spots_hom_DL.csv')
 
 example_BSA = imread('data/homogenate_DL_data/example_BSA.tif')
 example_BSA = np.mean(example_BSA[10:, :, :], axis=0)
@@ -172,19 +174,21 @@ def LOD_calculation(data, capture, detect, ax):
 # =======Plot figure=======
 
 
-fig = plt.figure(figsize=(18.4 * cm,  9.2 * cm))
-gs1 = fig.add_gridspec( nrows=2, ncols=4, wspace=0.6, hspace=0.55)
+fig = plt.figure(figsize=(18.4 * cm,  3*6.1 * cm))
+gs1 = fig.add_gridspec( nrows=3, ncols=3, wspace=0.6, hspace=0.3)
 axA = fig.add_subplot(gs1[0, 0:1])
 axB = fig.add_subplot(gs1[0, 1:2])
 axC = fig.add_subplot(gs1[0, 2:3])
-axD = fig.add_subplot(gs1[0, 3:4])
-axE = fig.add_subplot(gs1[1, 0:1])
-axF = fig.add_subplot(gs1[1, 1:2])
-axG = fig.add_subplot(gs1[1, 2:3])
-axH = fig.add_subplot(gs1[1, 3:4])
+axD = fig.add_subplot(gs1[1, 0:1])
+axE = fig.add_subplot(gs1[1, 1:2])
+axF = fig.add_subplot(gs1[1, 2:3])
+axG = fig.add_subplot(gs1[2, 0:1])
+axH = fig.add_subplot(gs1[2, 1:2])
+axI = fig.add_subplot(gs1[2, 2:3])
 
 
-for ax, label in zip([axA, axB, axC, axD, axE, axF, axG, axH], ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']):
+
+for ax, label in zip([axA, axB, axC, axD, axE, axF, axG, axH, axI], ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']):
     # label physical distance to the left and up:
     trans = mtransforms.ScaledTranslation(-30/72, -3/72, fig.dpi_scale_trans)
     ax.text(0.0, 1.05, label, transform=ax.transAxes + trans,
@@ -201,6 +205,7 @@ microim1 = microshow(images=[example_BSA],
 scatbar(dataframe=mean_number_peptide_data[mean_number_peptide_data['capture'] == 'AT8'],
         xcol='sample', ycol='spots_count', ax=axB, xorder=['Dimer', 'R1E5'], dotcolor='#36454F', barcolor='darkgrey', pairs=[('Dimer', 'R1E5')])
 axB.set(title='AT8 assay', ylabel='Aggregates per FOV', xlabel='')
+
 
 # ----------Panel C----------
 scatbar(dataframe=mean_spots_Xreactivity[mean_spots_Xreactivity['capture'] == 'AT8'],
@@ -272,6 +277,18 @@ LOD_calculation(mean_spots_dilution, 'HT7', 'HT7', ax=axH)
 
 axH.set(ylabel='Aggregates per FOV',
         xlabel='Concentration of tau [pg/mL]')
+
+# ----------Panel H----------
+
+scatbar(
+    dataframe=spots_hom_DL, xcol='detect', ycol='norm_tau', ax=axI, xorder=['AT8', 'HT7'], 
+    dotpalette=palette, barpalette=palette,
+    hue_col='disease_state', hue_order=['AD', 'CRL'], comparisons_correction=None, pairs=[(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))],
+    groups=['AT8', 'HT7'], group_label_y=-0.22, group_line_y=-0.15, edgecolor='white')
+
+axI.set(title='Normalised tau',
+        ylabel='Normalised number of spots',
+        xlabel='')
 
 
 

@@ -70,6 +70,21 @@ mean_spots_Xreactivity = read_in('data/homogenate_DL_data/Xreactivity_spots_per_
 mean_spots_dilution = read_in(
     'data/homogenate_DL_data/dilution_spots_per_fov.csv')
 
+spots_hom_DL = pd.read_csv('results/2_homogenate_DL/spots_count_summary.csv')
+spots_hom_DL = spots_hom_DL[spots_hom_DL['sample']!='BSA']
+tau_elisa = pd.read_csv('results/S1_method/total_tau_ELISA.csv', sep=';')
+mean_tau_elisa = tau_elisa.groupby(['sample']).mean().reset_index()
+elisa_dict=dict(zip(mean_tau_elisa['sample'], mean_tau_elisa['concentration']))
+
+elisa_dict= {'9': 11934239.666666666,
+ '13': 6791242.333333333,
+ '28': 14115627.333333334,
+ '55': 11960455.333333334,
+ '159': 23236355.0,
+ '246': 6395861.666666667}
+
+spots_hom_DL['total_tau']= spots_hom_DL['sample'].astype(str).map(elisa_dict)
+spots_hom_DL['norm_tau'] = (spots_hom_DL['spots_count']/ spots_hom_DL['total_tau'])*1000000
 
 mean_spots_dilution = pd.read_csv(
     'data/homogenate_DL_data/dilution_spots_per_fov.csv')
@@ -263,7 +278,8 @@ def LOD_calculation(data, capture, detect, ax):
 # LOD_values
 
 
-
+spots_hom_DL.to_csv(
+    f'{output_folder}spots_hom_DL.csv')
 mean_number_peptide_data.to_csv(
     f'{output_folder}mean_number_peptide_data.csv')
 mean_spots_Xreactivity.to_csv(

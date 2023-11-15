@@ -49,7 +49,7 @@ palette = {
 
 # =========Organise data========
 spots_summary = pd.read_csv(f'{input_path}spots_count_summary.csv')
-spots_summary = spots_summary[spots_summary['disease_state'] != 'BSA'].copy()
+#spots_summary = spots_summary[spots_summary['disease_state'] != 'BSA'].copy()
 mean_intensity_plotting = pd.read_csv(f'{input_path}mean_intensity.csv')
 proportion_intensity_plotting = pd.read_csv(f'{input_path}proportion_intensity.csv')
 fitted_ecdf_HT7 = pd.read_csv(f'{input_path}fitted_ecdf_HT7.csv')
@@ -103,6 +103,16 @@ scatbar(
     hue_col='disease_state', hue_order=['AD', 'CRL'], comparisons_correction=None, pairs=[(('AT8', 'AD'), ('AT8', 'CRL')), (('HT7', 'AD'), ('HT7', 'CRL'))],
     groups=['AT8', 'HT7'], group_label_y=-0.22, group_line_y=-0.15, edgecolor='white')
 
+AT8_BSA_background = spots_summary[(spots_summary['disease_state'] == 'BSA') & (
+    spots_summary['capture'] == 'AT8')].mean()
+HT7_BSA_background = spots_summary[(spots_summary['disease_state'] == 'BSA') & (
+    spots_summary['capture'] == 'HT7')].mean()
+
+axC.hlines(y=AT8_BSA_background['spots_count'], xmin=-0.4, xmax=1.4, ls='--',
+           lw=1, colors='#A9A9A9')
+
+axC.hlines(y=HT7_BSA_background['spots_count'], xmin=-0.4, xmax=1.4, ls=':',
+           lw=1, colors='#A9A9A9')
 axC.set_ylabel('Number of spots')
 # axC.set_xticks([-0.27, 0, 0.29, 0.73, 1, 1.29])
 # axC.set_xticklabels(['AD', 'CRL', 'BSA']*2)
