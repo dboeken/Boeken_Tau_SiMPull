@@ -146,7 +146,7 @@ scatbar(
 axB1.set(title='', ylabel='Mean length [nm]', xlabel='')
 
 scatbar(
-    dataframe=SR_spots_mean, xcol='disease_state', ycol='smoothed_length', ax=axB2, xorder=['AD', 'CRL'],
+    dataframe=SR_spots_mean, xcol='disease_state', ycol='eccentricity', ax=axB2, xorder=['AD', 'CRL'],
     dotpalette=palette, barpalette=palette,
     pairs=[('AD', 'CRL')]
 )
