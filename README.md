@@ -5,9 +5,11 @@
 
 # BOEKEN Tau SiMPull 2023
 
-This repository contains the analysis code associated with the Tau SiMPull project, led by Dorothea Böken. This manuscript has been submitted for publication under the title **"Characterisation of tau aggregates in human samples at super-resolution"**.
+This repository contains the analysis code associated with the Tau SiMPull project led by Dorothea Böken. This manuscript has been published under the title **"Single-Molecule Characterization and Super-Resolution Imaging of Alzheimer's Disease-Relevant Tau Aggregates in Human Samples"**.
 
-This manuscript has been submitted as a preprint via BioRxiv [here](https://doi.org/10.1101/2023.06.12.544575). A link to the final version will be provided upon publication.
+This manuscript has been submitted as a preprint via BioRxiv [here](https://doi.org/10.1101/2023.06.12.544575).
+
+The paper has now been published in Angewandte Chemie doi: 10.1002/anie.202317756 [here](https://onlinelibrary.wiley.com/doi/10.1002/anie.202317756).
 
 ## Prerequisites
 
